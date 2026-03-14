@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, FileDown, Printer, Copy, Check, FileText } from 'lucide-react';
 import type { CodebaseGraph } from '@/types/graph';
@@ -249,7 +250,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
 
   const repoLabel = graph.repoUrl.split('/').slice(-2).join('/') || graph.repoUrl;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -259,7 +260,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm"
           />
 
           {/* Modal */}
@@ -268,7 +269,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.18 }}
-            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[680px] max-w-[96vw] max-h-[90vh] flex flex-col"
+            className="fixed left-1/2 top-1/2 z-[10000] -translate-x-1/2 -translate-y-1/2 w-[680px] max-w-[96vw] max-h-[90vh] flex flex-col"
             style={{
               background: 'hsl(var(--surface-1))',
               border: '1px solid hsl(var(--border))',
@@ -384,6 +385,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
           />
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
