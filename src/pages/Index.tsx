@@ -3,6 +3,7 @@ import LandingPage from '@/components/LandingPage';
 import Dashboard from '@/components/Dashboard';
 import { useAnalyzeRepo } from '@/hooks/useAnalyzeRepo';
 import type { CodebaseGraph } from '@/types/graph';
+import type { SessionStats } from '@/components/LiveStatsBar';
 
 type AppStage = 'landing' | 'analyzing' | 'ready' | 'dashboard';
 
