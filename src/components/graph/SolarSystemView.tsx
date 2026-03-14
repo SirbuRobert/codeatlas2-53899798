@@ -548,6 +548,7 @@ function Scene({
   const [userInteracting, setUserInteracting] = useState(false);
   const { gl } = useThree();
   void gl;
+  const positionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
 
   const blastRadius = useMemo(() => {
     if (!blastRadiusNodeId) return null;
