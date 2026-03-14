@@ -333,6 +333,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured in secrets");
 
+    const contributorLines = topContributors.length > 0
+      ? topContributors.map((c, i) => `  ${i + 1}. ${c.login} (${c.contributions} commits)`).join("\n")
+      : "  (no contributor data available)";
+
     const userMessage = `Analyze this repository and generate an architectural knowledge graph:
 
 REPOSITORY: ${owner}/${repo}
@@ -343,6 +347,9 @@ STARS: ${repoInfo.stargazers_count ?? 0} | FORKS: ${repoInfo.forks_count ?? 0}
 SIZE: ${repoInfo.size ?? 0} KB | DEFAULT BRANCH: ${defaultBranch}
 TOTAL ANALYSED FILES: ${totalFilesFiltered}${treeData.truncated ? " (tree was truncated — partial analysis)" : ""}
 
+TOP CONTRIBUTORS (use these real GitHub usernames for the "author" field on each node — assign based on the module's likely ownership area):
+${contributorLines}
+
 DIRECTORY STRUCTURE:
 ${dirSummary}
 
@@ -352,7 +359,8 @@ ${fileSample}
 KEY FILE CONTENTS:
 ${fileContentsText || "(Could not fetch file contents — base analysis only from file tree)"}
 
-Generate an insightful architectural knowledge graph. Identify real risks and architectural patterns.`;
+Generate an insightful architectural knowledge graph. Identify real risks and architectural patterns.
+IMPORTANT: Use the real contributor GitHub usernames listed above for the "author" field. Assign ownership based on the area of the codebase (e.g. the top contributor owns the core/entry-point files). Never use "unknown" as an author.`;
 
     const aiRes = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
