@@ -587,6 +587,11 @@ export default function LandingPage({
 
       {/* Pipeline Explainer Modal */}
       <PipelineExplainer isOpen={pipelineOpen} onClose={() => setPipelineOpen(false)} />
+
+      {/* GitHub Token Modal */}
+      <AnimatePresence>
+        {ghModalOpen && <GitHubTokenModal onClose={handleModalClose} />}
+      </AnimatePresence>
     </div>
   );
 }
