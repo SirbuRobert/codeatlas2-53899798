@@ -385,6 +385,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
           />
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
