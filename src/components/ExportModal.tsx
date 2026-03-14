@@ -254,31 +254,31 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm"
-          />
+          {/* Backdrop + centered modal wrapper */}
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.18 }}
-            className="fixed left-1/2 top-1/2 z-[10000] -translate-x-1/2 -translate-y-1/2 w-[680px] max-w-[96vw] max-h-[85vh] flex flex-col"
-            style={{
-              background: 'hsl(var(--surface-1))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: 12,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-              top: '50vh',
-              left: '50vw',
-              transform: 'translate(-50%, -50%)',
-            }}
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.18 }}
+              className="relative z-10 w-[680px] max-w-[96vw] max-h-[85vh] flex flex-col"
+              style={{
+                background: 'hsl(var(--surface-1))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 12,
+                boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+              }}
+            >
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-5 py-4 border-b border-border flex-shrink-0">
