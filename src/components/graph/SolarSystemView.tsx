@@ -880,6 +880,7 @@ function SceneWithBlast({
           isTourFocus={tourFocusNodeId === sunBody.node.id}
           isSearchMatch={searchHighlightIds.has(sunBody.node.id)}
           onClick={() => onNodeSelect(sunBody.node)}
+          positionsRef={positionsRef}
         />
       )}
 
@@ -905,9 +906,17 @@ function SceneWithBlast({
             isSearchMatch={searchHighlightIds.has(id)}
             onClick={() => onNodeSelect(b.node)}
             autoRotate={!userInteracting}
+            positionsRef={positionsRef}
           />
         );
       })}
+
+      {/* Dependency wave particles for selected node */}
+      <DependencyWaves
+        selectedNodeId={selectedNodeId}
+        edges={edges}
+        positionsRef={positionsRef}
+      />
     </>
   );
 }
