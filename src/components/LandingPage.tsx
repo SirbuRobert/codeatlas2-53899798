@@ -142,7 +142,20 @@ export default function LandingPage({
   const [glitchActive, setGlitchActive] = useState(false);
   const [analysisUrl, setAnalysisUrl] = useState('');
   const [pipelineOpen, setPipelineOpen] = useState(false);
+  const [ghModalOpen, setGhModalOpen] = useState(false);
+  const [ghConnected, setGhConnected] = useState(() => !!localStorage.getItem(GH_TOKEN_KEY));
   const animFinishedRef = useRef(false);
+
+  // Sync ghConnected whenever modal closes
+  const handleModalClose = () => {
+    setGhModalOpen(false);
+    setGhConnected(!!localStorage.getItem(GH_TOKEN_KEY));
+  };
+
+  const handleDisconnect = () => {
+    localStorage.removeItem(GH_TOKEN_KEY);
+    setGhConnected(false);
+  };
 
   // Glitch title effect
   useEffect(() => {
@@ -184,6 +197,12 @@ export default function LandingPage({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAnalyzing]);
+
+  const isPrivateError = !!analysisError && (
+    analysisError.includes('404') ||
+    analysisError.toLowerCase().includes('not found') ||
+    analysisError.toLowerCase().includes('private')
+  );
 
   const handleSubmit = (url: string = inputUrl) => {
     const trimmed = url.trim();
