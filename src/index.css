@@ -108,11 +108,6 @@
     height: 100%;
   }
 
-  #root {
-    height: 100%;
-    overflow-y: auto;
-  }
-
   body {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
