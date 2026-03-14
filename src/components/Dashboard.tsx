@@ -222,6 +222,17 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         {searchHighlightIds.size > 0 && (
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            onClick={() => { setSearchHighlightIds(new Set()); setSearchQuery(''); setStatsHighlightLabel(null); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/30 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+          >
+            <Search className="w-3 h-3" />
+            🔍 {searchHighlightIds.size} {statsHighlightLabel ? `${statsHighlightLabel} files` : `matches for "${searchQuery}"`} — click to clear
+          </motion.button>
+        )}
+        {/* placeholder — original badge removed below */}
+        {false && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             onClick={() => { setSearchHighlightIds(new Set()); setSearchQuery(''); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/30 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
           >
