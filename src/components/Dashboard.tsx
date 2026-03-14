@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -12,6 +12,7 @@ import OnboardingTour from '@/components/OnboardingTour';
 import SearchBar from '@/components/SearchBar';
 import AISummaryPanel, { AISummaryBanner } from '@/components/AISummaryPanel';
 import BusinessInsightsPanel from '@/components/BusinessInsightsPanel';
+import ExportModal from '@/components/ExportModal';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 
@@ -38,6 +39,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [ghostMode, setGhostMode] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const securityAnalysis = useMemo(
     () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
@@ -276,6 +278,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           </button>
 
           <button
+            onClick={() => setExportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 border border-success/25 font-mono text-[10px] text-success hover:bg-success/15 transition-all"
+          >
+            <FileDown className="w-3 h-3" />
+            Export
+          </button>
+
+          <button
             onClick={() => navigate('/billing')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/25 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
           >
@@ -387,6 +397,9 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
       {/* AI Summary Panel */}
       <AISummaryPanel graph={graph} isOpen={summaryOpen} onClose={() => setSummaryOpen(false)} />
+
+      {/* Export Modal */}
+      <ExportModal graph={graph} isOpen={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   );
 }
