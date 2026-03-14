@@ -397,6 +397,11 @@ export default function LandingPage({
         )}
       </div>
 
+      {/* Live stats bar — shown on idle landing, hidden during analysis */}
+      {!isAnalyzing && !analysisError && (
+        <LiveStatsBar stats={sessionStats} />
+      )}
+
       <div className="relative z-10 text-center pb-6">
         <p className="font-mono text-[10px] text-foreground-dim tracking-[0.2em]">
           CHALLENGE BY QA DNA · VIBEHACK BUCHAREST · MARCH 14–15, 2026
