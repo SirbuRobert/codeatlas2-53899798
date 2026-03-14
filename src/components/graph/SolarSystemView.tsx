@@ -792,6 +792,7 @@ export default function SolarSystemView({
 function SceneWithBlast({
   bodies, selectedNodeId, onNodeSelect,
   blastRadiusNodeId, blastAll, securityOverlay, searchHighlightIds, ghostMode, tourFocusNodeId,
+  edges,
 }: {
   bodies: SolarBody[];
   selectedNodeId: string | null;
@@ -802,8 +803,10 @@ function SceneWithBlast({
   searchHighlightIds: Set<string>;
   ghostMode: boolean;
   tourFocusNodeId: string | null;
+  edges: import('@/types/graph').AxonEdge[];
 }) {
   const [userInteracting, setUserInteracting] = useState(false);
+  const positionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
 
   const planetPositions = useMemo(() => {
     const map = new Map<string, THREE.Vector3>();
