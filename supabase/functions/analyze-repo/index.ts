@@ -222,9 +222,24 @@ serve(async (req) => {
     };
     if (token) ghHeaders["Authorization"] = `Bearer ${token}`;
 
-    // ── 1. Fetch repo metadata ──────────────────────────────────────────
-    const repoInfo = await githubFetch(`/repos/${owner}/${repo}`, ghHeaders);
+    // ── 1. Fetch repo metadata + contributors in parallel ──────────────
+    const [repoInfo, contributorsRaw] = await Promise.all([
+      githubFetch(`/repos/${owner}/${repo}`, ghHeaders),
+      githubFetch(`/repos/${owner}/${repo}/contributors?per_page=15&anon=0`, ghHeaders).catch(() => []),
+    ]);
     const defaultBranch: string = repoInfo.default_branch || "main";
+
+    // Build contributor list: login + contributions count
+    const contributors: Array<{ login: string; contributions: number }> =
+      Array.isArray(contributorsRaw)
+        ? contributorsRaw
+            .filter((c: Record<string, unknown>) => c.type !== "Bot" && c.login)
+            .map((c: Record<string, unknown>) => ({
+              login: c.login as string,
+              contributions: (c.contributions as number) ?? 0,
+            }))
+        : [];
+    const topContributors = contributors.slice(0, 10);
 
     // ── 2. Fetch recursive file tree ────────────────────────────────────
     let treeData: { tree: Array<{ type: string; path: string; size?: number }>; truncated?: boolean };
@@ -318,6 +333,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured in secrets");
 
+    const contributorLines = topContributors.length > 0
+      ? topContributors.map((c, i) => `  ${i + 1}. ${c.login} (${c.contributions} commits)`).join("\n")
+      : "  (no contributor data available)";
+
     const userMessage = `Analyze this repository and generate an architectural knowledge graph:
 
 REPOSITORY: ${owner}/${repo}
@@ -328,6 +347,9 @@ STARS: ${repoInfo.stargazers_count ?? 0} | FORKS: ${repoInfo.forks_count ?? 0}
 SIZE: ${repoInfo.size ?? 0} KB | DEFAULT BRANCH: ${defaultBranch}
 TOTAL ANALYSED FILES: ${totalFilesFiltered}${treeData.truncated ? " (tree was truncated — partial analysis)" : ""}
 
+TOP CONTRIBUTORS (use these real GitHub usernames for the "author" field on each node — assign based on the module's likely ownership area):
+${contributorLines}
+
 DIRECTORY STRUCTURE:
 ${dirSummary}
 
@@ -337,7 +359,8 @@ ${fileSample}
 KEY FILE CONTENTS:
 ${fileContentsText || "(Could not fetch file contents — base analysis only from file tree)"}
 
-Generate an insightful architectural knowledge graph. Identify real risks and architectural patterns.`;
+Generate an insightful architectural knowledge graph. Identify real risks and architectural patterns.
+IMPORTANT: Use the real contributor GitHub usernames listed above for the "author" field. Assign ownership based on the area of the codebase (e.g. the top contributor owns the core/entry-point files). Never use "unknown" as an author.`;
 
     const aiRes = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -408,9 +431,19 @@ Generate an insightful architectural knowledge graph. Identify real risks and ar
         strength: e.strength ?? 0.7,
       }));
 
-    // ── 8. Build final response ──────────────────────────────────────────
+    // ── 8. Fix up any remaining "unknown" authors using real contributors ─
+    const fallbackAuthor = topContributors[0]?.login ?? owner;
+    const processedNodes = (graphData.nodes || []).map((n) => {
+      const authorVal = (n.author as string | undefined) ?? "";
+      if (!authorVal || authorVal.toLowerCase() === "unknown" || authorVal.trim() === "") {
+        return { ...n, author: fallbackAuthor };
+      }
+      return n;
+    });
+
+    // ── 9. Build final response ──────────────────────────────────────────
     const response = {
-      nodes: graphData.nodes || [],
+      nodes: processedNodes,
       edges: processedEdges,
       summary: graphData.summary || "",
       language: graphData.primaryLanguage || repoInfo.language || "Unknown",
