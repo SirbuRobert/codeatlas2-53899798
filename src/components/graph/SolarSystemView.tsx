@@ -357,12 +357,13 @@ function SunBody({
 
 function OrbitingBody({
   body, parentPosition, isSelected, isDimmed, isOrphan, isSecurityNode, isExposed, isBlastSource, isBlastImpacted,
-  isTourFocus, isSearchMatch, onClick, autoRotate,
+  isTourFocus, isSearchMatch, onClick, autoRotate, positionsRef,
 }: {
   body: SolarBody; parentPosition: THREE.Vector3; isSelected: boolean;
   isDimmed: boolean; isOrphan: boolean; isSecurityNode: boolean; isExposed: boolean;
   isBlastSource: boolean; isBlastImpacted: boolean; isTourFocus: boolean; isSearchMatch: boolean;
   onClick: () => void; autoRotate: boolean;
+  positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
 }) {
   const groupRef = useRef<THREE.Group>(null!);
   const meshRef = useRef<THREE.Mesh>(null!);
@@ -379,11 +380,11 @@ function OrbitingBody({
     if (!autoRotate && !isMoon) return;
     angleRef.current += delta * body.orbitSpeed * (autoRotate ? 1 : 0.2);
     if (groupRef.current) {
-      groupRef.current.position.set(
-        parentPosition.x + Math.cos(angleRef.current) * body.orbitRadius,
-        parentPosition.y,
-        parentPosition.z + Math.sin(angleRef.current) * body.orbitRadius
-      );
+      const px = parentPosition.x + Math.cos(angleRef.current) * body.orbitRadius;
+      const pz = parentPosition.z + Math.sin(angleRef.current) * body.orbitRadius;
+      groupRef.current.position.set(px, parentPosition.y, pz);
+      // Track live position for dependency waves
+      positionsRef.current.set(body.node.id, new THREE.Vector3(px, parentPosition.y, pz));
     }
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.5;
   });
