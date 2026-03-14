@@ -222,9 +222,24 @@ serve(async (req) => {
     };
     if (token) ghHeaders["Authorization"] = `Bearer ${token}`;
 
-    // ── 1. Fetch repo metadata ──────────────────────────────────────────
-    const repoInfo = await githubFetch(`/repos/${owner}/${repo}`, ghHeaders);
+    // ── 1. Fetch repo metadata + contributors in parallel ──────────────
+    const [repoInfo, contributorsRaw] = await Promise.all([
+      githubFetch(`/repos/${owner}/${repo}`, ghHeaders),
+      githubFetch(`/repos/${owner}/${repo}/contributors?per_page=15&anon=0`, ghHeaders).catch(() => []),
+    ]);
     const defaultBranch: string = repoInfo.default_branch || "main";
+
+    // Build contributor list: login + contributions count
+    const contributors: Array<{ login: string; contributions: number }> =
+      Array.isArray(contributorsRaw)
+        ? contributorsRaw
+            .filter((c: Record<string, unknown>) => c.type !== "Bot" && c.login)
+            .map((c: Record<string, unknown>) => ({
+              login: c.login as string,
+              contributions: (c.contributions as number) ?? 0,
+            }))
+        : [];
+    const topContributors = contributors.slice(0, 10);
 
     // ── 2. Fetch recursive file tree ────────────────────────────────────
     let treeData: { tree: Array<{ type: string; path: string; size?: number }>; truncated?: boolean };
