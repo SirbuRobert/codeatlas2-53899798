@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw, Orbit } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw, Orbit, ShieldAlert } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -9,6 +9,7 @@ import TreemapView from '@/components/TreemapView';
 import SolarSystemView from '@/components/graph/SolarSystemView';
 import OnboardingTour from '@/components/OnboardingTour';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
+import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 
 type ViewMode = 'topology' | 'treemap' | 'solar';
 
