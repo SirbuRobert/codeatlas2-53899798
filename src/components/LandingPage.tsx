@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle } from 'lucide-react';
+import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle, HelpCircle } from 'lucide-react';
 import { exampleRepos } from '@/data/mockGraph';
 import type { AnalysisPhase } from '@/types/graph';
 import LiveStatsBar from '@/components/LiveStatsBar';
 import type { SessionStats } from '@/components/LiveStatsBar';
+import PipelineExplainer from '@/components/PipelineExplainer';
 
 interface LandingPageProps {
   onAnalyze: (url: string) => void;
