@@ -322,7 +322,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       </div>
 
       {/* ── Stats HUD ── */}
-      <StatsHUD graph={{ ...graph, repoUrl }} />
+      <StatsHUD graph={{ ...graph, repoUrl }} onStatClick={handleStatClick} activeStatLabel={statsHighlightLabel ?? undefined} />
 
       {/* ── AI Summary banner ── */}
       <AISummaryBanner summary={graph.summary} onExpand={() => setSummaryOpen(true)} />
