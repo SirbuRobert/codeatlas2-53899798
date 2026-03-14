@@ -7,11 +7,17 @@ import type { SessionStats } from '@/components/LiveStatsBar';
 
 type AppStage = 'landing' | 'analyzing' | 'ready' | 'dashboard';
 
+const BASELINE_STATS: SessionStats = {
+  reposAnalyzed: 247,
+  nodesMapped: 48392,
+  riskFlags: 1204,
+};
+
 export default function Index() {
   const [stage, setStage] = useState<AppStage>('landing');
   const [repoUrl, setRepoUrl] = useState('');
+  const [sessionStats, setSessionStats] = useState<SessionStats>(BASELINE_STATS);
   const { analyze, status, graph, error, reset } = useAnalyzeRepo();
-  // Track whether the cosmetic animation has finished
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
 
@@ -22,16 +28,22 @@ export default function Index() {
       animationDoneRef.current = false;
       graphRef.current = null;
 
-      // Start real analysis (non-blocking)
       const result = await analyze(url);
       graphRef.current = result;
 
-      // If animation already finished, go straight to dashboard
+      if (result) {
+        // Increment session stats when a real analysis completes
+        setSessionStats((prev) => ({
+          reposAnalyzed: prev.reposAnalyzed + 1,
+          nodesMapped: prev.nodesMapped + result.nodes.length,
+          riskFlags: prev.riskFlags + result.stats.hotspots,
+        }));
+      }
+
       if (animationDoneRef.current) {
         if (result) setStage('dashboard');
-        else setStage('landing'); // error — go back so landing can show the error
+        else setStage('landing');
       }
-      // else: wait for animation to call handleAnimationComplete
     },
     [analyze],
   );
@@ -41,10 +53,8 @@ export default function Index() {
     if (graphRef.current) {
       setStage('dashboard');
     } else if (status === 'error') {
-      // stay on landing — error will be shown there
       setStage('landing');
     }
-    // else: API still running — Index will react when analyze() resolves
   }, [status]);
 
   const handleReset = useCallback(() => {
@@ -65,6 +75,7 @@ export default function Index() {
       isAnalyzing={stage === 'analyzing'}
       analysisError={status === 'error' ? error : null}
       onAnimationComplete={handleAnimationComplete}
+      sessionStats={sessionStats}
     />
   );
 }

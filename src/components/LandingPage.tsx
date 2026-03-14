@@ -32,6 +32,7 @@ export default function LandingPage({
   isAnalyzing,
   analysisError,
   onAnimationComplete,
+  sessionStats,
 }: LandingPageProps) {
   const [inputUrl, setInputUrl] = useState('');
   const [phases, setPhases] = useState<AnalysisPhase[]>(ANALYSIS_PHASES);
