@@ -3,12 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle } from 'lucide-react';
 import { exampleRepos } from '@/data/mockGraph';
 import type { AnalysisPhase } from '@/types/graph';
+import LiveStatsBar from '@/components/LiveStatsBar';
+import type { SessionStats } from '@/components/LiveStatsBar';
 
 interface LandingPageProps {
   onAnalyze: (url: string) => void;
   isAnalyzing: boolean;
   analysisError: string | null;
   onAnimationComplete: () => void;
+  sessionStats: SessionStats;
 }
 
 const ANALYSIS_PHASES: AnalysisPhase[] = [
@@ -29,6 +32,7 @@ export default function LandingPage({
   isAnalyzing,
   analysisError,
   onAnimationComplete,
+  sessionStats,
 }: LandingPageProps) {
   const [inputUrl, setInputUrl] = useState('');
   const [phases, setPhases] = useState<AnalysisPhase[]>(ANALYSIS_PHASES);
@@ -392,6 +396,11 @@ export default function LandingPage({
           </motion.div>
         )}
       </div>
+
+      {/* Live stats bar — shown on idle landing, hidden during analysis */}
+      {!isAnalyzing && !analysisError && (
+        <LiveStatsBar stats={sessionStats} />
+      )}
 
       <div className="relative z-10 text-center pb-6">
         <p className="font-mono text-[10px] text-foreground-dim tracking-[0.2em]">
