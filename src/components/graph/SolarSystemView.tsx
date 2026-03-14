@@ -470,8 +470,8 @@ function ForceScene({
     if (securityOverlay) {
       return (
         !securityOverlay.authChainIds.has(id) &&
-        !securityOverlay.exposedNodes.has(id) &&
-        !securityOverlay.privilegedNodes.has(id)
+        !securityOverlay.exposedApiIds.has(id) &&
+        !securityOverlay.securityNodeIds.has(id)
       );
     }
     return false;
