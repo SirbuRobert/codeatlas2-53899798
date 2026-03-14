@@ -40,6 +40,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
 
   const securityAnalysis = useMemo(
     () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
