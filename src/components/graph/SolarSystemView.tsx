@@ -693,7 +693,7 @@ export default function SolarSystemView({
   const bodies = useMemo(() => buildSolarLayout(graph), [graph]);
   const selectedBody = bodies.find(b => b.node.id === selectedNodeId);
 
-  const handleCanvasClick = useCallback(() => { onNodeSelect(null); }, [onNodeSelect]);
+  const handleCanvasPointerMissed = useCallback(() => { onNodeSelect(null); }, [onNodeSelect]);
 
   if (bodies.length === 0) {
     return (
@@ -716,7 +716,7 @@ export default function SolarSystemView({
       <Canvas
         camera={{ position: [0, 8, 18], fov: 55 }}
         gl={{ antialias: true, alpha: false }}
-        onClick={handleCanvasClick}
+        onPointerMissed={handleCanvasPointerMissed}
         style={{ background: '#020408' }}
       >
         <SceneWithBlast
