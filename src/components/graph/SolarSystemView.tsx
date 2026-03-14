@@ -531,9 +531,9 @@ function ForceScene({
         const isBlastImpacted = !!(blastSets?.all.has(node.id));
         const isSecurityNode = !!(
           securityOverlay &&
-          (securityOverlay.authChainIds.has(node.id) || securityOverlay.privilegedNodes.has(node.id))
+          (securityOverlay.authChainIds.has(node.id) || securityOverlay.securityNodeIds.has(node.id))
         );
-        const isExposed = !!(securityOverlay?.exposedNodes.has(node.id));
+        const isExposed = !!(securityOverlay?.exposedApiIds.has(node.id));
         const isSearchMatch = searchHighlightIds.size > 0 && searchHighlightIds.has(node.id);
 
         return (
