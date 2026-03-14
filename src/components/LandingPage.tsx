@@ -182,7 +182,14 @@ export default function LandingPage({
           className="text-foreground-dim text-sm text-center max-w-md mb-10 leading-relaxed"
         >
           GitHub API → Tree-sitter AST → Knowledge Graph → AI Semantic Layer → Interactive 60fps WebGL map.
-          No config. No setup. Just drop a URL.
+          No config. No setup. Just drop a URL.{' '}
+          <button
+            onClick={() => setPipelineOpen(true)}
+            className="inline-flex items-center gap-1 text-cyan hover:underline transition-colors"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            How does this work?
+          </button>
         </motion.p>
 
         {/* Input / Analysis panel */}
