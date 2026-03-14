@@ -39,6 +39,7 @@ export default function LandingPage({
   const [phases, setPhases] = useState<AnalysisPhase[]>(ANALYSIS_PHASES);
   const [glitchActive, setGlitchActive] = useState(false);
   const [analysisUrl, setAnalysisUrl] = useState('');
+  const [pipelineOpen, setPipelineOpen] = useState(false);
   const animFinishedRef = useRef(false);
 
   // Glitch title effect
