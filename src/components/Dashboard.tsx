@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -8,6 +8,8 @@ import StatsHUD from '@/components/StatsHUD';
 import TreemapView from '@/components/TreemapView';
 import SolarSystemView from '@/components/graph/SolarSystemView';
 import OnboardingTour from '@/components/OnboardingTour';
+import SearchBar from '@/components/SearchBar';
+import AISummaryPanel, { AISummaryBanner } from '@/components/AISummaryPanel';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 
@@ -26,12 +28,19 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [blastRadiusNodeId, setBlastRadiusNodeId] = useState<string | null>(null);
   const [securityOverlayActive, setSecurityOverlayActive] = useState(false);
   const [tourActive, setTourActive] = useState(false);
+  const [tourFocusNodeId, setTourFocusNodeId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchHighlightIds, setSearchHighlightIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [ghostMode, setGhostMode] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
-  // Compute security analysis lazily when overlay is on
   const securityAnalysis = useMemo(
     () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
     [securityOverlayActive, graph],
   );
+
+  const orphanCount = useMemo(() => graph.nodes.filter(n => n.metadata.isOrphan).length, [graph.nodes]);
 
   const handleNodeSelect = useCallback((node: AxonNode | null) => {
     setSelectedNode(node);
@@ -42,6 +51,9 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     setBlastRadiusNodeId(nodeId);
     setSelectedNode(null);
     setSecurityOverlayActive(false);
+    setGhostMode(false);
+    setSearchHighlightIds(new Set());
+    setSearchQuery('');
   }, []);
 
   const handleSecurityReview = useCallback(() => {
@@ -49,15 +61,42 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     setBlastRadiusNodeId(null);
     setSelectedNode(null);
     setViewMode('topology');
+    setGhostMode(false);
+    setSearchHighlightIds(new Set());
+    setSearchQuery('');
+  }, []);
+
+  const handleGhostCity = useCallback(() => {
+    setGhostMode(g => !g);
+    setSecurityOverlayActive(false);
+    setBlastRadiusNodeId(null);
+    setSearchHighlightIds(new Set());
+    setSearchQuery('');
+  }, []);
+
+  const handleSearchResults = useCallback((ids: Set<string>, query: string) => {
+    setSearchHighlightIds(ids);
+    setSearchQuery(query);
+    if (ids.size > 0) {
+      setSecurityOverlayActive(false);
+      setBlastRadiusNodeId(null);
+      setGhostMode(false);
+    }
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setBlastRadiusNodeId(null);
+    setSecurityOverlayActive(false);
+    setGhostMode(false);
+    setSearchHighlightIds(new Set());
+    setSearchQuery('');
   }, []);
 
   // CMD+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCmdOpen(true);
-      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(true); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') { e.preventDefault(); setSearchOpen(true); }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -77,14 +116,20 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         graph.nodes[0];
       if (highRisk) handleBlastRadius(highRisk.id);
     },
+    onSearch: () => setSearchOpen(true),
+    onGhostCity: handleGhostCity,
   });
+
+  const activeOverlayCount = [
+    !!blastRadiusNodeId, securityOverlayActive, ghostMode, searchHighlightIds.size > 0
+  ].filter(Boolean).length;
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* ── Top Bar ── */}
       <div
-        className="flex items-center gap-3 px-4 border-b border-border bg-surface-1 flex-shrink-0"
-        style={{ height: 48 }}
+        className="flex items-center gap-2 px-4 border-b border-border bg-surface-1 flex-shrink-0 flex-wrap"
+        style={{ minHeight: 48 }}
       >
         <div className="flex items-center gap-2 pr-4 border-r border-border">
           <div className="w-5 h-5 rounded-md bg-cyan/10 border border-cyan/30 flex items-center justify-center">
@@ -118,37 +163,84 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           ))}
         </div>
 
-        {/* Blast radius active indicator */}
+        {/* Active mode badges — click to clear */}
         {blastRadiusNodeId && !securityOverlayActive && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             onClick={() => setBlastRadiusNodeId(null)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-alert/10 border border-alert/30 font-mono text-[10px] text-alert hover:bg-alert/15 transition-all"
           >
             ⚡ BLAST RADIUS ACTIVE — click to clear
           </motion.button>
         )}
-
-        {/* Security overlay active badge */}
         {securityOverlayActive && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             onClick={() => setSecurityOverlayActive(false)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[10px] transition-all"
-            style={{
-              background: 'rgba(168,85,247,0.12)',
-              border: '1px solid rgba(168,85,247,0.4)',
-              color: '#c084fc',
-            }}
+            style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.4)', color: '#c084fc' }}
           >
             <ShieldAlert className="w-3 h-3" />
-            🔐 SECURITY SCAN ACTIVE — click to clear
+            🔐 SECURITY SCAN — click to clear
           </motion.button>
+        )}
+        {ghostMode && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            onClick={() => setGhostMode(false)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[10px] transition-all"
+            style={{ background: 'rgba(71,85,105,0.15)', border: '1px solid rgba(71,85,105,0.4)', color: '#94a3b8' }}
+          >
+            <Ghost className="w-3 h-3" />
+            👻 GHOST CITY — {orphanCount} orphans — click to clear
+          </motion.button>
+        )}
+        {searchHighlightIds.size > 0 && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            onClick={() => { setSearchHighlightIds(new Set()); setSearchQuery(''); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/30 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+          >
+            <Search className="w-3 h-3" />
+            🔍 {searchHighlightIds.size} matches for "{searchQuery}" — click to clear
+          </motion.button>
+        )}
+        {activeOverlayCount > 1 && (
+          <button
+            onClick={clearAll}
+            className="font-mono text-[9px] text-foreground-dim hover:text-alert px-2 py-1 rounded border border-border hover:border-alert/30 transition-all"
+          >
+            clear all
+          </button>
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Search */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground transition-all"
+          >
+            <Search className="w-3 h-3" />
+            Search
+            <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">⌘F</kbd>
+          </button>
+
+          {/* Ghost City */}
+          {orphanCount > 0 && (
+            <button
+              onClick={handleGhostCity}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-[10px] transition-all ${
+                ghostMode
+                  ? 'bg-surface-3 border-border-bright text-foreground-muted'
+                  : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground'
+              }`}
+            >
+              <Ghost className="w-3 h-3" />
+              Dead Code
+              <span className="font-mono text-[9px] px-1 rounded bg-surface-3 text-foreground-dim">{orphanCount}</span>
+            </button>
+          )}
+
           <button
             onClick={() => setTourActive(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 border border-success/25 font-mono text-[10px] text-success hover:bg-success/15 transition-all"
@@ -162,10 +254,8 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-muted hover:text-foreground hover:border-border-bright transition-all"
           >
             <Terminal className="w-3 h-3" />
-            Slash Commands
-            <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">
-              ⌘K
-            </kbd>
+            Commands
+            <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">⌘K</kbd>
           </button>
 
           <button
@@ -182,54 +272,52 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       <StatsHUD graph={{ ...graph, repoUrl }} />
 
       {/* ── AI Summary banner ── */}
-      <div className="flex-shrink-0 px-4 py-2 bg-surface-1 border-b border-border">
-        <p className="font-mono text-[10px] text-foreground-dim leading-relaxed line-clamp-1">
-          <span className="text-cyan font-bold mr-2">AI SUMMARY</span>
-          {graph.summary}
-        </p>
-      </div>
+      <AISummaryBanner summary={graph.summary} onExpand={() => setSummaryOpen(true)} />
 
       {/* ── Main canvas ── */}
       <div className="flex-1 relative overflow-hidden">
+        {/* Search bar floating */}
+        <SearchBar
+          nodes={graph.nodes}
+          onResults={handleSearchResults}
+          onClose={() => setSearchOpen(false)}
+          isOpen={searchOpen}
+        />
+
         <AnimatePresence mode="wait">
           {viewMode === 'topology' ? (
-            <motion.div
-              key="topology"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0"
-            >
+            <motion.div key="topology" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
               <GraphCanvas
                 graph={graph}
                 selectedNodeId={selectedNode?.id ?? null}
                 blastRadiusNodeId={blastRadiusNodeId}
                 onNodeSelect={handleNodeSelect}
                 securityOverlay={securityAnalysis}
+                searchHighlightIds={searchHighlightIds}
+                ghostMode={ghostMode}
+                tourFocusNodeId={tourFocusNodeId}
               />
             </motion.div>
           ) : viewMode === 'treemap' ? (
-            <motion.div
-              key="treemap"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0"
-            >
-              <TreemapView graph={graph} onNodeSelect={handleNodeSelect} />
+            <motion.div key="treemap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
+              <TreemapView
+                graph={graph}
+                onNodeSelect={handleNodeSelect}
+                searchHighlightIds={searchHighlightIds}
+                ghostMode={ghostMode}
+              />
             </motion.div>
           ) : (
-            <motion.div
-              key="solar"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0"
-            >
+            <motion.div key="solar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
               <SolarSystemView
                 graph={graph}
                 selectedNodeId={selectedNode?.id ?? null}
                 onNodeSelect={handleNodeSelect}
+                blastRadiusNodeId={blastRadiusNodeId}
+                securityOverlay={securityAnalysis}
+                searchHighlightIds={searchHighlightIds}
+                ghostMode={ghostMode}
+                tourFocusNodeId={tourFocusNodeId}
               />
             </motion.div>
           )}
@@ -251,8 +339,11 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           {tourActive && (
             <OnboardingTour
               graph={graph}
-              onClose={() => setTourActive(false)}
-              onFocusNode={(id) => setSelectedNode(graph.nodes.find((n) => n.id === id) ?? null)}
+              onClose={() => { setTourActive(false); setTourFocusNodeId(null); }}
+              onFocusNode={(id) => {
+                setSelectedNode(graph.nodes.find((n) => n.id === id) ?? null);
+                setTourFocusNodeId(id);
+              }}
             />
           )}
         </AnimatePresence>
@@ -260,6 +351,9 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
       {/* Command Bar */}
       <CommandBar isOpen={cmdOpen} onClose={() => setCmdOpen(false)} commands={slashCommands} />
+
+      {/* AI Summary Panel */}
+      <AISummaryPanel graph={graph} isOpen={summaryOpen} onClose={() => setSummaryOpen(false)} />
     </div>
   );
 }
