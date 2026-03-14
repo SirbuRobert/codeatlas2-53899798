@@ -1,11 +1,7 @@
 import { useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import ReactFlow, {
-  Background,
-  type Node,
-  type Edge,
-} from '@xyflow/react';
+import { ReactFlow, Background, type Node, type Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 interface PipelineExplainerProps {
