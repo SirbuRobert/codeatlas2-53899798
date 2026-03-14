@@ -1,15 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw, Orbit } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
 import StatsHUD from '@/components/StatsHUD';
 import TreemapView from '@/components/TreemapView';
+import SolarSystemView from '@/components/graph/SolarSystemView';
 import OnboardingTour from '@/components/OnboardingTour';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 
-type ViewMode = 'topology' | 'treemap';
+type ViewMode = 'topology' | 'treemap' | 'solar';
 
 interface DashboardProps {
   graph: CodebaseGraph;
