@@ -81,7 +81,7 @@ interface AxonNodeData extends AxonNode {
 }
 
 const AxonGraphNode = memo(({ data }: NodeProps) => {
-  const nodeData = data as AxonNodeData;
+  const nodeData = data as unknown as AxonNodeData;
   const { type, label, metadata, isSelected, isHighlighted, isDimmed, isBlastSource, isBlastImpacted } = nodeData;
   const config = NODE_CONFIGS[type] ?? NODE_CONFIGS.file;
   const { Icon } = config;
