@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw, Orbit } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -9,6 +9,7 @@ import TreemapView from '@/components/TreemapView';
 import SolarSystemView from '@/components/graph/SolarSystemView';
 import OnboardingTour from '@/components/OnboardingTour';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
+import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 
 type ViewMode = 'topology' | 'treemap' | 'solar';
 
@@ -23,7 +24,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
   const [cmdOpen, setCmdOpen] = useState(false);
   const [blastRadiusNodeId, setBlastRadiusNodeId] = useState<string | null>(null);
+  const [securityOverlayActive, setSecurityOverlayActive] = useState(false);
   const [tourActive, setTourActive] = useState(false);
+
+  // Compute security analysis lazily when overlay is on
+  const securityAnalysis = useMemo(
+    () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
+    [securityOverlayActive, graph],
+  );
 
   const handleNodeSelect = useCallback((node: AxonNode | null) => {
     setSelectedNode(node);
@@ -33,6 +41,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const handleBlastRadius = useCallback((nodeId: string) => {
     setBlastRadiusNodeId(nodeId);
     setSelectedNode(null);
+    setSecurityOverlayActive(false);
+  }, []);
+
+  const handleSecurityReview = useCallback(() => {
+    setSecurityOverlayActive(true);
+    setBlastRadiusNodeId(null);
+    setSelectedNode(null);
+    setViewMode('topology');
   }, []);
 
   // CMD+K
@@ -52,14 +68,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       const target = selectedNode ?? graph.nodes.find((n) => n.metadata.isEntryPoint) ?? graph.nodes[0];
       if (target) handleBlastRadius(target.id);
     },
-    onSecurityReview: () => {
-      // Find most security-critical node
-      const secNode =
-        graph.nodes.find((n) => n.metadata.flags.includes('security-critical')) ??
-        graph.nodes.find((n) => n.metadata.riskLevel === 'critical') ??
-        graph.nodes[0];
-      if (secNode) handleBlastRadius(secNode.id);
-    },
+    onSecurityReview: handleSecurityReview,
     onTour: () => setTourActive(true),
     onReviewPR: () => {
       const highRisk =
@@ -110,7 +119,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         </div>
 
         {/* Blast radius active indicator */}
-        {blastRadiusNodeId && (
+        {blastRadiusNodeId && !securityOverlayActive && (
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -118,6 +127,24 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-alert/10 border border-alert/30 font-mono text-[10px] text-alert hover:bg-alert/15 transition-all"
           >
             ⚡ BLAST RADIUS ACTIVE — click to clear
+          </motion.button>
+        )}
+
+        {/* Security overlay active badge */}
+        {securityOverlayActive && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => setSecurityOverlayActive(false)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[10px] transition-all"
+            style={{
+              background: 'rgba(168,85,247,0.12)',
+              border: '1px solid rgba(168,85,247,0.4)',
+              color: '#c084fc',
+            }}
+          >
+            <ShieldAlert className="w-3 h-3" />
+            🔐 SECURITY SCAN ACTIVE — click to clear
           </motion.button>
         )}
 
@@ -178,6 +205,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
                 selectedNodeId={selectedNode?.id ?? null}
                 blastRadiusNodeId={blastRadiusNodeId}
                 onNodeSelect={handleNodeSelect}
+                securityOverlay={securityAnalysis}
               />
             </motion.div>
           ) : viewMode === 'treemap' ? (
