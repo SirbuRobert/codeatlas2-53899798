@@ -416,6 +416,9 @@ export default function LandingPage({
           CHALLENGE BY QA DNA · VIBEHACK BUCHAREST · MARCH 14–15, 2026
         </p>
       </div>
+
+      {/* Pipeline Explainer Modal */}
+      <PipelineExplainer isOpen={pipelineOpen} onClose={() => setPipelineOpen(false)} />
     </div>
   );
 }
