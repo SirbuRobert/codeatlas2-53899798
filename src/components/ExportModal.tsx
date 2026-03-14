@@ -329,7 +329,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
               ) : (
                 <div className="p-6">
                   <div
-                    className="rounded-lg border border-border p-4 bg-white text-gray-900 text-xs leading-relaxed"
+                    className="rounded-lg border border-border p-4 bg-background text-foreground text-xs leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: printHTML }}
                   />
                   <p className="font-mono text-[9px] text-foreground-dim mt-3 text-center">
