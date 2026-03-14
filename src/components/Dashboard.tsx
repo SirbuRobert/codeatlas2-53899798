@@ -24,7 +24,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
   const [cmdOpen, setCmdOpen] = useState(false);
   const [blastRadiusNodeId, setBlastRadiusNodeId] = useState<string | null>(null);
+  const [securityOverlayActive, setSecurityOverlayActive] = useState(false);
   const [tourActive, setTourActive] = useState(false);
+
+  // Compute security analysis lazily when overlay is on
+  const securityAnalysis = useMemo(
+    () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
+    [securityOverlayActive, graph],
+  );
 
   const handleNodeSelect = useCallback((node: AxonNode | null) => {
     setSelectedNode(node);
@@ -34,6 +41,15 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const handleBlastRadius = useCallback((nodeId: string) => {
     setBlastRadiusNodeId(nodeId);
     setSelectedNode(null);
+    setSecurityOverlayActive(false);
+  }, []);
+
+  const handleSecurityReview = useCallback(() => {
+    setSecurityOverlayActive(true);
+    setBlastRadiusNodeId(null);
+    setSelectedNode(null);
+    // Switch to topology so the overlay is visible
+    setViewMode('topology');
   }, []);
 
   // CMD+K
@@ -53,14 +69,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       const target = selectedNode ?? graph.nodes.find((n) => n.metadata.isEntryPoint) ?? graph.nodes[0];
       if (target) handleBlastRadius(target.id);
     },
-    onSecurityReview: () => {
-      // Find most security-critical node
-      const secNode =
-        graph.nodes.find((n) => n.metadata.flags.includes('security-critical')) ??
-        graph.nodes.find((n) => n.metadata.riskLevel === 'critical') ??
-        graph.nodes[0];
-      if (secNode) handleBlastRadius(secNode.id);
-    },
+    onSecurityReview: handleSecurityReview,
     onTour: () => setTourActive(true),
     onReviewPR: () => {
       const highRisk =
