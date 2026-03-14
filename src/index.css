@@ -104,9 +104,13 @@
     @apply border-border;
   }
 
-  html, body, #root {
+  html, body {
     height: 100%;
-    overflow: hidden;
+  }
+
+  #root {
+    height: 100%;
+    overflow-y: auto;
   }
 
   body {
