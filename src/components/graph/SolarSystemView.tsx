@@ -727,6 +727,7 @@ export default function SolarSystemView({
           searchHighlightIds={searchHighlightIds}
           ghostMode={ghostMode}
           tourFocusNodeId={tourFocusNodeId}
+          edges={graph.edges}
         />
       </Canvas>
 
