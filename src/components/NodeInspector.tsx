@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight } from 'lucide-react';
-import type { AxonNode, NodeType } from '@/types/graph';
+import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown } from 'lucide-react';
+import type { AxonNode, NodeType, CodebaseGraph } from '@/types/graph';
 
 interface NodeInspectorProps {
   node: AxonNode | null;
   onClose: () => void;
   onBlastRadius: (nodeId: string) => void;
+  graph?: CodebaseGraph;
 }
 
 const TYPE_LABELS: Record<NodeType, string> = {
@@ -69,11 +71,77 @@ function MetricBar({ label, value, max = 100, color }: { label: string; value: n
   );
 }
 
-export default function NodeInspector({ node, onClose, onBlastRadius }: NodeInspectorProps) {
+function NodeRefRow({ nodeId, graph, onBlastRadius }: { nodeId: string; graph: CodebaseGraph; onBlastRadius: (id: string) => void }) {
+  const n = graph.nodes.find(nd => nd.id === nodeId);
+  if (!n) return null;
+  const color = TYPE_COLORS[n.type] ?? '#64748b';
+  return (
+    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border group">
+      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
+      <span className="font-mono text-[10px] text-foreground-muted flex-1 truncate">{n.label}</span>
+      <span className="font-mono text-[9px] px-1 py-0.5 rounded border text-[10px]"
+        style={{ color, borderColor: `${color}30`, background: `${color}10` }}>
+        {TYPE_LABELS[n.type]}
+      </span>
+      <button
+        onClick={() => onBlastRadius(nodeId)}
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        title="Blast radius"
+      >
+        <Zap className="w-3 h-3 text-alert" />
+      </button>
+    </div>
+  );
+}
+
+function CollapsibleSection({ title, count, color, children }: {
+  title: string; count: number; color: string; children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(true);
+  if (count === 0) return null;
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 mb-2"
+      >
+        <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase">{title}</p>
+        <span className="font-mono text-[9px] px-1.5 py-0.5 rounded-full border"
+          style={{ color, borderColor: `${color}30`, background: `${color}10` }}>
+          {count}
+        </span>
+        <ChevronDown className={`w-3 h-3 text-foreground-dim ml-auto transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden space-y-1"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function NodeInspector({ node, onClose, onBlastRadius, graph }: NodeInspectorProps) {
   if (!node) return null;
 
   const typeColor = TYPE_COLORS[node.type] ?? '#00ffff';
   const risk = RISK_CONFIG[node.metadata.riskLevel] ?? RISK_CONFIG.none;
+
+  // Compute connectivity if graph is provided
+  const importedBy = graph
+    ? graph.edges.filter(e => e.target === node.id).map(e => e.source).slice(0, 8)
+    : [];
+  const exportsTo = graph
+    ? graph.edges.filter(e => e.source === node.id).map(e => e.target).slice(0, 8)
+    : [];
 
   return (
     <AnimatePresence>
@@ -244,6 +312,27 @@ export default function NodeInspector({ node, onClose, onBlastRadius }: NodeInsp
               )}
             </div>
           </div>
+
+          {/* ── Connectivity (requires graph prop) ── */}
+          {graph && (importedBy.length > 0 || exportsTo.length > 0) && (
+            <div className="space-y-3">
+              <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase">
+                DEPENDENCY GRAPH
+              </p>
+
+              <CollapsibleSection title="↑ Imported By" count={importedBy.length} color="#f97316">
+                {importedBy.map(id => (
+                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} />
+                ))}
+              </CollapsibleSection>
+
+              <CollapsibleSection title="↓ Exports To" count={exportsTo.length} color="#3b82f6">
+                {exportsTo.map(id => (
+                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} />
+                ))}
+              </CollapsibleSection>
+            </div>
+          )}
         </div>
 
         {/* ── Actions ── */}

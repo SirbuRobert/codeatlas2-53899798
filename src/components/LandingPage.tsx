@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle } from 'lucide-react';
+import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle, HelpCircle } from 'lucide-react';
 import { exampleRepos } from '@/data/mockGraph';
 import type { AnalysisPhase } from '@/types/graph';
 import LiveStatsBar from '@/components/LiveStatsBar';
 import type { SessionStats } from '@/components/LiveStatsBar';
+import PipelineExplainer from '@/components/PipelineExplainer';
 
 interface LandingPageProps {
   onAnalyze: (url: string) => void;
@@ -38,6 +39,7 @@ export default function LandingPage({
   const [phases, setPhases] = useState<AnalysisPhase[]>(ANALYSIS_PHASES);
   const [glitchActive, setGlitchActive] = useState(false);
   const [analysisUrl, setAnalysisUrl] = useState('');
+  const [pipelineOpen, setPipelineOpen] = useState(false);
   const animFinishedRef = useRef(false);
 
   // Glitch title effect
@@ -180,7 +182,14 @@ export default function LandingPage({
           className="text-foreground-dim text-sm text-center max-w-md mb-10 leading-relaxed"
         >
           GitHub API → Tree-sitter AST → Knowledge Graph → AI Semantic Layer → Interactive 60fps WebGL map.
-          No config. No setup. Just drop a URL.
+          No config. No setup. Just drop a URL.{' '}
+          <button
+            onClick={() => setPipelineOpen(true)}
+            className="inline-flex items-center gap-1 text-cyan hover:underline transition-colors"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            How does this work?
+          </button>
         </motion.p>
 
         {/* Input / Analysis panel */}
@@ -407,6 +416,9 @@ export default function LandingPage({
           CHALLENGE BY QA DNA · VIBEHACK BUCHAREST · MARCH 14–15, 2026
         </p>
       </div>
+
+      {/* Pipeline Explainer Modal */}
+      <PipelineExplainer isOpen={pipelineOpen} onClose={() => setPipelineOpen(false)} />
     </div>
   );
 }
