@@ -229,7 +229,7 @@ export default function OnboardingTour({ graph, onClose, onFocusNode }: Onboardi
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 80, opacity: 0 }}
       transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
-      className="absolute bottom-24 left-1/2 -translate-x-1/2 w-[500px] z-30"
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[500px] z-50"
     >
       <div
         className="panel-glass rounded-2xl overflow-hidden"

@@ -357,37 +357,46 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
 
+      {/* ── Overlays rendered OUTSIDE the canvas div so WebGL can't eat their clicks ── */}
+      <div className="pointer-events-none fixed inset-0 z-40 flex flex-col">
         {/* Node inspector */}
         <AnimatePresence>
           {selectedNode && (
-            <NodeInspector
-              node={selectedNode}
-              onClose={() => setSelectedNode(null)}
-              onBlastRadius={handleBlastRadius}
-              graph={graph}
-            />
+            <div className="pointer-events-auto">
+              <NodeInspector
+                node={selectedNode}
+                onClose={() => setSelectedNode(null)}
+                onBlastRadius={handleBlastRadius}
+                graph={graph}
+              />
+            </div>
           )}
         </AnimatePresence>
 
         {/* Business Insights Panel */}
-        <BusinessInsightsPanel
-          graph={graph}
-          isOpen={businessPanelOpen}
-          onClose={() => setBusinessPanelOpen(false)}
-        />
+        <div className="pointer-events-auto">
+          <BusinessInsightsPanel
+            graph={graph}
+            isOpen={businessPanelOpen}
+            onClose={() => setBusinessPanelOpen(false)}
+          />
+        </div>
 
-        {/* Onboarding tour */}
+        {/* Onboarding tour — bottom-center */}
         <AnimatePresence>
           {tourActive && (
-            <OnboardingTour
-              graph={graph}
-              onClose={() => { setTourActive(false); setTourFocusNodeId(null); }}
-              onFocusNode={(id) => {
-                setSelectedNode(graph.nodes.find((n) => n.id === id) ?? null);
-                setTourFocusNodeId(id);
-              }}
-            />
+            <div className="pointer-events-auto">
+              <OnboardingTour
+                graph={graph}
+                onClose={() => { setTourActive(false); setTourFocusNodeId(null); }}
+                onFocusNode={(id) => {
+                  setSelectedNode(graph.nodes.find((n) => n.id === id) ?? null);
+                  setTourFocusNodeId(id);
+                }}
+              />
+            </div>
           )}
         </AnimatePresence>
       </div>
