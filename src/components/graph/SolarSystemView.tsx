@@ -176,6 +176,87 @@ function buildSolarLayout(graph: CodebaseGraph): SolarBody[] {
   return bodies;
 }
 
+// ── Dependency Wave Particles ──────────────────────────────────────────────
+
+const WAVE_COLOR: Record<string, string> = {
+  imports: '#f97316',
+  calls: '#f97316',
+  inherits: '#f97316',
+  composes: '#f97316',
+  queries: '#a855f7',
+  exposes: '#00ffff',
+};
+
+function WaveParticle({
+  from, to, color, stagger,
+}: {
+  from: React.MutableRefObject<THREE.Vector3>;
+  to: React.MutableRefObject<THREE.Vector3>;
+  color: string;
+  stagger: number;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const tRef = useRef(stagger);
+
+  useFrame((_, delta) => {
+    tRef.current = (tRef.current + delta * 0.5) % 1;
+    if (meshRef.current) {
+      meshRef.current.position.lerpVectors(from.current, to.current, tRef.current);
+    }
+  });
+
+  return (
+    <mesh ref={meshRef}>
+      <sphereGeometry args={[0.07, 8, 8]} />
+      <meshBasicMaterial color={color} transparent opacity={0.85} />
+    </mesh>
+  );
+}
+
+function DependencyWaves({
+  selectedNodeId,
+  edges,
+  positionsRef,
+}: {
+  selectedNodeId: string | null;
+  edges: import('@/types/graph').AxonEdge[];
+  positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
+}) {
+  if (!selectedNodeId) return null;
+
+  const connected = edges
+    .filter(e => e.source === selectedNodeId || e.target === selectedNodeId)
+    .slice(0, 20);
+
+  return (
+    <>
+      {connected.map((edge, idx) => {
+        const fromId = edge.source;
+        const toId = edge.target;
+        const color = WAVE_COLOR[edge.relation] ?? '#00ffff';
+
+        // Create stable per-edge ref accessors
+        const fromRef = { current: positionsRef.current.get(fromId) ?? new THREE.Vector3() };
+        const toRef = { current: positionsRef.current.get(toId) ?? new THREE.Vector3() };
+
+        return (
+          <group key={edge.id + '-waves'}>
+            {[0, 0.33, 0.66].map((stagger, si) => (
+              <WaveParticle
+                key={`${edge.id}-${si}`}
+                from={fromRef as React.MutableRefObject<THREE.Vector3>}
+                to={toRef as React.MutableRefObject<THREE.Vector3>}
+                color={color}
+                stagger={(stagger + idx * 0.1) % 1}
+              />
+            ))}
+          </group>
+        );
+      })}
+    </>
+  );
+}
+
 // ── Orbit Ring ─────────────────────────────────────────────────────────────
 
 function OrbitRing({ radius, y = 0, color = '#334155', opacity = 0.35 }: {
