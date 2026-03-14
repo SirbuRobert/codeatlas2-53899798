@@ -278,10 +278,11 @@ function OrbitRing({ radius, y = 0, color = '#334155', opacity = 0.35 }: {
 // ── Sun Node ───────────────────────────────────────────────────────────────
 
 function SunBody({
-  body, isSelected, isDimmed, isTourFocus, isSearchMatch, onClick,
+  body, isSelected, isDimmed, isTourFocus, isSearchMatch, onClick, positionsRef,
 }: {
   body: SolarBody; isSelected: boolean; isDimmed: boolean;
   isTourFocus: boolean; isSearchMatch: boolean; onClick: () => void;
+  positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const [hovered, setHovered] = useState(false);
@@ -289,6 +290,8 @@ function SunBody({
 
   useFrame((_, delta) => {
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.3;
+    // Write sun position (always 0,0,0)
+    positionsRef.current.set(body.node.id, new THREE.Vector3(0, 0, 0));
   });
 
   const opacity = isDimmed ? 0.12 : 1;
