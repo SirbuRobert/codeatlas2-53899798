@@ -1,120 +1,136 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe } from 'lucide-react';
+import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle } from 'lucide-react';
 import { exampleRepos } from '@/data/mockGraph';
 import type { AnalysisPhase } from '@/types/graph';
 
 interface LandingPageProps {
   onAnalyze: (url: string) => void;
+  isAnalyzing: boolean;
+  analysisError: string | null;
+  onAnimationComplete: () => void;
 }
 
 const ANALYSIS_PHASES: AnalysisPhase[] = [
-  { id: 'clone', label: 'Cloning repository', status: 'pending' },
-  { id: 'parse', label: 'Running Tree-sitter AST parser', status: 'pending' },
+  { id: 'clone', label: 'Cloning repository via GitHub API', status: 'pending' },
+  { id: 'parse', label: 'Running Tree-sitter AST parser on file tree', status: 'pending' },
   { id: 'dag', label: 'Building Directed Acyclic Graph', status: 'pending' },
-  { id: 'semantic', label: 'Semantic enrichment via AI', status: 'pending' },
+  { id: 'semantic', label: 'AI Semantic enrichment (Gemini Flash)', status: 'pending' },
   { id: 'layout', label: 'Computing ELK hierarchical layout', status: 'pending' },
   { id: 'render', label: 'Initializing WebGL viewport', status: 'pending' },
 ];
 
-const PHASE_DURATIONS = [800, 1200, 900, 1800, 600, 500];
+// Phase durations in ms — total ~7.5s, enough for the real API call
+const PHASE_DURATIONS = [900, 1400, 1000, 2400, 800, 700];
+const TOTAL_ANIM_MS = PHASE_DURATIONS.reduce((a, b) => a + b, 0);
 
-const NODE_TYPE_COLORS: Record<string, string> = {
-  file: 'text-cyan',
-  class: 'text-violet',
-  function: 'text-warning',
-  module: 'text-node-module',
-  service: 'text-success',
-  database: 'text-alert',
-};
-
-export default function LandingPage({ onAnalyze }: LandingPageProps) {
+export default function LandingPage({
+  onAnalyze,
+  isAnalyzing,
+  analysisError,
+  onAnimationComplete,
+}: LandingPageProps) {
   const [inputUrl, setInputUrl] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [phases, setPhases] = useState<AnalysisPhase[]>(ANALYSIS_PHASES);
-  const [currentPhaseIdx, setCurrentPhaseIdx] = useState(0);
   const [glitchActive, setGlitchActive] = useState(false);
+  const [analysisUrl, setAnalysisUrl] = useState('');
+  const animFinishedRef = useRef(false);
 
-  // Glitch effect on title
+  // Glitch title effect
   useEffect(() => {
-    const interval = setInterval(() => {
+    const t = setInterval(() => {
       setGlitchActive(true);
       setTimeout(() => setGlitchActive(false), 150);
-    }, 4000);
-    return () => clearInterval(interval);
+    }, 5000);
+    return () => clearInterval(t);
   }, []);
 
-  const handleSubmit = async (url: string = inputUrl) => {
-    if (!url.trim()) return;
-    setIsAnalyzing(true);
-    setCurrentPhaseIdx(0);
-    setPhases(ANALYSIS_PHASES.map(p => ({ ...p, status: 'pending' })));
+  // Run cosmetic animation when isAnalyzing flips to true
+  useEffect(() => {
+    if (!isAnalyzing) return;
+    animFinishedRef.current = false;
+    setPhases(ANALYSIS_PHASES.map((p) => ({ ...p, status: 'pending' })));
 
-    for (let i = 0; i < ANALYSIS_PHASES.length; i++) {
-      setCurrentPhaseIdx(i);
-      setPhases(prev => prev.map((p, idx) =>
-        idx === i ? { ...p, status: 'running' } : p
-      ));
-      await new Promise(r => setTimeout(r, PHASE_DURATIONS[i]));
-      setPhases(prev => prev.map((p, idx) =>
-        idx === i ? { ...p, status: 'done', duration: PHASE_DURATIONS[i] } : p
-      ));
-    }
+    let cancelled = false;
+    (async () => {
+      for (let i = 0; i < ANALYSIS_PHASES.length; i++) {
+        if (cancelled) return;
+        setPhases((prev) =>
+          prev.map((p, idx) => (idx === i ? { ...p, status: 'running' } : p)),
+        );
+        await new Promise((r) => setTimeout(r, PHASE_DURATIONS[i]));
+        if (cancelled) return;
+        setPhases((prev) =>
+          prev.map((p, idx) =>
+            idx === i ? { ...p, status: 'done', duration: PHASE_DURATIONS[i] } : p,
+          ),
+        );
+      }
+      // Animation finished — notify parent
+      animFinishedRef.current = true;
+      onAnimationComplete();
+    })();
 
-    await new Promise(r => setTimeout(r, 400));
-    onAnalyze(url.trim());
+    return () => {
+      cancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnalyzing]);
+
+  const handleSubmit = (url: string = inputUrl) => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setAnalysisUrl(trimmed);
+    onAnalyze(trimmed);
   };
 
   const statsData = [
     { value: '40+', label: 'Languages parsed' },
     { value: '50k', label: 'Nodes @ 60fps' },
-    { value: '<3s', label: 'Analysis time' },
+    { value: '<10s', label: 'Analysis time' },
     { value: '100%', label: 'Deterministic' },
   ];
 
   const featureItems = [
     { icon: '🔴', title: 'Blast Radius', desc: 'Instantly see what breaks if you change this file' },
     { icon: '🗺️', title: 'Spatial Memory', desc: 'Deterministic layout — nodes stay where you learned them' },
-    { icon: '🧠', title: 'AI Summaries', desc: 'Every node explains itself in plain English' },
+    { icon: '🧠', title: 'AI Summaries', desc: 'Every node explains itself in plain English via Gemini' },
     { icon: '📐', title: 'C4 Model Auto-gen', desc: 'Context → Container → Component — one toggle' },
     { icon: '🔐', title: 'Security Topology', desc: 'Auth chains, permission graphs, vulnerability paths' },
     { icon: '🎯', title: 'Guided Tours', desc: 'Automated onboarding for new team members' },
   ];
 
+  const progressPct = Math.round(
+    (phases.filter((p) => p.status === 'done').length / phases.length) * 100,
+  );
+
   return (
     <div className="relative min-h-screen bg-background overflow-hidden flex flex-col">
-      {/* ── Ambient Background Grid ── */}
+      {/* Grid bg */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: `
-            linear-gradient(hsl(var(--cyan)) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--cyan)) 1px, transparent 1px)
-          `,
+          backgroundImage: `linear-gradient(hsl(var(--cyan)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--cyan)) 1px, transparent 1px)`,
           backgroundSize: '60px 60px',
         }}
       />
-
-      {/* ── Radial glow from top ── */}
+      {/* Top glow */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] opacity-[0.06] pointer-events-none"
         style={{ background: 'radial-gradient(ellipse, hsl(var(--cyan)) 0%, transparent 70%)' }}
       />
-
-      {/* ── Floating corner dots ── */}
-      <div className="absolute top-6 right-6 flex items-center gap-2">
+      {/* Version chip */}
+      <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
         <span className="font-mono text-[10px] text-foreground-dim tracking-[0.2em] uppercase">AXON v2.1.0</span>
-        <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-glow" />
+        <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
       </div>
 
-      {/* ── Main Content ── */}
+      {/* Main */}
       <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6 py-20">
-
-        {/* Logo / Brand */}
+        {/* Brand */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
           className="flex items-center gap-3 mb-8"
         >
           <div className="relative w-10 h-10">
@@ -133,7 +149,7 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          transition={{ delay: 0.1 }}
           className="text-center mb-4"
         >
           <h1
@@ -153,20 +169,19 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
           </p>
         </motion.div>
 
-        {/* Subline */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
           className="text-foreground-dim text-sm text-center max-w-md mb-10 leading-relaxed"
         >
-          AST parsing → Knowledge Graph → AI Semantic Layer → Interactive 60fps WebGL map.
+          GitHub API → Tree-sitter AST → Knowledge Graph → AI Semantic Layer → Interactive 60fps WebGL map.
           No config. No setup. Just drop a URL.
         </motion.p>
 
-        {/* ── Repo Input ── */}
+        {/* Input / Analysis panel */}
         <AnimatePresence mode="wait">
-          {!isAnalyzing ? (
+          {!isAnalyzing && !analysisError ? (
             <motion.div
               key="input"
               initial={{ opacity: 0, y: 20 }}
@@ -175,7 +190,6 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
               transition={{ delay: 0.4 }}
               className="w-full max-w-2xl"
             >
-              {/* Input bar */}
               <div className="relative group mb-4">
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-cyan/30 via-violet/20 to-cyan/30 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
                 <div className="relative flex items-center gap-3 bg-surface-1 border border-border rounded-2xl px-5 py-4 shadow-[var(--shadow-panel)]">
@@ -183,9 +197,9 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
                   <input
                     type="text"
                     value={inputUrl}
-                    onChange={e => setInputUrl(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                    placeholder="github.com/org/repository"
+                    onChange={(e) => setInputUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                    placeholder="github.com/org/repository  or  https://github.com/org/repo"
                     className="flex-1 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
                     autoFocus
                   />
@@ -193,8 +207,7 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
                     onClick={() => handleSubmit()}
                     disabled={!inputUrl.trim()}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan text-primary-foreground font-mono text-xs font-semibold tracking-wider
-                               hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed
-                               transition-all duration-150 active:scale-95"
+                               hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 active:scale-95"
                   >
                     <Zap className="w-3.5 h-3.5" />
                     ANALYZE
@@ -202,16 +215,13 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
                 </div>
               </div>
 
-              {/* Example repos */}
               <div className="flex items-center gap-2 flex-wrap justify-center">
                 <span className="font-mono text-[11px] text-foreground-dim mr-1">TRY:</span>
-                {exampleRepos.map(repo => (
+                {exampleRepos.map((repo) => (
                   <button
                     key={repo.url}
                     onClick={() => handleSubmit(repo.url)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border
-                               font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright
-                               hover:bg-surface-3 transition-all duration-150 group"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright hover:bg-surface-3 transition-all duration-150 group"
                   >
                     {repo.private ? (
                       <Lock className="w-2.5 h-2.5 text-warning" />
@@ -230,8 +240,36 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
                 ))}
               </div>
             </motion.div>
+          ) : analysisError ? (
+            /* Error state */
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-lg"
+            >
+              <div className="bg-surface-1 border border-alert/30 rounded-2xl p-6 shadow-[var(--shadow-panel)]">
+                <div className="flex items-start gap-3 mb-4">
+                  <AlertCircle className="w-5 h-5 text-alert flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-mono text-sm font-bold text-alert mb-1">ANALYSIS FAILED</p>
+                    <p className="font-mono text-[11px] text-foreground-muted leading-relaxed">{analysisError}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setInputUrl(analysisUrl);
+                    // Parent will reset state on next render cycle
+                    window.location.reload();
+                  }}
+                  className="w-full py-2 rounded-xl bg-surface-2 border border-border font-mono text-xs text-foreground-muted hover:text-foreground transition-all"
+                >
+                  TRY AGAIN
+                </button>
+              </div>
+            </motion.div>
           ) : (
-            /* ── Analysis Pipeline Progress ── */
+            /* Analysis progress */
             <motion.div
               key="analysis"
               initial={{ opacity: 0, scale: 0.97 }}
@@ -239,16 +277,13 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
               className="w-full max-w-lg"
             >
               <div className="bg-surface-1 border border-border rounded-2xl p-6 shadow-[var(--shadow-panel)]">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-5">
                   <div>
                     <p className="font-mono text-xs text-foreground-dim mb-0.5">ANALYZING</p>
-                    <p className="font-mono text-sm text-cyan truncate max-w-[280px]">
-                      {inputUrl}
-                    </p>
+                    <p className="font-mono text-sm text-cyan truncate max-w-[280px]">{analysisUrl}</p>
                   </div>
                   <div className="flex gap-1">
-                    {[0, 1, 2].map(i => (
+                    {[0, 1, 2].map((i) => (
                       <div
                         key={i}
                         className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse"
@@ -263,14 +298,11 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
                   <motion.div
                     className="h-full bg-gradient-to-r from-cyan to-violet"
                     initial={{ width: '0%' }}
-                    animate={{
-                      width: `${Math.round((phases.filter(p => p.status === 'done').length / phases.length) * 100)}%`,
-                    }}
+                    animate={{ width: `${progressPct}%` }}
                     transition={{ duration: 0.4 }}
                   />
                 </div>
 
-                {/* Phase list */}
                 <div className="space-y-2.5">
                   {phases.map((phase, idx) => (
                     <motion.div
@@ -282,37 +314,20 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
                     >
                       <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
                         {phase.status === 'done' && (
-                          <motion.svg
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="w-3.5 h-3.5 text-success"
-                            viewBox="0 0 12 12" fill="none"
-                          >
+                          <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-3.5 h-3.5 text-success" viewBox="0 0 12 12" fill="none">
                             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </motion.svg>
                         )}
-                        {phase.status === 'running' && (
-                          <div className="w-2 h-2 rounded-full bg-cyan animate-pulse" />
-                        )}
-                        {phase.status === 'pending' && (
-                          <div className="w-2 h-2 rounded-full bg-surface-3 border border-border" />
-                        )}
+                        {phase.status === 'running' && <div className="w-2 h-2 rounded-full bg-cyan animate-pulse" />}
+                        {phase.status === 'pending' && <div className="w-2 h-2 rounded-full bg-surface-3 border border-border" />}
                       </div>
-                      <span
-                        className={`font-mono text-xs transition-colors duration-200 ${
-                          phase.status === 'done'
-                            ? 'text-foreground-dim'
-                            : phase.status === 'running'
-                            ? 'text-foreground'
-                            : 'text-foreground-dim opacity-40'
-                        }`}
-                      >
+                      <span className={`font-mono text-xs transition-colors duration-200 ${
+                        phase.status === 'done' ? 'text-foreground-dim' : phase.status === 'running' ? 'text-foreground' : 'text-foreground-dim opacity-40'
+                      }`}>
                         {phase.label}
                       </span>
                       {phase.status === 'done' && phase.duration && (
-                        <span className="ml-auto font-mono text-[10px] text-foreground-dim">
-                          {phase.duration}ms
-                        </span>
+                        <span className="ml-auto font-mono text-[10px] text-foreground-dim">{phase.duration}ms</span>
                       )}
                       {phase.status === 'running' && (
                         <span className="ml-auto font-mono text-[10px] text-cyan terminal-cursor" />
@@ -320,13 +335,25 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
                     </motion.div>
                   ))}
                 </div>
+
+                {/* Awaiting AI */}
+                {progressPct === 100 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-4 flex items-center gap-2 px-3 py-2 bg-cyan/5 rounded-xl border border-cyan/15"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" />
+                    <span className="font-mono text-[10px] text-cyan">Awaiting AI analysis completion…</span>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ── Stats Bar ── */}
-        {!isAnalyzing && (
+        {/* Stats */}
+        {!isAnalyzing && !analysisError && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -336,16 +363,14 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
             {statsData.map((stat, i) => (
               <div key={i} className="text-center">
                 <div className="font-mono text-2xl font-bold text-cyan">{stat.value}</div>
-                <div className="font-mono text-[10px] text-foreground-dim tracking-wider uppercase mt-0.5">
-                  {stat.label}
-                </div>
+                <div className="font-mono text-[10px] text-foreground-dim tracking-wider uppercase mt-0.5">{stat.label}</div>
               </div>
             ))}
           </motion.div>
         )}
 
-        {/* ── Feature Grid ── */}
-        {!isAnalyzing && (
+        {/* Feature grid */}
+        {!isAnalyzing && !analysisError && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -355,8 +380,7 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
             {featureItems.map((f, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 p-4 rounded-xl bg-surface-1 border border-border
-                           hover:border-border-bright hover:bg-surface-2 transition-all duration-200 group cursor-default"
+                className="flex items-start gap-3 p-4 rounded-xl bg-surface-1 border border-border hover:border-border-bright hover:bg-surface-2 transition-all duration-200 cursor-default"
               >
                 <span className="text-xl leading-none mt-0.5">{f.icon}</span>
                 <div>
@@ -369,7 +393,6 @@ export default function LandingPage({ onAnalyze }: LandingPageProps) {
         )}
       </div>
 
-      {/* ── Footer ── */}
       <div className="relative z-10 text-center pb-6">
         <p className="font-mono text-[10px] text-foreground-dim tracking-[0.2em]">
           CHALLENGE BY QA DNA · VIBEHACK BUCHAREST · MARCH 14–15, 2026
