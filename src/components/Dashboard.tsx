@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -10,6 +11,7 @@ import SolarSystemView from '@/components/graph/SolarSystemView';
 import OnboardingTour from '@/components/OnboardingTour';
 import SearchBar from '@/components/SearchBar';
 import AISummaryPanel, { AISummaryBanner } from '@/components/AISummaryPanel';
+import BusinessInsightsPanel from '@/components/BusinessInsightsPanel';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 
@@ -22,6 +24,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
+  const navigate = useNavigate();
   const [selectedNode, setSelectedNode] = useState<AxonNode | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -34,6 +37,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [ghostMode, setGhostMode] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
 
   const securityAnalysis = useMemo(
     () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
@@ -225,6 +229,19 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">⌘F</kbd>
           </button>
 
+          {/* Business View */}
+          <button
+            onClick={() => setBusinessPanelOpen(o => !o)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-[10px] transition-all ${
+              businessPanelOpen
+                ? 'bg-surface-3 border-border-bright text-foreground'
+                : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground'
+            }`}
+          >
+            <TrendingUp className="w-3 h-3" />
+            Business View
+          </button>
+
           {/* Ghost City */}
           {orphanCount > 0 && (
             <button
@@ -256,6 +273,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             <Terminal className="w-3 h-3" />
             Commands
             <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">⌘K</kbd>
+          </button>
+
+          <button
+            onClick={() => navigate('/billing')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/25 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+          >
+            <CreditCard className="w-3 h-3" />
+            Plans
           </button>
 
           <button
@@ -330,9 +355,17 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
               node={selectedNode}
               onClose={() => setSelectedNode(null)}
               onBlastRadius={handleBlastRadius}
+              graph={graph}
             />
           )}
         </AnimatePresence>
+
+        {/* Business Insights Panel */}
+        <BusinessInsightsPanel
+          graph={graph}
+          isOpen={businessPanelOpen}
+          onClose={() => setBusinessPanelOpen(false)}
+        />
 
         {/* Onboarding tour */}
         <AnimatePresence>
