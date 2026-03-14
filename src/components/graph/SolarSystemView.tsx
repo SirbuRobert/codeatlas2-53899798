@@ -661,6 +661,7 @@ function Scene({
             isSearchMatch={searchHighlightIds.has(id)}
             onClick={() => onNodeSelect(b.node)}
             autoRotate={!userInteracting}
+            positionsRef={positionsRef}
           />
         );
       })}
