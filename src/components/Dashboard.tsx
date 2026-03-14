@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw, Orbit, ShieldAlert } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -48,7 +48,6 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     setSecurityOverlayActive(true);
     setBlastRadiusNodeId(null);
     setSelectedNode(null);
-    // Switch to topology so the overlay is visible
     setViewMode('topology');
   }, []);
 
@@ -148,7 +147,59 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             🔐 SECURITY SCAN ACTIVE — click to clear
           </motion.button>
         )}
-...
+
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setTourActive(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 border border-success/25 font-mono text-[10px] text-success hover:bg-success/15 transition-all"
+          >
+            <Route className="w-3 h-3" />
+            TOUR
+          </button>
+
+          <button
+            onClick={() => setCmdOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-muted hover:text-foreground hover:border-border-bright transition-all"
+          >
+            <Terminal className="w-3 h-3" />
+            Slash Commands
+            <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">
+              ⌘K
+            </kbd>
+          </button>
+
+          <button
+            onClick={onReset}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground transition-all"
+          >
+            <RefreshCw className="w-3 h-3" />
+            New Repo
+          </button>
+        </div>
+      </div>
+
+      {/* ── Stats HUD ── */}
+      <StatsHUD graph={{ ...graph, repoUrl }} />
+
+      {/* ── AI Summary banner ── */}
+      <div className="flex-shrink-0 px-4 py-2 bg-surface-1 border-b border-border">
+        <p className="font-mono text-[10px] text-foreground-dim leading-relaxed line-clamp-1">
+          <span className="text-cyan font-bold mr-2">AI SUMMARY</span>
+          {graph.summary}
+        </p>
+      </div>
+
+      {/* ── Main canvas ── */}
+      <div className="flex-1 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {viewMode === 'topology' ? (
+            <motion.div
+              key="topology"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0"
+            >
               <GraphCanvas
                 graph={graph}
                 selectedNodeId={selectedNode?.id ?? null}
