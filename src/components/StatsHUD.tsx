@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import type { CodebaseGraph } from '@/types/graph';
 import { AlertTriangle, CheckCircle, GitBranch, Zap, FileCode, TrendingUp } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StatsHUDProps {
   graph: CodebaseGraph;
@@ -16,6 +17,7 @@ export default function StatsHUD({ graph }: StatsHUDProps) {
       value: stats.totalFiles,
       color: '#00ffff',
       sub: `${(stats.totalLines / 1000).toFixed(1)}k lines`,
+      tooltip: 'Total codebase surface area. Larger codebases carry higher maintenance overhead and more potential entry points for bugs.',
     },
     {
       icon: TrendingUp,
@@ -23,6 +25,7 @@ export default function StatsHUD({ graph }: StatsHUDProps) {
       value: stats.avgComplexity.toFixed(1),
       color: stats.avgComplexity > 10 ? '#f59e0b' : '#22c55e',
       sub: 'cyclomatic',
+      tooltip: 'Average decision branches per function. Above 10 signals higher testing cost, slower onboarding, and elevated bug risk — directly increasing maintenance spend.',
     },
     {
       icon: AlertTriangle,
@@ -30,6 +33,7 @@ export default function StatsHUD({ graph }: StatsHUDProps) {
       value: stats.hotspots,
       color: '#ef4444',
       sub: 'critical risk',
+      tooltip: 'Files that are both complex AND frequently changed — the leading indicator of production bug density. Each hotspot multiplies regression risk.',
     },
     {
       icon: Zap,
@@ -37,6 +41,7 @@ export default function StatsHUD({ graph }: StatsHUDProps) {
       value: stats.orphans,
       color: '#6b7280',
       sub: 'dead code',
+      tooltip: 'Code that nothing calls. Dead code wastes developer attention, bloats build output, and increases cognitive load for anyone reading the codebase.',
     },
     {
       icon: GitBranch,
@@ -44,6 +49,7 @@ export default function StatsHUD({ graph }: StatsHUDProps) {
       value: stats.circularDeps,
       color: stats.circularDeps > 0 ? '#ef4444' : '#22c55e',
       sub: 'detected',
+      tooltip: 'Modules that depend on each other in a loop. Circular imports prevent tree-shaking, cause fragile build orders, and make safe refactoring nearly impossible.',
     },
     {
       icon: CheckCircle,
@@ -51,6 +57,7 @@ export default function StatsHUD({ graph }: StatsHUDProps) {
       value: `${stats.testCoverage}%`,
       color: stats.testCoverage >= 80 ? '#22c55e' : stats.testCoverage >= 60 ? '#eab308' : '#ef4444',
       sub: 'test coverage',
+      tooltip: 'Percentage of code exercised by automated tests. Below 60% significantly raises deployment risk — every release becomes a gamble.',
     },
   ];
 
@@ -77,15 +84,26 @@ export default function StatsHUD({ graph }: StatsHUDProps) {
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.label} className="flex items-center gap-1.5">
-              <Icon className="w-3 h-3" style={{ color: item.color }} />
-              <div>
-                <span className="font-mono text-[11px] font-bold" style={{ color: item.color }}>
-                  {item.value}
-                </span>
-                <span className="font-mono text-[9px] text-foreground-dim ml-1">{item.label}</span>
-              </div>
-            </div>
+            <Tooltip key={item.label}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5 cursor-help group">
+                  <Icon className="w-3 h-3 transition-transform group-hover:scale-110" style={{ color: item.color }} />
+                  <div>
+                    <span className="font-mono text-[11px] font-bold" style={{ color: item.color }}>
+                      {item.value}
+                    </span>
+                    <span className="font-mono text-[9px] text-foreground-dim ml-1">{item.label}</span>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                className="max-w-[240px] font-mono text-[10px] leading-relaxed"
+              >
+                <p className="font-bold mb-1" style={{ color: item.color }}>{item.label}</p>
+                <p className="text-foreground-muted">{item.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
           );
         })}
       </div>
