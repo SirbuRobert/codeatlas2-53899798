@@ -279,7 +279,6 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
                 boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
               }}
             >
-          >
             {/* Header */}
             <div className="flex items-center gap-3 px-5 py-4 border-b border-border flex-shrink-0">
               <div
