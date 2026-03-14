@@ -91,6 +91,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             [
               ['topology', Map, 'Topology'],
               ['treemap', LayoutGrid, 'Treemap'],
+              ['solar', Orbit, 'Solar'],
             ] as const
           ).map(([mode, Icon, label]) => (
             <button
