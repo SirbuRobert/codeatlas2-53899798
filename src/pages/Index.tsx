@@ -28,7 +28,9 @@ export default function Index() {
       animationDoneRef.current = false;
       graphRef.current = null;
 
-      const result = await analyze(url);
+      // Automatically include GitHub PAT if available
+      const token = localStorage.getItem('axon_gh_token') ?? undefined;
+      const result = await analyze(url, token);
       graphRef.current = result;
 
       if (result) {
