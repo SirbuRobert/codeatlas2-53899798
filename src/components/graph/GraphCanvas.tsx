@@ -27,6 +27,9 @@ interface GraphCanvasProps {
   blastRadiusNodeId: string | null;
   onNodeSelect: (node: AxonNode | null) => void;
   securityOverlay?: SecurityAnalysis | null;
+  searchHighlightIds?: Set<string>;
+  ghostMode?: boolean;
+  tourFocusNodeId?: string | null;
 }
 
 const RELATION_COLORS: Record<string, string> = {
@@ -65,16 +68,17 @@ export default function GraphCanvas({
   blastRadiusNodeId,
   onNodeSelect,
   securityOverlay,
+  searchHighlightIds = new Set(),
+  ghostMode = false,
+  tourFocusNodeId = null,
 }: GraphCanvasProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
-  // Compute blast radius
   const blastRadius = useMemo(() => {
     if (!blastRadiusNodeId) return null;
     return calculateBlastRadius(blastRadiusNodeId, graph.edges, { depth: 4 });
   }, [blastRadiusNodeId, graph.edges]);
 
-  // Hover-based connected set
   const hoveredConnected = useMemo(() => {
     if (!hoveredNodeId) return null;
     const connected = new Set<string>();
@@ -85,16 +89,18 @@ export default function GraphCanvas({
     return connected;
   }, [hoveredNodeId, graph.edges]);
 
-  // Build React Flow nodes
   const rfNodes: Node[] = useMemo(() => {
     return graph.nodes.map(node => {
-      // ── Security overlay dimming ──
       let isDimmed = false;
-      if (securityOverlay) {
+      if (ghostMode) {
+        isDimmed = !node.metadata.isOrphan;
+      } else if (securityOverlay) {
         isDimmed = !securityOverlay.securityNodeIds.has(node.id) &&
                    !securityOverlay.authChainIds.has(node.id) &&
                    !securityOverlay.exposedApiIds.has(node.id) &&
                    !securityOverlay.unprotectedDbIds.has(node.id);
+      } else if (searchHighlightIds.size > 0) {
+        isDimmed = !searchHighlightIds.has(node.id);
       } else if (hoveredNodeId) {
         isDimmed = hoveredNodeId !== node.id && !hoveredConnected?.has(node.id);
       } else if (blastRadius) {
@@ -112,17 +118,18 @@ export default function GraphCanvas({
           isDimmed,
           isBlastSource: !securityOverlay && blastRadiusNodeId === node.id,
           isBlastImpacted: !securityOverlay && (blastRadius ? blastRadius.all.has(node.id) : false),
-          // Security states
           isSecurityNode: securityOverlay ? securityOverlay.securityNodeIds.has(node.id) : false,
           isAuthChain: securityOverlay ? securityOverlay.authChainIds.has(node.id) : false,
           isExposed: securityOverlay
             ? securityOverlay.exposedApiIds.has(node.id) || securityOverlay.unprotectedDbIds.has(node.id)
             : false,
+          isSearchMatch: searchHighlightIds.has(node.id),
+          isTourFocus: tourFocusNodeId === node.id,
         },
         draggable: true,
       };
     });
-  }, [graph.nodes, selectedNodeId, hoveredNodeId, hoveredConnected, blastRadius, blastRadiusNodeId, securityOverlay]);
+  }, [graph.nodes, selectedNodeId, hoveredNodeId, hoveredConnected, blastRadius, blastRadiusNodeId, securityOverlay, searchHighlightIds, ghostMode, tourFocusNodeId]);
 
   // Build React Flow edges
   const rfEdges: Edge[] = useMemo(() => {

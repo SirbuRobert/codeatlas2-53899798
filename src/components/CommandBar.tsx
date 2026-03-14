@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Shield, GitPullRequest, Route, HelpCircle } from 'lucide-react';
+import { X, Zap, Shield, GitPullRequest, Route, HelpCircle, Search, Ghost } from 'lucide-react';
 
 export interface SlashCommand {
   id: string;
@@ -47,10 +47,7 @@ export default function CommandBar({ isOpen, onClose, commands }: CommandBarProp
       e.preventDefault();
       setSelectedIdx(i => Math.max(i - 1, 0));
     } else if (e.key === 'Enter') {
-      if (filtered[selectedIdx]) {
-        filtered[selectedIdx].action();
-        onClose();
-      }
+      if (filtered[selectedIdx]) { filtered[selectedIdx].action(); onClose(); }
     } else if (e.key === 'Escape') {
       onClose();
     }
@@ -60,28 +57,22 @@ export default function CommandBar({ isOpen, onClose, commands }: CommandBarProp
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
           />
-
-          {/* Command Bar */}
           <motion.div
             initial={{ y: 20, opacity: 0, scale: 0.97 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 10, opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[540px] z-50"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[560px] z-50"
           >
             <div
               className="bg-surface-1/90 backdrop-blur-xl rounded-2xl overflow-hidden"
               style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 20px 60px rgba(0,0,0,0.6)' }}
             >
-              {/* Input Row */}
               <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
                 <span className="font-mono text-sm text-cyan font-bold select-none">AXON_</span>
                 <input
@@ -89,22 +80,17 @@ export default function CommandBar({ isOpen, onClose, commands }: CommandBarProp
                   value={query}
                   onChange={e => { setQuery(e.target.value); setSelectedIdx(0); }}
                   onKeyDown={handleKeyDown}
-                  placeholder="Type /blast-radius, /security-review, /tour..."
+                  placeholder="Type /blast-radius, /search, /ghost-city, /tour..."
                   className="flex-1 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
                 />
                 <div className="flex items-center gap-2">
-                  <kbd className="font-mono text-[9px] bg-surface-3 px-1.5 py-0.5 rounded text-foreground-dim border border-border">
-                    ESC
-                  </kbd>
-                  <button onClick={onClose}>
-                    <X className="w-4 h-4 text-foreground-dim hover:text-foreground transition-colors" />
-                  </button>
+                  <kbd className="font-mono text-[9px] bg-surface-3 px-1.5 py-0.5 rounded text-foreground-dim border border-border">ESC</kbd>
+                  <button onClick={onClose}><X className="w-4 h-4 text-foreground-dim hover:text-foreground transition-colors" /></button>
                 </div>
               </div>
 
-              {/* Command List */}
               {filtered.length > 0 && (
-                <div className="py-1.5 max-h-[280px] overflow-y-auto">
+                <div className="py-1.5 max-h-[320px] overflow-y-auto">
                   {filtered.map((cmd, idx) => {
                     const Icon = cmd.icon;
                     return (
@@ -126,9 +112,7 @@ export default function CommandBar({ isOpen, onClose, commands }: CommandBarProp
                           <p className="font-mono text-[10px] text-foreground-dim mt-0.5 truncate">{cmd.description}</p>
                         </div>
                         {idx === selectedIdx && (
-                          <kbd className="font-mono text-[9px] bg-surface-3 px-1.5 py-0.5 rounded text-foreground-dim border border-border flex-shrink-0">
-                            ↵
-                          </kbd>
+                          <kbd className="font-mono text-[9px] bg-surface-3 px-1.5 py-0.5 rounded text-foreground-dim border border-border flex-shrink-0">↵</kbd>
                         )}
                       </button>
                     );
@@ -136,7 +120,6 @@ export default function CommandBar({ isOpen, onClose, commands }: CommandBarProp
                 </div>
               )}
 
-              {/* Empty state */}
               {filtered.length === 0 && query && (
                 <div className="py-6 text-center">
                   <HelpCircle className="w-8 h-8 text-foreground-dim mx-auto mb-2" />
@@ -144,13 +127,10 @@ export default function CommandBar({ isOpen, onClose, commands }: CommandBarProp
                 </div>
               )}
 
-              {/* Footer hint */}
               <div className="flex items-center gap-4 px-4 py-2 border-t border-border">
                 <span className="font-mono text-[9px] text-foreground-dim">↑↓ navigate</span>
                 <span className="font-mono text-[9px] text-foreground-dim">↵ execute</span>
-                <span className="font-mono text-[9px] text-foreground-dim ml-auto">
-                  {filtered.length} commands
-                </span>
+                <span className="font-mono text-[9px] text-foreground-dim ml-auto">{filtered.length} commands</span>
               </div>
             </div>
           </motion.div>
@@ -167,38 +147,50 @@ export function buildSlashCommands(callbacks: {
   onSecurityReview: () => void;
   onTour: () => void;
   onReviewPR: () => void;
+  onSearch: () => void;
+  onGhostCity: () => void;
 }): SlashCommand[] {
   return [
     {
       id: 'blast-radius',
       name: 'blast-radius',
       description: 'Select a node to highlight all upstream dependents and impact radius',
-      icon: Zap,
-      color: '#ef4444',
+      icon: Zap, color: '#ef4444',
       action: callbacks.onBlastRadius,
     },
     {
       id: 'security-review',
       name: 'security-review',
       description: 'Analyze auth chains, permission boundaries, and exploitable paths',
-      icon: Shield,
-      color: '#a855f7',
+      icon: Shield, color: '#a855f7',
       action: callbacks.onSecurityReview,
+    },
+    {
+      id: 'search',
+      name: 'search',
+      description: 'Natural language search — "auth logic", "database queries", "entry point"',
+      icon: Search, color: '#00ffff',
+      action: callbacks.onSearch,
+    },
+    {
+      id: 'ghost-city',
+      name: 'ghost-city',
+      description: 'Highlight orphaned / dead code — files nothing calls',
+      icon: Ghost, color: '#64748b',
+      action: callbacks.onGhostCity,
     },
     {
       id: 'review-pr',
       name: 'review-pr',
       description: 'Compare current branch vs main — visualize diffs and regressions',
-      icon: GitPullRequest,
-      color: '#3b82f6',
+      icon: GitPullRequest, color: '#3b82f6',
       action: callbacks.onReviewPR,
     },
     {
       id: 'tour',
       name: 'tour',
       description: 'Guided camera tour through entry points, core logic, and data layer',
-      icon: Route,
-      color: '#22c55e',
+      icon: Route, color: '#22c55e',
       action: callbacks.onTour,
     },
   ];
