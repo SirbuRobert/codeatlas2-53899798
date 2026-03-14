@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 
@@ -16,54 +16,210 @@ interface OnboardingTourProps {
   onFocusNode: (nodeId: string) => void;
 }
 
+// ─── Security keyword list (mirrors securityAnalysis.ts) ───────────────────
+const SECURITY_KEYWORDS = [
+  'auth', 'jwt', 'token', 'session', 'permission', 'oauth', 'crypto',
+  'password', 'secret', 'middleware', 'guard', 'policy', 'rbac', 'acl',
+  'login', 'logout', 'signup', 'verify', 'validate', 'sanitize', 'encrypt',
+  'decrypt', 'hash', 'salt', 'csrf', 'cors', 'helmet',
+];
+
+function isSecurityNode(node: AxonNode): boolean {
+  const l = node.label.toLowerCase();
+  const p = (node.metadata.path ?? '').toLowerCase();
+  return (
+    SECURITY_KEYWORDS.some((kw) => l.includes(kw) || p.includes(kw)) ||
+    node.metadata.flags.includes('security-critical')
+  );
+}
+
+// ─── Description builder ────────────────────────────────────────────────────
+function buildDescription(
+  node: AxonNode,
+  role: 'entry' | 'security' | 'hub' | 'complex' | 'risky' | 'database',
+  graph: CodebaseGraph,
+): string {
+  const { metadata } = node;
+  const parts: string[] = [];
+
+  // Lead with semantic summary if available
+  if (metadata.semanticSummary) {
+    parts.push(metadata.semanticSummary);
+  }
+
+  // Role-specific insight
+  switch (role) {
+    case 'entry':
+      parts.push(
+        `\`${node.label}\` is the application entry point — every request starts here. ` +
+        `It carries ${metadata.dependencies} direct dependencies and has been modified ${metadata.churn} times recently.`,
+      );
+      break;
+    case 'security':
+      parts.push(
+        `\`${node.label}\` is a security chokepoint — ${metadata.dependents} module${metadata.dependents !== 1 ? 's' : ''} depend on it. ` +
+        `A bug here could compromise the entire auth layer.`,
+      );
+      if (metadata.coverage < 70) {
+        parts.push(`⚠️ Only ${metadata.coverage}% test coverage — security regressions may go undetected.`);
+      }
+      break;
+    case 'hub':
+      parts.push(
+        `\`${node.label}\` is the most-imported module in the codebase — ${metadata.dependents} node${metadata.dependents !== 1 ? 's' : ''} depend on it. ` +
+        `Any breaking change here has the widest blast radius.`,
+      );
+      break;
+    case 'complex':
+      parts.push(
+        `\`${node.label}\` has the highest cyclomatic complexity in the repo (score: ${metadata.complexity}). ` +
+        `High complexity means more code paths and more chances for logic bugs.`,
+      );
+      if (metadata.coverage < 60) {
+        parts.push(`It has only ${metadata.coverage}% test coverage, making regressions hard to catch.`);
+      }
+      break;
+    case 'risky':
+      parts.push(
+        `\`${node.label}\` is rated **${metadata.riskLevel}** risk — ${metadata.coverage}% test coverage ` +
+        `with a churn score of ${metadata.churn}. High churn + low coverage = highest regression probability.`,
+      );
+      if (metadata.flags.length > 0) {
+        parts.push(`Active flags: ${metadata.flags.map((f) => `\`${f}\``).join(', ')}.`);
+      }
+      break;
+    case 'database':
+      {
+        const queryEdges = graph.edges.filter(
+          (e) => e.target === node.id && e.relation === 'queries',
+        ).length;
+        parts.push(
+          `\`${node.label}\` is the data layer — ${queryEdges > 0 ? `queried by ${queryEdges} node${queryEdges !== 1 ? 's' : ''}` : `${metadata.dependents} dependent${metadata.dependents !== 1 ? 's' : ''}`}. ` +
+          `It represents the persistence boundary of the application.`,
+        );
+      }
+      break;
+  }
+
+  // Append key metric callouts not yet mentioned
+  const extras: string[] = [];
+  if (role !== 'complex' && metadata.complexity >= 12) {
+    extras.push(`complexity ${metadata.complexity}`);
+  }
+  if (role !== 'risky' && metadata.riskLevel === 'critical') {
+    extras.push(`critical risk`);
+  }
+  if (extras.length > 0) {
+    parts.push(`Metrics: ${extras.join(', ')}.`);
+  }
+
+  return parts.join(' ');
+}
+
+// ─── Core tour builder ───────────────────────────────────────────────────────
+export function buildTourFromGraph(graph: CodebaseGraph): TourStep[] {
+  const used = new Set<string>();
+  const steps: TourStep[] = [];
+
+  function pick(node: AxonNode | undefined, role: 'entry' | 'security' | 'hub' | 'complex' | 'risky' | 'database') {
+    if (!node || used.has(node.id)) return;
+    used.add(node.id);
+
+    const ROLE_META: Record<typeof role, { emoji: string; title: string }> = {
+      entry:    { emoji: '🚀', title: 'Entry Point' },
+      security: { emoji: '🔐', title: 'Auth Chokepoint' },
+      hub:      { emoji: '🔗', title: 'Most-Imported Hub' },
+      complex:  { emoji: '⚠️', title: 'Complexity Hotspot' },
+      risky:    { emoji: '🔥', title: 'Highest Risk' },
+      database: { emoji: '🗄️', title: 'Data Layer' },
+    };
+
+    const { emoji, title } = ROLE_META[role];
+    const stepNum = steps.length + 1;
+
+    steps.push({
+      nodeId: node.id,
+      emoji,
+      title: `${stepNum}. ${title}`,
+      description: buildDescription(node, role, graph),
+    });
+  }
+
+  const nodes = graph.nodes;
+
+  // 1. Entry point
+  const entryNode =
+    nodes.find((n) => n.metadata.isEntryPoint) ??
+    [...nodes]
+      .filter((n) => n.type === 'service' || n.type === 'file')
+      .sort((a, b) => (b.metadata.churn + b.metadata.dependencies) - (a.metadata.churn + a.metadata.dependencies))[0];
+  pick(entryNode, 'entry');
+
+  // 2. Security / auth chokepoint
+  const securityNode = [...nodes]
+    .filter(isSecurityNode)
+    .sort((a, b) => b.metadata.dependents - a.metadata.dependents)[0];
+  pick(securityNode, 'security');
+
+  // 3. Most-imported hub (skip if same as entry/security)
+  const hubNode = [...nodes]
+    .filter((n) => !used.has(n.id))
+    .sort((a, b) => b.metadata.dependents - a.metadata.dependents)[0];
+  pick(hubNode, 'hub');
+
+  // 4. Highest complexity
+  const complexNode = [...nodes]
+    .filter((n) => !used.has(n.id))
+    .sort((a, b) => b.metadata.complexity - a.metadata.complexity)[0];
+  pick(complexNode, 'complex');
+
+  // 5. Highest risk: critical + lowest coverage, then high churn
+  const riskyNode = [...nodes]
+    .filter((n) => !used.has(n.id))
+    .sort((a, b) => {
+      const riskOrder = { critical: 0, high: 1, medium: 2, low: 3, none: 4 };
+      const riskDiff = riskOrder[a.metadata.riskLevel] - riskOrder[b.metadata.riskLevel];
+      if (riskDiff !== 0) return riskDiff;
+      return a.metadata.coverage - b.metadata.coverage; // lower coverage first
+    })[0];
+  pick(riskyNode, 'risky');
+
+  // 6. Database / data layer
+  const dbNode =
+    nodes.find((n) => n.type === 'database' && !used.has(n.id)) ??
+    [...nodes]
+      .filter((n) => !used.has(n.id) && graph.edges.some((e) => e.target === n.id && e.relation === 'queries'))
+      .sort((a, b) => b.metadata.dependents - a.metadata.dependents)[0];
+  pick(dbNode, 'database');
+
+  // Re-number titles after dedup
+  steps.forEach((s, i) => {
+    s.title = s.title.replace(/^\d+\./, `${i + 1}.`);
+  });
+
+  return steps;
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function OnboardingTour({ graph, onClose, onFocusNode }: OnboardingTourProps) {
   const [step, setStep] = useState(0);
 
-  const tourSteps: TourStep[] = [
-    {
-      nodeId: 'server',
-      title: '1. Entry Point',
-      emoji: '🚀',
-      description: `Start here. \`server.ts\` bootstraps the entire application — it registers all middleware, mounts route handlers, and starts the HTTP listener. This is where every request begins its life.`,
-    },
-    {
-      nodeId: 'app',
-      title: '2. App Configuration',
-      emoji: '⚙️',
-      description: '`app.ts` configures Express: CORS policy, JSON body parsing, global rate limiting, and error handling. Think of it as the settings panel for the entire server.',
-    },
-    {
-      nodeId: 'auth-middleware',
-      title: '3. The Auth Gate 🔑',
-      emoji: '🔐',
-      description: '`middleware/auth.ts` is the security chokepoint — it validates JWT tokens and is imported by ALL 8 protected route modules. ⚠️ This is a critical single point of failure — a bug here breaks authentication for the entire platform.',
-    },
-    {
-      nodeId: 'permissions',
-      title: '4. Access Control',
-      emoji: '🛡️',
-      description: '`permissions.ts` handles RBAC, feature flags, and plan-based feature gating. It\'s imported by 22 modules. Any refactor here requires regression testing across the entire codebase.',
-    },
-    {
-      nodeId: 'billing-service',
-      title: '5. Billing ⚠️',
-      emoji: '💳',
-      description: 'This is where the money flows. `BillingService` orchestrates Stripe subscriptions, webhook processing, and invoice generation. CRITICAL: 45% test coverage and high churn — highest risk area in the codebase.',
-    },
-    {
-      nodeId: 'db-client',
-      title: '6. Database Foundation',
-      emoji: '🗄️',
-      description: '`lib/database.ts` is the singleton Prisma client. It\'s imported by 10 services and acts as the bridge to PostgreSQL. The schema in `prisma/schema.prisma` defines 12 data models including User, Organization, and Subscription.',
-    },
-  ];
+  const tourSteps = useMemo(() => buildTourFromGraph(graph), [graph]);
 
-  const current = tourSteps[step];
-  const node = graph.nodes.find(n => n.id === current.nodeId);
+  // Guard: if somehow zero steps, close immediately
+  if (tourSteps.length === 0) {
+    onClose();
+    return null;
+  }
 
-  useEffect(() => {
-    onFocusNode(current.nodeId);
-  }, [step, current.nodeId, onFocusNode]);
+  const current = tourSteps[Math.min(step, tourSteps.length - 1)];
+  const node = graph.nodes.find((n) => n.id === current.nodeId);
+
+  // Focus node on step change
+  const handleStep = (next: number) => {
+    setStep(next);
+    onFocusNode(tourSteps[next].nodeId);
+  };
 
   const progress = ((step + 1) / tourSteps.length) * 100;
 
@@ -131,7 +287,7 @@ export default function OnboardingTour({ graph, onClose, onFocusNode }: Onboardi
           {/* Navigation */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setStep(s => Math.max(0, s - 1))}
+              onClick={() => handleStep(Math.max(0, step - 1))}
               disabled={step === 0}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border
                          font-mono text-[10px] text-foreground-muted disabled:opacity-30
@@ -146,7 +302,7 @@ export default function OnboardingTour({ graph, onClose, onFocusNode }: Onboardi
               {tourSteps.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setStep(i)}
+                  onClick={() => handleStep(i)}
                   className={`h-1.5 rounded-full transition-all duration-200 ${
                     i === step ? 'w-6 bg-success' : 'w-1.5 bg-surface-3 hover:bg-surface-3'
                   }`}
@@ -156,7 +312,7 @@ export default function OnboardingTour({ graph, onClose, onFocusNode }: Onboardi
 
             {step < tourSteps.length - 1 ? (
               <button
-                onClick={() => setStep(s => s + 1)}
+                onClick={() => handleStep(step + 1)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-success/10 border border-success/30
                            font-mono text-[10px] text-success hover:bg-success/15 transition-all"
               >
