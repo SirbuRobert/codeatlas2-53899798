@@ -164,7 +164,7 @@ const AxonGraphNode = memo(({ data }: NodeProps) => {
         <div className="px-3 py-2.5">
           {/* Type + label */}
           <div className="flex items-center gap-1.5 mb-1.5">
-            <Icon className="w-3 h-3 flex-shrink-0" style={{ color: config.color }} />
+            <span className="w-3 h-3 flex-shrink-0" style={{ color: config.color, display: 'flex' }}><Icon className="w-3 h-3" /></span>
             <span
               className="font-mono text-[11px] font-semibold leading-none truncate"
               style={{ color: '#e2e8f0' }}
