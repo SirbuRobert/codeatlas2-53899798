@@ -1,15 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, RotateCcw, Route, RefreshCw, Orbit } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
 import StatsHUD from '@/components/StatsHUD';
 import TreemapView from '@/components/TreemapView';
+import SolarSystemView from '@/components/graph/SolarSystemView';
 import OnboardingTour from '@/components/OnboardingTour';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 
-type ViewMode = 'topology' | 'treemap';
+type ViewMode = 'topology' | 'treemap' | 'solar';
 
 interface DashboardProps {
   graph: CodebaseGraph;
@@ -90,6 +91,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             [
               ['topology', Map, 'Topology'],
               ['treemap', LayoutGrid, 'Treemap'],
+              ['solar', Orbit, 'Solar'],
             ] as const
           ).map(([mode, Icon, label]) => (
             <button
@@ -178,7 +180,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
                 onNodeSelect={handleNodeSelect}
               />
             </motion.div>
-          ) : (
+          ) : viewMode === 'treemap' ? (
             <motion.div
               key="treemap"
               initial={{ opacity: 0 }}
@@ -187,6 +189,20 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
               className="absolute inset-0"
             >
               <TreemapView graph={graph} onNodeSelect={handleNodeSelect} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="solar"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0"
+            >
+              <SolarSystemView
+                graph={graph}
+                selectedNodeId={selectedNode?.id ?? null}
+                onNodeSelect={handleNodeSelect}
+              />
             </motion.div>
           )}
         </AnimatePresence>
