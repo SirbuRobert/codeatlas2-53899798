@@ -40,6 +40,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
 
   const securityAnalysis = useMemo(
     () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
@@ -96,7 +97,24 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     setGhostMode(false);
     setSearchHighlightIds(new Set());
     setSearchQuery('');
+    setStatsHighlightLabel(null);
   }, []);
+
+  const handleStatClick = useCallback((ids: Set<string>, label: string) => {
+    // Toggle: clicking the same stat again clears
+    if (statsHighlightLabel === label && ids.size > 1) {
+      setSearchHighlightIds(new Set());
+      setSearchQuery('');
+      setStatsHighlightLabel(null);
+      return;
+    }
+    setSearchHighlightIds(ids);
+    setSearchQuery(label);
+    setStatsHighlightLabel(label);
+    setSecurityOverlayActive(false);
+    setBlastRadiusNodeId(null);
+    setGhostMode(false);
+  }, [statsHighlightLabel]);
 
   // CMD+K
   useEffect(() => {
@@ -204,20 +222,12 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         {searchHighlightIds.size > 0 && (
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            onClick={() => { setSearchHighlightIds(new Set()); setSearchQuery(''); }}
+            onClick={() => { setSearchHighlightIds(new Set()); setSearchQuery(''); setStatsHighlightLabel(null); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/30 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
           >
             <Search className="w-3 h-3" />
-            🔍 {searchHighlightIds.size} matches for "{searchQuery}" — click to clear
+            🔍 {searchHighlightIds.size} {statsHighlightLabel ? `${statsHighlightLabel} files` : `matches for "${searchQuery}"`} — click to clear
           </motion.button>
-        )}
-        {activeOverlayCount > 1 && (
-          <button
-            onClick={clearAll}
-            className="font-mono text-[9px] text-foreground-dim hover:text-alert px-2 py-1 rounded border border-border hover:border-alert/30 transition-all"
-          >
-            clear all
-          </button>
         )}
 
         <div className="ml-auto flex items-center gap-2">
@@ -304,7 +314,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       </div>
 
       {/* ── Stats HUD ── */}
-      <StatsHUD graph={{ ...graph, repoUrl }} />
+      <StatsHUD graph={{ ...graph, repoUrl }} onStatClick={handleStatClick} activeStatLabel={statsHighlightLabel ?? undefined} />
 
       {/* ── AI Summary banner ── */}
       <AISummaryBanner summary={graph.summary} onExpand={() => setSummaryOpen(true)} />
