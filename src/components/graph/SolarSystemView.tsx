@@ -626,6 +626,7 @@ function Scene({
           isTourFocus={tourFocusNodeId === sunBody.node.id}
           isSearchMatch={searchHighlightIds.has(sunBody.node.id)}
           onClick={() => onNodeSelect(sunBody.node)}
+          positionsRef={positionsRef}
         />
       )}
 
