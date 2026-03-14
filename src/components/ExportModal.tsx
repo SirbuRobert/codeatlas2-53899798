@@ -250,7 +250,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
 
   const repoLabel = graph.repoUrl.split('/').slice(-2).join('/') || graph.repoUrl;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -260,7 +260,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm"
           />
 
           {/* Modal */}
