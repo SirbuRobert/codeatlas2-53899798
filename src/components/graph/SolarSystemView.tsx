@@ -1,18 +1,20 @@
 // ═══════════════════════════════════════════════
-//  AXON Solar System View — 3D Knowledge Graph
+//  AXON 3D Force Graph — Real dependency web
+//  All nodes connected via spring physics,
+//  edges rendered as glowing lines.
 //  Full feature parity: blast radius, security,
-//  ghost city (orphans), NL search, tour focus.
+//  ghost city (orphans), search, tour focus.
 // ═══════════════════════════════════════════════
 
-import { useRef, useState, useMemo, useCallback } from 'react';
+import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Stars, OrbitControls, Html, Line } from '@react-three/drei';
 import * as THREE from 'three';
-import type { AxonNode, CodebaseGraph, NodeType } from '@/types/graph';
+import type { AxonNode, AxonEdge, CodebaseGraph, NodeType } from '@/types/graph';
 import { calculateBlastRadius } from '@/types/graph';
 import type { SecurityAnalysis } from '@/lib/securityAnalysis';
 
-// ── Color palette mirrors AxonGraphNode NODE_CONFIGS ──────────────────────
+// ── Color palette ─────────────────────────────────────────────────────────
 const NODE_COLORS: Record<NodeType, string> = {
   file:     '#00ffff',
   class:    '#a855f7',
@@ -23,6 +25,15 @@ const NODE_COLORS: Record<NodeType, string> = {
   api:      '#06b6d4',
 };
 
+const EDGE_COLORS: Record<string, string> = {
+  imports:  '#334155',
+  calls:    '#1e3a5f',
+  inherits: '#3b2a5f',
+  composes: '#1a3a2a',
+  queries:  '#3a1a3a',
+  exposes:  '#1a3a3a',
+};
+
 const RISK_EMISSIVE: Record<string, string> = {
   critical: '#ef4444',
   high:     '#f59e0b',
@@ -31,167 +42,108 @@ const RISK_EMISSIVE: Record<string, string> = {
   none:     '#334155',
 };
 
-// ── Layout ─────────────────────────────────────────────────────────────────
+// ── Force-directed layout ─────────────────────────────────────────────────
 
-interface SolarBody {
-  node: AxonNode;
-  role: 'sun' | 'planet' | 'moon' | 'asteroid';
-  orbitRadius: number;
-  orbitAngle: number;
-  orbitSpeed: number;
-  orbitParentId: string | null;
-  size: number;
-  color: string;
+interface NodeState {
+  id: string;
+  pos: THREE.Vector3;
+  vel: THREE.Vector3;
+  mass: number;
 }
 
-function buildSolarLayout(graph: CodebaseGraph): SolarBody[] {
-  const { nodes, edges } = graph;
-  if (nodes.length === 0) return [];
-
-  const gravityScore = (n: AxonNode) =>
-    n.metadata.dependents * 3 + n.metadata.dependencies * 1.5 + n.metadata.loc / 200;
-
-  const sorted = [...nodes].sort((a, b) => {
-    const diff = gravityScore(b) - gravityScore(a);
-    if (Math.abs(diff) < 1) {
-      const rank = (n: AxonNode) =>
-        n.type === 'service' ? 3 : n.type === 'module' ? 2 : n.metadata.isEntryPoint ? 1 : 0;
-      return rank(b) - rank(a);
-    }
-    return diff;
+function buildInitialLayout(nodes: AxonNode[]): NodeState[] {
+  return nodes.map((n, i) => {
+    // Fibonacci sphere distribution for nice initial spread
+    const phi = Math.acos(1 - 2 * (i + 0.5) / nodes.length);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+    const r = 12 + Math.random() * 6;
+    return {
+      id: n.id,
+      pos: new THREE.Vector3(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.cos(phi),
+        r * Math.sin(phi) * Math.sin(theta)
+      ),
+      vel: new THREE.Vector3(0, 0, 0),
+      mass: 1 + n.metadata.dependents * 0.1,
+    };
   });
-
-  const sun = sorted[0];
-  const sunId = sun.id;
-
-  const sunNeighbors = new Set<string>(
-    edges
-      .filter(e => e.source === sunId || e.target === sunId)
-      .map(e => (e.source === sunId ? e.target : e.source))
-  );
-
-  const adjMap = new Map<string, Set<string>>();
-  for (const n of nodes) adjMap.set(n.id, new Set());
-  for (const e of edges) {
-    adjMap.get(e.source)?.add(e.target);
-    adjMap.get(e.target)?.add(e.source);
-  }
-
-  const roleMap = new Map<string, 'sun' | 'planet' | 'moon' | 'asteroid'>();
-  roleMap.set(sunId, 'sun');
-
-  const planetCandidates = [...sunNeighbors]
-    .filter(id => id !== sunId)
-    .map(id => nodes.find(n => n.id === id)!)
-    .filter(Boolean)
-    .sort((a, b) => b.metadata.dependents - a.metadata.dependents);
-
-  const planets = planetCandidates.slice(0, 12);
-  const planetIds = new Set(planets.map(p => p.id));
-  planets.forEach(p => roleMap.set(p.id, 'planet'));
-
-  const moonParent = new Map<string, string>();
-  for (const n of nodes) {
-    if (roleMap.has(n.id)) continue;
-    const neighbors = adjMap.get(n.id) ?? new Set();
-    let parentPlanetId: string | null = null;
-    for (const nid of neighbors) {
-      if (planetIds.has(nid)) { parentPlanetId = nid; break; }
-    }
-    if (parentPlanetId) {
-      roleMap.set(n.id, 'moon');
-      moonParent.set(n.id, parentPlanetId);
-    } else {
-      roleMap.set(n.id, 'asteroid');
-    }
-  }
-
-  const maxDependents = Math.max(1, ...nodes.map(n => n.metadata.dependents));
-  function planetSize(n: AxonNode) {
-    return 0.3 + (n.metadata.dependents / maxDependents) * 0.9;
-  }
-
-  const bodies: SolarBody[] = [];
-
-  bodies.push({
-    node: sun, role: 'sun', orbitRadius: 0, orbitAngle: 0,
-    orbitSpeed: 0, orbitParentId: null, size: 1.5,
-    color: NODE_COLORS[sun.type] ?? '#22c55e',
-  });
-
-  const RING_RADII = [4, 7, 10];
-  const RING_CAPS = [4, 4, 4];
-  let ringIdx = 0, ringCount = 0;
-  for (let i = 0; i < planets.length; i++) {
-    if (ringCount >= RING_CAPS[ringIdx] && ringIdx < 2) { ringIdx++; ringCount = 0; }
-    const totalInRing = Math.min(RING_CAPS[ringIdx], planets.length - i + ringCount);
-    const angle = (ringCount / totalInRing) * Math.PI * 2;
-    const p = planets[i];
-    bodies.push({
-      node: p, role: 'planet',
-      orbitRadius: RING_RADII[ringIdx],
-      orbitAngle: angle,
-      orbitSpeed: 0.08 / RING_RADII[ringIdx],
-      orbitParentId: sunId,
-      size: planetSize(p),
-      color: NODE_COLORS[p.type] ?? '#3b82f6',
-    });
-    ringCount++;
-  }
-
-  const moonsByParent = new Map<string, AxonNode[]>();
-  for (const [id, parentId] of moonParent) {
-    const n = nodes.find(nn => nn.id === id)!;
-    if (!moonsByParent.has(parentId)) moonsByParent.set(parentId, []);
-    moonsByParent.get(parentId)!.push(n);
-  }
-  for (const [parentId, moons] of moonsByParent) {
-    const count = Math.min(moons.length, 5);
-    for (let i = 0; i < count; i++) {
-      const m = moons[i];
-      const angle = (i / count) * Math.PI * 2;
-      bodies.push({
-        node: m, role: 'moon',
-        orbitRadius: 1.4 + (i % 2) * 0.3,
-        orbitAngle: angle,
-        orbitSpeed: 0.4 + i * 0.05,
-        orbitParentId: parentId,
-        size: 0.18 + (m.metadata.dependencies / 10) * 0.12,
-        color: NODE_COLORS[m.type] ?? '#64748b',
-      });
-    }
-  }
-
-  const asteroids = nodes.filter(n => roleMap.get(n.id) === 'asteroid');
-  asteroids.forEach((a, i) => {
-    const angle = (i / Math.max(1, asteroids.length)) * Math.PI * 2;
-    const r = 13 + (i % 3) * 0.8;
-    bodies.push({
-      node: a, role: 'asteroid',
-      orbitRadius: r, orbitAngle: angle, orbitSpeed: 0.02,
-      orbitParentId: sunId, size: 0.12, color: '#475569',
-    });
-  });
-
-  return bodies;
 }
 
-// ── Dependency Wave Particles ──────────────────────────────────────────────
+// Run N ticks of force simulation on CPU, returns stable positions
+function runForceSimulation(
+  nodes: AxonNode[],
+  edges: AxonEdge[],
+  ticks = 120,
+): Map<string, THREE.Vector3> {
+  const states = buildInitialLayout(nodes);
+  const idxById = new Map(states.map((s, i) => [s.id, i]));
 
-const WAVE_COLOR: Record<string, string> = {
-  imports: '#f97316',
-  calls: '#f97316',
-  inherits: '#f97316',
-  composes: '#f97316',
-  queries: '#a855f7',
-  exposes: '#00ffff',
-};
+  const REPULSION = 80;
+  const SPRING_LEN = 4.5;
+  const SPRING_K = 0.04;
+  const DAMPING = 0.82;
+  const DT = 0.5;
+  const CENTER_K = 0.008;
+
+  const tmpForce = new THREE.Vector3();
+
+  for (let tick = 0; tick < ticks; tick++) {
+    // Reset forces
+    for (const s of states) {
+      s.vel.multiplyScalar(DAMPING);
+    }
+
+    // Repulsion between all pairs (Barnes-Hut approximation: just O(n²) for ≤300 nodes)
+    for (let i = 0; i < states.length; i++) {
+      for (let j = i + 1; j < states.length; j++) {
+        const a = states[i];
+        const b = states[j];
+        tmpForce.subVectors(a.pos, b.pos);
+        const dist = Math.max(tmpForce.length(), 0.5);
+        const force = REPULSION / (dist * dist);
+        tmpForce.normalize().multiplyScalar(force);
+        a.vel.addScaledVector(tmpForce, DT / a.mass);
+        b.vel.addScaledVector(tmpForce, -DT / b.mass);
+      }
+    }
+
+    // Spring attraction along edges
+    for (const edge of edges) {
+      const ai = idxById.get(edge.source);
+      const bi = idxById.get(edge.target);
+      if (ai == null || bi == null) continue;
+      const a = states[ai];
+      const b = states[bi];
+      tmpForce.subVectors(b.pos, a.pos);
+      const dist = Math.max(tmpForce.length(), 0.1);
+      const spring = (dist - SPRING_LEN) * SPRING_K * edge.strength;
+      tmpForce.normalize().multiplyScalar(spring);
+      a.vel.addScaledVector(tmpForce, DT / a.mass);
+      b.vel.addScaledVector(tmpForce, -DT / b.mass);
+    }
+
+    // Weak centering gravity
+    for (const s of states) {
+      s.vel.addScaledVector(s.pos, -CENTER_K * DT);
+    }
+
+    // Integrate
+    for (const s of states) {
+      s.pos.addScaledVector(s.vel, DT);
+    }
+  }
+
+  return new Map(states.map(s => [s.id, s.pos.clone()]));
+}
+
+// ── Live wave particles along edges ───────────────────────────────────────
 
 function WaveParticle({
-  from, to, color, stagger,
+  fromPos, toPos, color, stagger,
 }: {
-  from: React.MutableRefObject<THREE.Vector3>;
-  to: React.MutableRefObject<THREE.Vector3>;
+  fromPos: THREE.Vector3;
+  toPos: THREE.Vector3;
   color: string;
   stagger: number;
 }) {
@@ -199,268 +151,198 @@ function WaveParticle({
   const tRef = useRef(stagger);
 
   useFrame((_, delta) => {
-    tRef.current = (tRef.current + delta * 0.5) % 1;
+    tRef.current = (tRef.current + delta * 0.45) % 1;
     if (meshRef.current) {
-      meshRef.current.position.lerpVectors(from.current, to.current, tRef.current);
+      meshRef.current.position.lerpVectors(fromPos, toPos, tRef.current);
     }
   });
 
   return (
     <mesh ref={meshRef}>
-      <sphereGeometry args={[0.07, 8, 8]} />
-      <meshBasicMaterial color={color} transparent opacity={0.85} />
+      <sphereGeometry args={[0.06, 6, 6]} />
+      <meshBasicMaterial color={color} transparent opacity={0.9} />
     </mesh>
   );
 }
 
-function DependencyWaves({
-  selectedNodeId,
-  edges,
-  positionsRef,
+// ── Edge line ──────────────────────────────────────────────────────────────
+
+function EdgeLine({
+  from, to, color, opacity, highlighted, animated, selectedNodeId, edge,
 }: {
+  from: THREE.Vector3;
+  to: THREE.Vector3;
+  color: string;
+  opacity: number;
+  highlighted: boolean;
+  animated: boolean;
   selectedNodeId: string | null;
-  edges: import('@/types/graph').AxonEdge[];
-  positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
+  edge: AxonEdge;
 }) {
-  if (!selectedNodeId) return null;
-
-  const connected = edges
-    .filter(e => e.source === selectedNodeId || e.target === selectedNodeId)
-    .slice(0, 20);
-
-  return (
-    <>
-      {connected.map((edge, idx) => {
-        const fromId = edge.source;
-        const toId = edge.target;
-        const color = WAVE_COLOR[edge.relation] ?? '#00ffff';
-
-        // Create stable per-edge ref accessors
-        const fromRef = { current: positionsRef.current.get(fromId) ?? new THREE.Vector3() };
-        const toRef = { current: positionsRef.current.get(toId) ?? new THREE.Vector3() };
-
-        return (
-          <group key={edge.id + '-waves'}>
-            {[0, 0.33, 0.66].map((stagger, si) => (
-              <WaveParticle
-                key={`${edge.id}-${si}`}
-                from={fromRef as React.MutableRefObject<THREE.Vector3>}
-                to={toRef as React.MutableRefObject<THREE.Vector3>}
-                color={color}
-                stagger={(stagger + idx * 0.1) % 1}
-              />
-            ))}
-          </group>
-        );
-      })}
-    </>
+  const points = useMemo<[number, number, number][]>(
+    () => [[from.x, from.y, from.z], [to.x, to.y, to.z]],
+    [from, to]
   );
-}
 
-// ── Orbit Ring ─────────────────────────────────────────────────────────────
-
-function OrbitRing({ radius, y = 0, color = '#334155', opacity = 0.35 }: {
-  radius: number; y?: number; color?: string; opacity?: number;
-}) {
-  const points = useMemo(() => {
-    const pts: [number, number, number][] = [];
-    const segments = 128;
-    for (let i = 0; i <= segments; i++) {
-      const a = (i / segments) * Math.PI * 2;
-      pts.push([Math.cos(a) * radius, y, Math.sin(a) * radius]);
-    }
-    return pts;
-  }, [radius, y]);
-
-  return <Line points={points} color={color} lineWidth={0.5} transparent opacity={opacity} />;
-}
-
-// ── Sun Node ───────────────────────────────────────────────────────────────
-
-function SunBody({
-  body, isSelected, isDimmed, isTourFocus, isSearchMatch, onClick, positionsRef,
-}: {
-  body: SolarBody; isSelected: boolean; isDimmed: boolean;
-  isTourFocus: boolean; isSearchMatch: boolean; onClick: () => void;
-  positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
-}) {
-  const meshRef = useRef<THREE.Mesh>(null!);
-  const [hovered, setHovered] = useState(false);
-  const color = body.color;
-
-  useFrame((_, delta) => {
-    if (meshRef.current) meshRef.current.rotation.y += delta * 0.3;
-    // Write sun position (always 0,0,0)
-    positionsRef.current.set(body.node.id, new THREE.Vector3(0, 0, 0));
-  });
-
-  const opacity = isDimmed ? 0.12 : 1;
+  const lineColor = highlighted ? '#00ffff' : color;
+  const lineWidth = highlighted ? 1.5 : 0.5;
+  const lineOpacity = highlighted ? 0.9 : opacity;
 
   return (
-    <group position={[0, 0, 0]}>
-      {/* Tour focus flash ring */}
-      {isTourFocus && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 2.2, 0.06, 8, 64]} />
-          <meshBasicMaterial color="#00ffff" transparent opacity={0.8} />
-        </mesh>
-      )}
-      {/* Search match ring */}
-      {isSearchMatch && !isDimmed && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.8, 0.04, 8, 64]} />
-          <meshBasicMaterial color="#00ffff" transparent opacity={0.5} />
-        </mesh>
-      )}
-      <mesh>
-        <sphereGeometry args={[body.size * 1.6, 32, 32]} />
-        <meshBasicMaterial color={color} transparent opacity={0.06 * opacity} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[body.size * 1.3, 32, 32]} />
-        <meshBasicMaterial color={color} transparent opacity={0.1 * opacity} />
-      </mesh>
-      <mesh
-        ref={meshRef}
-        onClick={(e) => { e.stopPropagation(); onClick(); }}
-        onPointerEnter={() => setHovered(true)}
-        onPointerLeave={() => setHovered(false)}
-        scale={hovered || isSelected ? 1.15 : 1}
-      >
-        <sphereGeometry args={[body.size, 48, 48]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={isDimmed ? 0.1 : (hovered || isSelected ? 2.5 : 1.8)}
-          roughness={0.2} metalness={0.1}
-          transparent opacity={isDimmed ? 0.15 : 1}
-        />
-      </mesh>
-      <pointLight color={color} intensity={isDimmed ? 0.5 : 6} distance={20} decay={2} />
-      {!isDimmed && (
-        <Html center position={[0, body.size + 0.4, 0]} style={{ pointerEvents: 'none' }}>
-          <div style={{
-            fontFamily: 'monospace', fontSize: '10px', fontWeight: 'bold',
-            color, whiteSpace: 'nowrap', textShadow: `0 0 8px ${color}`,
-            opacity: hovered || isSelected ? 1 : 0.8, letterSpacing: '0.08em',
-          }}>
-            {body.node.metadata.isOrphan ? '👻' : '☀'} {body.node.label}
-            {body.node.metadata.isEntryPoint && <span style={{ color: '#00ffff', marginLeft: 4 }}>ENTRY</span>}
-          </div>
-        </Html>
+    <group>
+      <Line
+        points={points}
+        color={lineColor}
+        lineWidth={lineWidth}
+        transparent
+        opacity={lineOpacity}
+      />
+      {animated && (
+        <>
+          {[0, 0.4, 0.8].map((s, i) => (
+            <WaveParticle
+              key={i}
+              fromPos={from}
+              toPos={to}
+              color="#00ffff"
+              stagger={s}
+            />
+          ))}
+        </>
       )}
     </group>
   );
 }
 
-// ── Planet / Moon Body ─────────────────────────────────────────────────────
+// ── Node sphere ────────────────────────────────────────────────────────────
 
-function OrbitingBody({
-  body, parentPosition, isSelected, isDimmed, isOrphan, isSecurityNode, isExposed, isBlastSource, isBlastImpacted,
-  isTourFocus, isSearchMatch, onClick, autoRotate, positionsRef,
+function NodeSphere({
+  node,
+  position,
+  size,
+  color,
+  isSelected,
+  isDimmed,
+  isOrphan,
+  isSecurityNode,
+  isExposed,
+  isBlastSource,
+  isBlastImpacted,
+  isTourFocus,
+  isSearchMatch,
+  onClick,
+  positionsRef,
 }: {
-  body: SolarBody; parentPosition: THREE.Vector3; isSelected: boolean;
-  isDimmed: boolean; isOrphan: boolean; isSecurityNode: boolean; isExposed: boolean;
-  isBlastSource: boolean; isBlastImpacted: boolean; isTourFocus: boolean; isSearchMatch: boolean;
-  onClick: () => void; autoRotate: boolean;
+  node: AxonNode;
+  position: THREE.Vector3;
+  size: number;
+  color: string;
+  isSelected: boolean;
+  isDimmed: boolean;
+  isOrphan: boolean;
+  isSecurityNode: boolean;
+  isExposed: boolean;
+  isBlastSource: boolean;
+  isBlastImpacted: boolean;
+  isTourFocus: boolean;
+  isSearchMatch: boolean;
+  onClick: () => void;
   positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
 }) {
-  const groupRef = useRef<THREE.Group>(null!);
   const meshRef = useRef<THREE.Mesh>(null!);
   const [hovered, setHovered] = useState(false);
-  const angleRef = useRef(body.orbitAngle);
-  const isMoon = body.role === 'moon';
-  const isCritical = body.node.metadata.riskLevel === 'critical';
+  const isCritical = node.metadata.riskLevel === 'critical';
 
-  // Color overrides
-  const effectiveColor = isExposed ? '#ef4444' : isSecurityNode ? '#a855f7' : isOrphan ? '#475569' : body.color;
-  const riskColor = RISK_EMISSIVE[body.node.metadata.riskLevel] ?? '#334155';
+  const effectiveColor = isExposed
+    ? '#ef4444'
+    : isSecurityNode
+    ? '#a855f7'
+    : isOrphan
+    ? '#475569'
+    : color;
+
+  const riskColor = RISK_EMISSIVE[node.metadata.riskLevel] ?? '#334155';
+
+  // Register position once
+  useEffect(() => {
+    positionsRef.current.set(node.id, position.clone());
+  }, [node.id, position, positionsRef]);
 
   useFrame((_, delta) => {
-    if (!autoRotate && !isMoon) return;
-    angleRef.current += delta * body.orbitSpeed * (autoRotate ? 1 : 0.2);
-    if (groupRef.current) {
-      const px = parentPosition.x + Math.cos(angleRef.current) * body.orbitRadius;
-      const pz = parentPosition.z + Math.sin(angleRef.current) * body.orbitRadius;
-      groupRef.current.position.set(px, parentPosition.y, pz);
-      // Track live position for dependency waves
-      positionsRef.current.set(body.node.id, new THREE.Vector3(px, parentPosition.y, pz));
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.25;
     }
-    if (meshRef.current) meshRef.current.rotation.y += delta * 0.5;
   });
 
-  const initPos = useMemo(() => new THREE.Vector3(
-    parentPosition.x + Math.cos(body.orbitAngle) * body.orbitRadius,
-    parentPosition.y,
-    parentPosition.z + Math.sin(body.orbitAngle) * body.orbitRadius
-  ), [parentPosition, body.orbitAngle, body.orbitRadius]);
+  const scale = hovered || isSelected ? 1.3 : isSearchMatch ? 1.15 : 1;
+  const opacity = isDimmed ? 0.12 : 1;
 
-  const scale = hovered || isSelected ? 1.25 : 1;
+  const showLabel = hovered || isSelected || isTourFocus || isSearchMatch;
 
   return (
-    <group ref={groupRef} position={initPos}>
+    <group position={position}>
       {/* Tour focus ring */}
       {isTourFocus && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 2.0, 0.06, 8, 64]} />
+          <torusGeometry args={[size * 2.2, 0.07, 8, 64]} />
           <meshBasicMaterial color="#00ffff" transparent opacity={0.9} />
         </mesh>
       )}
       {/* Search match ring */}
       {isSearchMatch && !isDimmed && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.7, 0.04, 8, 64]} />
-          <meshBasicMaterial color="#00ffff" transparent opacity={0.55} />
+          <torusGeometry args={[size * 1.9, 0.05, 8, 64]} />
+          <meshBasicMaterial color="#00ffff" transparent opacity={0.6} />
         </mesh>
       )}
       {/* Critical risk ring */}
       {isCritical && !isOrphan && !isDimmed && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.5, 0.04, 8, 64]} />
+          <torusGeometry args={[size * 1.6, 0.04, 8, 64]} />
           <meshBasicMaterial color="#ef4444" transparent opacity={0.6} />
         </mesh>
       )}
-      {/* Blast source ring */}
+      {/* Blast source */}
       {isBlastSource && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.8, 0.05, 8, 64]} />
-          <meshBasicMaterial color="#ff4444" transparent opacity={0.8} />
+          <torusGeometry args={[size * 2.0, 0.06, 8, 64]} />
+          <meshBasicMaterial color="#ff4444" transparent opacity={0.85} />
         </mesh>
       )}
-      {/* Blast impacted ring */}
+      {/* Blast impacted */}
       {isBlastImpacted && !isBlastSource && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.6, 0.04, 8, 64]} />
-          <meshBasicMaterial color="#f59e0b" transparent opacity={0.6} />
+          <torusGeometry args={[size * 1.7, 0.05, 8, 64]} />
+          <meshBasicMaterial color="#f59e0b" transparent opacity={0.65} />
         </mesh>
       )}
-      {/* Security node ring */}
+      {/* Security */}
       {isSecurityNode && !isDimmed && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.6, 0.04, 8, 64]} />
-          <meshBasicMaterial color="#a855f7" transparent opacity={0.7} />
+          <torusGeometry args={[size * 1.7, 0.05, 8, 64]} />
+          <meshBasicMaterial color="#a855f7" transparent opacity={0.75} />
         </mesh>
       )}
-      {/* Exposed API ring */}
+      {/* Exposed API */}
       {isExposed && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.7, 0.05, 8, 64]} />
-          <meshBasicMaterial color="#ef4444" transparent opacity={0.7} />
+          <torusGeometry args={[size * 1.8, 0.06, 8, 64]} />
+          <meshBasicMaterial color="#ef4444" transparent opacity={0.75} />
         </mesh>
       )}
-      {/* Orphan dashed ring (static approximation with thin torus) */}
+      {/* Orphan dashed ring */}
       {isOrphan && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[body.size * 1.5, 0.03, 6, 12]} />
-          <meshBasicMaterial color="#475569" transparent opacity={0.7} />
+          <torusGeometry args={[size * 1.5, 0.03, 6, 12]} />
+          <meshBasicMaterial color="#475569" transparent opacity={0.65} />
         </mesh>
       )}
 
-      {/* Glow */}
-      {!isMoon && !isOrphan && (
+      {/* Glow halo */}
+      {!isOrphan && !isDimmed && (
         <mesh>
-          <sphereGeometry args={[body.size * 1.4, 16, 16]} />
-          <meshBasicMaterial color={effectiveColor} transparent opacity={isDimmed ? 0.01 : 0.07} />
+          <sphereGeometry args={[size * 1.5, 12, 12]} />
+          <meshBasicMaterial color={effectiveColor} transparent opacity={0.06} />
         </mesh>
       )}
 
@@ -472,31 +354,38 @@ function OrbitingBody({
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
       >
-        <sphereGeometry args={[body.size, isMoon ? 16 : 32, isMoon ? 16 : 32]} />
+        <sphereGeometry args={[size, 28, 28]} />
         <meshStandardMaterial
           color={effectiveColor}
           emissive={isCritical ? riskColor : effectiveColor}
-          emissiveIntensity={isDimmed ? 0.05 : (hovered || isSelected ? 1.2 : isMoon ? 0.3 : 0.6)}
-          roughness={isOrphan ? 0.9 : 0.5}
-          metalness={0.2}
+          emissiveIntensity={isDimmed ? 0.04 : (hovered || isSelected ? 1.4 : 0.55)}
+          roughness={isOrphan ? 0.9 : 0.45}
+          metalness={isOrphan ? 0 : 0.3}
           transparent
-          opacity={isDimmed ? 0.12 : 1}
+          opacity={opacity}
         />
       </mesh>
 
       {/* Label */}
-      {(!isMoon || hovered || isSearchMatch) && !isDimmed && (
-        <Html center position={[0, body.size + (isMoon ? 0.2 : 0.35), 0]} style={{ pointerEvents: 'none' }}>
+      {showLabel && !isDimmed && (
+        <Html center position={[0, size + 0.55, 0]} style={{ pointerEvents: 'none' }}>
           <div style={{
             fontFamily: 'monospace',
-            fontSize: isMoon ? '8px' : '9px',
-            color: hovered || isSelected ? effectiveColor : isOrphan ? '#475569' : '#94a3b8',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            color: effectiveColor,
             whiteSpace: 'nowrap',
-            textShadow: hovered ? `0 0 6px ${effectiveColor}` : 'none',
-            opacity: hovered || isSelected || isSearchMatch ? 1 : 0.7,
-            letterSpacing: '0.05em',
+            textShadow: `0 0 8px ${effectiveColor}`,
+            letterSpacing: '0.06em',
+            background: 'rgba(0,0,0,0.55)',
+            padding: '2px 6px',
+            borderRadius: 4,
+            border: `1px solid ${effectiveColor}44`,
           }}>
-            {isOrphan ? '👻 ' : isSecurityNode ? '🔐 ' : isExposed ? '⚠ ' : ''}{body.node.label}
+            {node.metadata.isOrphan ? '👻 ' : ''}{node.label}
+            {node.metadata.isEntryPoint && (
+              <span style={{ color: '#00ffff', marginLeft: 5 }}>ENTRY</span>
+            )}
           </div>
         </Html>
       )}
@@ -504,172 +393,232 @@ function OrbitingBody({
   );
 }
 
-// ── Tooltip overlay ────────────────────────────────────────────────────────
-
-function NodeTooltip({ node, color }: { node: AxonNode; color: string }) {
-  return (
-    <div style={{
-      position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-      background: 'rgba(10,12,20,0.92)', border: `1px solid ${color}40`,
-      borderRadius: 8, padding: '8px 14px', fontFamily: 'monospace', fontSize: 11,
-      color: '#e2e8f0', pointerEvents: 'none', whiteSpace: 'nowrap',
-      backdropFilter: 'blur(8px)',
-      boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px ${color}20`, zIndex: 100,
-    }}>
-      <span style={{ color, fontWeight: 'bold', marginRight: 6 }}>{node.type.toUpperCase()}</span>
-      {node.metadata.isOrphan ? '👻 ' : ''}{node.label}
-      <span style={{ color: '#64748b', marginLeft: 8 }}>
-        ↑{node.metadata.dependents} deps · {node.metadata.loc}L · {node.metadata.riskLevel}
-      </span>
-      {node.metadata.semanticSummary && (
-        <div style={{ marginTop: 4, color: '#94a3b8', fontSize: 10, maxWidth: 320, whiteSpace: 'normal' }}>
-          {node.metadata.semanticSummary.slice(0, 120)}{node.metadata.semanticSummary.length > 120 ? '…' : ''}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Scene ──────────────────────────────────────────────────────────────────
 
-function Scene({
-  bodies, selectedNodeId, onNodeSelect,
-  blastRadiusNodeId, securityOverlay, searchHighlightIds, ghostMode, tourFocusNodeId,
+function ForceScene({
+  graph,
+  selectedNodeId,
+  blastRadiusNodeId,
+  onNodeSelect,
+  securityOverlay,
+  searchHighlightIds,
+  ghostMode,
+  tourFocusNodeId,
+  stablePositions,
 }: {
-  bodies: SolarBody[];
+  graph: CodebaseGraph;
   selectedNodeId: string | null;
-  onNodeSelect: (node: AxonNode | null) => void;
   blastRadiusNodeId: string | null;
+  onNodeSelect: (node: AxonNode | null) => void;
   securityOverlay: SecurityAnalysis | null;
   searchHighlightIds: Set<string>;
   ghostMode: boolean;
   tourFocusNodeId: string | null;
+  stablePositions: Map<string, THREE.Vector3>;
 }) {
-  const [userInteracting, setUserInteracting] = useState(false);
-  const { gl } = useThree();
-  void gl;
   const positionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
+  const { camera } = useThree();
 
-  const blastRadius = useMemo(() => {
+  // Camera pull toward tour focus
+  useEffect(() => {
+    if (!tourFocusNodeId) return;
+    const pos = stablePositions.get(tourFocusNodeId);
+    if (!pos) return;
+    const dir = pos.clone().normalize();
+    const target = pos.clone().add(dir.multiplyScalar(8));
+    camera.position.lerp(target, 0.04);
+  });
+
+  // Blast radius sets
+  const blastSets = useMemo(() => {
     if (!blastRadiusNodeId) return null;
-    // We don't have edges here, so we rely on passed prop
-    return null;
-  }, [blastRadiusNodeId]);
-  void blastRadius;
+    return calculateBlastRadius(blastRadiusNodeId, graph.edges, { depth: 3 });
+  }, [blastRadiusNodeId, graph.edges]);
 
-  const planetPositions = useMemo(() => {
-    const map = new Map<string, THREE.Vector3>();
-    map.set('__sun__', new THREE.Vector3(0, 0, 0));
-    for (const b of bodies) {
-      if (b.role === 'planet' || b.role === 'asteroid') {
-        map.set(b.node.id, new THREE.Vector3(
-          Math.cos(b.orbitAngle) * b.orbitRadius, 0, Math.sin(b.orbitAngle) * b.orbitRadius
-        ));
-      }
+  // Node sizing
+  const maxDependents = useMemo(
+    () => Math.max(1, ...graph.nodes.map(n => n.metadata.dependents)),
+    [graph.nodes]
+  );
+
+  const nodeSize = useCallback(
+    (n: AxonNode) => 0.22 + (n.metadata.dependents / maxDependents) * 0.65,
+    [maxDependents]
+  );
+
+  // Which edges to show
+  const visibleEdges = useMemo(() => {
+    if (blastRadiusNodeId && blastSets) {
+      const ids = new Set([blastRadiusNodeId, ...blastSets.all]);
+      return graph.edges.filter(e => ids.has(e.source) && ids.has(e.target));
     }
-    return map;
-  }, [bodies]);
+    if (searchHighlightIds.size > 0) {
+      return graph.edges.filter(
+        e => searchHighlightIds.has(e.source) && searchHighlightIds.has(e.target)
+      );
+    }
+    return graph.edges;
+  }, [graph.edges, blastRadiusNodeId, blastSets, searchHighlightIds]);
 
-  const sunBody = bodies.find(b => b.role === 'sun');
-  const sunPos = new THREE.Vector3(0, 0, 0);
-
-  const planetRings = useMemo(
-    () => [...new Set(bodies.filter(b => b.role === 'planet').map(b => b.orbitRadius))],
-    [bodies]
-  );
-  const asteroidRing = useMemo(
-    () => bodies.some(b => b.role === 'asteroid') ? 13 : null, [bodies]
-  );
-
-  // Compute dimming per body
-  function isDimmed(b: SolarBody): boolean {
-    const id = b.node.id;
-    if (ghostMode) return !b.node.metadata.isOrphan;
-    if (securityOverlay) {
-      return !securityOverlay.securityNodeIds.has(id) &&
-             !securityOverlay.authChainIds.has(id) &&
-             !securityOverlay.exposedApiIds.has(id) &&
-             !securityOverlay.unprotectedDbIds.has(id);
+  // Dim logic
+  const isDimmed = useCallback((id: string) => {
+    if (ghostMode) return !graph.nodes.find(n => n.id === id)?.metadata.isOrphan;
+    if (blastRadiusNodeId && blastSets) {
+      return id !== blastRadiusNodeId && !blastSets.all.has(id);
     }
     if (searchHighlightIds.size > 0) return !searchHighlightIds.has(id);
+    if (securityOverlay) {
+      return (
+        !securityOverlay.authChainIds.has(id) &&
+        !securityOverlay.exposedNodes.has(id) &&
+        !securityOverlay.privilegedNodes.has(id)
+      );
+    }
     return false;
-  }
+  }, [ghostMode, blastRadiusNodeId, blastSets, searchHighlightIds, securityOverlay, graph.nodes]);
 
   return (
     <>
-      <Stars radius={80} depth={60} count={3000} factor={4} saturation={0.3} fade speed={0.5} />
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[10, 20, 10]} intensity={0.4} color="#e2e8f0" />
-      <OrbitControls
-        enablePan={false} minDistance={3} maxDistance={35}
-        autoRotate={!userInteracting} autoRotateSpeed={0.4}
-        onStart={() => setUserInteracting(true)}
-        onEnd={() => setTimeout(() => setUserInteracting(false), 3000)}
-        makeDefault
-      />
+      <Stars radius={80} depth={50} count={2000} factor={3} saturation={0} fade speed={0.4} />
+      <ambientLight intensity={0.25} />
+      <pointLight position={[0, 0, 0]} intensity={2} color="#ffffff" distance={60} decay={2} />
 
-      {/* Orbit rings */}
-      {planetRings.map(r => (
-        <OrbitRing key={r} radius={r}
-          color={securityOverlay ? 'rgba(168,85,247,0.2)' : '#334155'}
-        />
-      ))}
-      {asteroidRing && <OrbitRing radius={asteroidRing} />}
-      {asteroidRing && <OrbitRing radius={asteroidRing + 0.8} />}
-      {asteroidRing && <OrbitRing radius={asteroidRing + 1.6} />}
+      {/* Edges */}
+      {visibleEdges.map((edge) => {
+        const fromPos = stablePositions.get(edge.source);
+        const toPos = stablePositions.get(edge.target);
+        if (!fromPos || !toPos) return null;
 
-      {/* Sun */}
-      {sunBody && (
-        <SunBody
-          body={sunBody}
-          isSelected={selectedNodeId === sunBody.node.id}
-          isDimmed={isDimmed(sunBody)}
-          isTourFocus={tourFocusNodeId === sunBody.node.id}
-          isSearchMatch={searchHighlightIds.has(sunBody.node.id)}
-          onClick={() => onNodeSelect(sunBody.node)}
-          positionsRef={positionsRef}
-        />
-      )}
+        const isHighlighted =
+          (blastSets && (blastSets.all.has(edge.source) || blastSets.all.has(edge.target))) ||
+          (searchHighlightIds.size > 0 && searchHighlightIds.has(edge.source) && searchHighlightIds.has(edge.target)) ||
+          (selectedNodeId != null && (edge.source === selectedNodeId || edge.target === selectedNodeId));
 
-      {/* Planets, moons, asteroids */}
-      {bodies.filter(b => b.role !== 'sun').map(b => {
-        const parentPos = b.orbitParentId === sunBody?.node.id || b.orbitParentId === null
-          ? sunPos
-          : (planetPositions.get(b.orbitParentId!) ?? sunPos);
+        const dimEdge =
+          (blastRadiusNodeId && blastSets && !blastSets.all.has(edge.source) && !blastSets.all.has(edge.target)) ||
+          (searchHighlightIds.size > 0 && !searchHighlightIds.has(edge.source) && !searchHighlightIds.has(edge.target));
 
-        const id = b.node.id;
-        const dimmed = isDimmed(b);
-
-        // Blast radius states
-        const isBlastImpacted = blastRadiusNodeId
-          ? id !== blastRadiusNodeId // simplified — full BFS passed from parent
-          : false;
+        const baseColor = securityOverlay
+          ? '#6b21a8'
+          : EDGE_COLORS[edge.relation] ?? '#1e293b';
 
         return (
-          <OrbitingBody
-            key={id}
-            body={b}
-            parentPosition={parentPos}
-            isSelected={selectedNodeId === id}
+          <EdgeLine
+            key={edge.id}
+            from={fromPos}
+            to={toPos}
+            color={baseColor}
+            opacity={dimEdge ? 0.04 : isHighlighted ? 1 : 0.28}
+            highlighted={!!isHighlighted}
+            animated={
+              selectedNodeId != null &&
+              (edge.source === selectedNodeId || edge.target === selectedNodeId)
+            }
+            selectedNodeId={selectedNodeId}
+            edge={edge}
+          />
+        );
+      })}
+
+      {/* Nodes */}
+      {graph.nodes.map((node) => {
+        const pos = stablePositions.get(node.id);
+        if (!pos) return null;
+
+        const dimmed = isDimmed(node.id);
+        const isOrphan = !!node.metadata.isOrphan;
+        const isBlastSource = node.id === blastRadiusNodeId;
+        const isBlastImpacted = !!(blastSets?.all.has(node.id));
+        const isSecurityNode = !!(
+          securityOverlay &&
+          (securityOverlay.authChainIds.has(node.id) || securityOverlay.privilegedNodes.has(node.id))
+        );
+        const isExposed = !!(securityOverlay?.exposedNodes.has(node.id));
+        const isSearchMatch = searchHighlightIds.size > 0 && searchHighlightIds.has(node.id);
+
+        return (
+          <NodeSphere
+            key={node.id}
+            node={node}
+            position={pos}
+            size={nodeSize(node)}
+            color={NODE_COLORS[node.type] ?? '#00ffff'}
+            isSelected={selectedNodeId === node.id}
             isDimmed={dimmed}
-            isOrphan={!!b.node.metadata.isOrphan}
-            isSecurityNode={securityOverlay ? securityOverlay.securityNodeIds.has(id) : false}
-            isExposed={securityOverlay ? (securityOverlay.exposedApiIds.has(id) || securityOverlay.unprotectedDbIds.has(id)) : false}
-            isBlastSource={blastRadiusNodeId === id}
-            isBlastImpacted={!securityOverlay && !!blastRadiusNodeId && isBlastImpacted}
-            isTourFocus={tourFocusNodeId === id}
-            isSearchMatch={searchHighlightIds.has(id)}
-            onClick={() => onNodeSelect(b.node)}
-            autoRotate={!userInteracting}
+            isOrphan={isOrphan}
+            isSecurityNode={isSecurityNode}
+            isExposed={isExposed}
+            isBlastSource={isBlastSource}
+            isBlastImpacted={isBlastImpacted}
+            isTourFocus={tourFocusNodeId === node.id}
+            isSearchMatch={isSearchMatch}
+            onClick={() => onNodeSelect(node)}
             positionsRef={positionsRef}
           />
         );
       })}
+
+      <OrbitControls
+        makeDefault
+        enableDamping
+        dampingFactor={0.08}
+        minDistance={4}
+        maxDistance={100}
+        rotateSpeed={0.6}
+        zoomSpeed={0.8}
+      />
     </>
   );
 }
 
-// ── Main Export ────────────────────────────────────────────────────────────
+// ── Loading spinner ────────────────────────────────────────────────────────
+
+function Spinner() {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  useFrame((_, delta) => {
+    if (meshRef.current) meshRef.current.rotation.y += delta * 1.5;
+  });
+  return (
+    <mesh ref={meshRef}>
+      <torusGeometry args={[1.2, 0.08, 12, 60]} />
+      <meshBasicMaterial color="#00ffff" transparent opacity={0.7} />
+    </mesh>
+  );
+}
+
+// ── Legend ─────────────────────────────────────────────────────────────────
+
+function Legend({ graph }: { graph: CodebaseGraph }) {
+  const types = useMemo(() => {
+    const seen = new Set<NodeType>();
+    graph.nodes.forEach(n => seen.add(n.type));
+    return [...seen];
+  }, [graph.nodes]);
+
+  return (
+    <div className="absolute bottom-4 left-4 flex flex-col gap-1 pointer-events-none">
+      {types.map(t => (
+        <div key={t} className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full" style={{ background: NODE_COLORS[t] }} />
+          <span className="font-mono text-[9px] capitalize" style={{ color: NODE_COLORS[t] }}>{t}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Stats HUD overlay ──────────────────────────────────────────────────────
+
+function InfoBar({ graph }: { graph: CodebaseGraph }) {
+  return (
+    <div className="absolute bottom-4 right-4 font-mono text-[9px] text-foreground-dim pointer-events-none text-right space-y-0.5">
+      <div>{graph.nodes.length} nodes · {graph.edges.length} edges</div>
+      <div style={{ color: '#475569' }}>drag to rotate · scroll to zoom · click node to inspect</div>
+    </div>
+  );
+}
+
+// ── Main export ────────────────────────────────────────────────────────────
 
 interface SolarSystemViewProps {
   graph: CodebaseGraph;
@@ -683,242 +632,84 @@ interface SolarSystemViewProps {
 }
 
 export default function SolarSystemView({
-  graph, selectedNodeId, onNodeSelect,
+  graph,
+  selectedNodeId,
+  onNodeSelect,
   blastRadiusNodeId = null,
   securityOverlay = null,
   searchHighlightIds = new Set(),
   ghostMode = false,
   tourFocusNodeId = null,
 }: SolarSystemViewProps) {
-  const bodies = useMemo(() => buildSolarLayout(graph), [graph]);
-  const selectedBody = bodies.find(b => b.node.id === selectedNodeId);
+  const [ready, setReady] = useState(false);
+  const [stablePositions, setStablePositions] = useState<Map<string, THREE.Vector3>>(new Map());
 
-  const handleCanvasPointerMissed = useCallback(() => { onNodeSelect(null); }, [onNodeSelect]);
+  // Run force simulation once when graph changes
+  useEffect(() => {
+    setReady(false);
+    const id = requestAnimationFrame(() => {
+      const positions = runForceSimulation(graph.nodes, graph.edges, 150);
+      setStablePositions(positions);
+      setReady(true);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [graph.nodes, graph.edges]);
 
-  if (bodies.length === 0) {
+  if (graph.nodes.length === 0) {
     return (
       <div className="flex items-center justify-center h-full font-mono text-foreground-dim text-xs">
-        No graph data to render
+        No nodes to display
       </div>
     );
   }
 
-  const blastResult = blastRadiusNodeId
-    ? calculateBlastRadius(blastRadiusNodeId, graph.edges, { depth: 4 })
-    : null;
-
-  // Build a search-aware set for Scene (pass full blast set)
-  const blastAll = blastResult?.all ?? new Set<string>();
-
-  // For Scene we pass blastAll via a custom prop mechanism — we'll use the scene directly
   return (
-    <div className="relative w-full h-full bg-[#020408]">
+    <div className="w-full h-full relative bg-background">
       <Canvas
-        camera={{ position: [0, 8, 18], fov: 55 }}
+        camera={{ position: [0, 12, 32], fov: 55, near: 0.1, far: 300 }}
         gl={{ antialias: true, alpha: false }}
-        onPointerMissed={handleCanvasPointerMissed}
-        style={{ background: '#020408' }}
+        dpr={[1, 1.5]}
       >
-        <SceneWithBlast
-          bodies={bodies}
-          selectedNodeId={selectedNodeId}
-          onNodeSelect={onNodeSelect}
-          blastRadiusNodeId={blastRadiusNodeId}
-          blastAll={blastAll}
-          securityOverlay={securityOverlay}
-          searchHighlightIds={searchHighlightIds}
-          ghostMode={ghostMode}
-          tourFocusNodeId={tourFocusNodeId}
-          edges={graph.edges}
-        />
-      </Canvas>
-
-      {/* HUD overlay */}
-      <div style={{
-        position: 'absolute', top: 12, left: 12, fontFamily: 'monospace',
-        fontSize: 10, color: '#475569', pointerEvents: 'none', letterSpacing: '0.08em',
-      }}>
-        {securityOverlay ? (
+        {!ready ? (
           <>
-            <div style={{ color: '#a855f7' }}>🔐 SECURITY OVERLAY ACTIVE</div>
-            <div>Purple = auth nodes · Red ring = exposed</div>
-          </>
-        ) : blastRadiusNodeId ? (
-          <>
-            <div style={{ color: '#ef4444' }}>⚡ BLAST RADIUS ACTIVE</div>
-            <div>Red ring = source · Orange = impacted</div>
-          </>
-        ) : ghostMode ? (
-          <>
-            <div style={{ color: '#64748b' }}>👻 GHOST CITY — Dead Code Only</div>
-            <div>Grey bodies = unreachable nodes</div>
-          </>
-        ) : searchHighlightIds.size > 0 ? (
-          <>
-            <div style={{ color: '#00ffff' }}>🔍 {searchHighlightIds.size} search matches</div>
-            <div>Cyan ring = matched node</div>
+            <Stars radius={80} depth={50} count={1500} factor={3} saturation={0} fade speed={0.3} />
+            <ambientLight intensity={0.3} />
+            <Spinner />
+            <OrbitControls makeDefault enableDamping />
           </>
         ) : (
-          <>
-            <div>☀ SUN — gravity center</div>
-            <div>◉ PLANET — direct dependency</div>
-            <div>· MOON — indirect dependency</div>
-            <div style={{ marginTop: 4, color: '#ef4444' }}>⊕ RED RING — critical risk</div>
-            <div style={{ color: '#475569' }}>👻 GHOST — orphan / dead code</div>
-            <div style={{ marginTop: 6, color: '#334155' }}>DRAG · SCROLL · CLICK node to inspect</div>
-          </>
-        )}
-      </div>
-
-      {/* Node count badge */}
-      <div style={{
-        position: 'absolute', top: 12, right: 12, fontFamily: 'monospace',
-        fontSize: 10, color: '#334155', pointerEvents: 'none',
-      }}>
-        {bodies.length} bodies · {graph.edges.length} connections
-        {graph.stats.orphans > 0 && (
-          <span style={{ color: '#475569', marginLeft: 6 }}>· 👻 {graph.stats.orphans} orphans</span>
-        )}
-      </div>
-
-      {/* Selected node tooltip */}
-      {selectedBody && (
-        <NodeTooltip node={selectedBody.node} color={
-          securityOverlay && securityOverlay.securityNodeIds.has(selectedBody.node.id) ? '#a855f7' : selectedBody.color
-        } />
-      )}
-    </div>
-  );
-}
-
-// ── Scene with blast radius wired ──────────────────────────────────────────
-
-function SceneWithBlast({
-  bodies, selectedNodeId, onNodeSelect,
-  blastRadiusNodeId, blastAll, securityOverlay, searchHighlightIds, ghostMode, tourFocusNodeId,
-  edges,
-}: {
-  bodies: SolarBody[];
-  selectedNodeId: string | null;
-  onNodeSelect: (node: AxonNode | null) => void;
-  blastRadiusNodeId: string | null;
-  blastAll: Set<string>;
-  securityOverlay: SecurityAnalysis | null;
-  searchHighlightIds: Set<string>;
-  ghostMode: boolean;
-  tourFocusNodeId: string | null;
-  edges: import('@/types/graph').AxonEdge[];
-}) {
-  const [userInteracting, setUserInteracting] = useState(false);
-  const positionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
-
-  const planetPositions = useMemo(() => {
-    const map = new Map<string, THREE.Vector3>();
-    for (const b of bodies) {
-      if (b.role === 'planet' || b.role === 'asteroid') {
-        map.set(b.node.id, new THREE.Vector3(
-          Math.cos(b.orbitAngle) * b.orbitRadius, 0, Math.sin(b.orbitAngle) * b.orbitRadius
-        ));
-      }
-    }
-    return map;
-  }, [bodies]);
-
-  const sunBody = bodies.find(b => b.role === 'sun');
-  const sunPos = new THREE.Vector3(0, 0, 0);
-
-  const planetRings = useMemo(
-    () => [...new Set(bodies.filter(b => b.role === 'planet').map(b => b.orbitRadius))],
-    [bodies]
-  );
-  const asteroidRing = useMemo(
-    () => bodies.some(b => b.role === 'asteroid') ? 13 : null, [bodies]
-  );
-
-  function getIsDimmed(b: SolarBody): boolean {
-    const id = b.node.id;
-    if (ghostMode) return !b.node.metadata.isOrphan;
-    if (securityOverlay) {
-      return !securityOverlay.securityNodeIds.has(id) &&
-             !securityOverlay.authChainIds.has(id) &&
-             !securityOverlay.exposedApiIds.has(id) &&
-             !securityOverlay.unprotectedDbIds.has(id);
-    }
-    if (blastRadiusNodeId) {
-      return id !== blastRadiusNodeId && !blastAll.has(id);
-    }
-    if (searchHighlightIds.size > 0) return !searchHighlightIds.has(id);
-    return false;
-  }
-
-  return (
-    <>
-      <Stars radius={80} depth={60} count={3000} factor={4} saturation={0.3} fade speed={0.5} />
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[10, 20, 10]} intensity={0.4} color="#e2e8f0" />
-      <OrbitControls
-        enablePan={false} minDistance={3} maxDistance={35}
-        autoRotate={!userInteracting} autoRotateSpeed={0.4}
-        onStart={() => setUserInteracting(true)}
-        onEnd={() => setTimeout(() => setUserInteracting(false), 3000)}
-        makeDefault
-      />
-
-      {planetRings.map(r => (
-        <OrbitRing key={r} radius={r}
-          color={securityOverlay ? '#a855f7' : blastRadiusNodeId ? '#ef4444' : '#334155'}
-          opacity={securityOverlay || blastRadiusNodeId ? 0.2 : 0.35}
-        />
-      ))}
-      {asteroidRing && <OrbitRing radius={asteroidRing} />}
-      {asteroidRing && <OrbitRing radius={asteroidRing + 0.8} />}
-      {asteroidRing && <OrbitRing radius={asteroidRing + 1.6} />}
-
-      {sunBody && (
-        <SunBody
-          body={sunBody}
-          isSelected={selectedNodeId === sunBody.node.id}
-          isDimmed={getIsDimmed(sunBody)}
-          isTourFocus={tourFocusNodeId === sunBody.node.id}
-          isSearchMatch={searchHighlightIds.has(sunBody.node.id)}
-          onClick={() => onNodeSelect(sunBody.node)}
-          positionsRef={positionsRef}
-        />
-      )}
-
-      {bodies.filter(b => b.role !== 'sun').map(b => {
-        const parentPos = b.orbitParentId === sunBody?.node.id || b.orbitParentId === null
-          ? sunPos
-          : (planetPositions.get(b.orbitParentId!) ?? sunPos);
-
-        const id = b.node.id;
-        return (
-          <OrbitingBody
-            key={id}
-            body={b}
-            parentPosition={parentPos}
-            isSelected={selectedNodeId === id}
-            isDimmed={getIsDimmed(b)}
-            isOrphan={!!b.node.metadata.isOrphan}
-            isSecurityNode={securityOverlay ? securityOverlay.securityNodeIds.has(id) : false}
-            isExposed={securityOverlay ? (securityOverlay.exposedApiIds.has(id) || securityOverlay.unprotectedDbIds.has(id)) : false}
-            isBlastSource={blastRadiusNodeId === id}
-            isBlastImpacted={!securityOverlay && blastRadiusNodeId !== null && blastAll.has(id) && blastRadiusNodeId !== id}
-            isTourFocus={tourFocusNodeId === id}
-            isSearchMatch={searchHighlightIds.has(id)}
-            onClick={() => onNodeSelect(b.node)}
-            autoRotate={!userInteracting}
-            positionsRef={positionsRef}
+          <ForceScene
+            graph={graph}
+            selectedNodeId={selectedNodeId}
+            blastRadiusNodeId={blastRadiusNodeId}
+            onNodeSelect={onNodeSelect}
+            securityOverlay={securityOverlay}
+            searchHighlightIds={searchHighlightIds}
+            ghostMode={ghostMode}
+            tourFocusNodeId={tourFocusNodeId}
+            stablePositions={stablePositions}
           />
-        );
-      })}
+        )}
+      </Canvas>
 
-      {/* Dependency wave particles for selected node */}
-      <DependencyWaves
-        selectedNodeId={selectedNodeId}
-        edges={edges}
-        positionsRef={positionsRef}
-      />
-    </>
+      {/* Overlays */}
+      <Legend graph={graph} />
+      <InfoBar graph={graph} />
+
+      {/* Loading state */}
+      {!ready && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="font-mono text-[11px] text-cyan animate-pulse tracking-widest">
+            COMPUTING 3D LAYOUT…
+          </div>
+        </div>
+      )}
+
+      {/* Mode badge */}
+      <div className="absolute top-3 right-4 flex items-center gap-1.5 pointer-events-none">
+        <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" />
+        <span className="font-mono text-[9px] text-foreground-dim tracking-widest">3D FORCE GRAPH</span>
+      </div>
+    </div>
   );
 }
