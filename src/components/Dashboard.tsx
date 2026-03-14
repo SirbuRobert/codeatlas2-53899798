@@ -97,7 +97,24 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     setGhostMode(false);
     setSearchHighlightIds(new Set());
     setSearchQuery('');
+    setStatsHighlightLabel(null);
   }, []);
+
+  const handleStatClick = useCallback((ids: Set<string>, label: string) => {
+    // Toggle: clicking the same stat again clears
+    if (statsHighlightLabel === label && ids.size > 1) {
+      setSearchHighlightIds(new Set());
+      setSearchQuery('');
+      setStatsHighlightLabel(null);
+      return;
+    }
+    setSearchHighlightIds(ids);
+    setSearchQuery(label);
+    setStatsHighlightLabel(label);
+    setSecurityOverlayActive(false);
+    setBlastRadiusNodeId(null);
+    setGhostMode(false);
+  }, [statsHighlightLabel]);
 
   // CMD+K
   useEffect(() => {

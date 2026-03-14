@@ -148,7 +148,7 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
                 }`}
                 style={
                   isActive
-                    ? { ringColor: item.color, boxShadow: `0 0 0 1px ${item.color}40, 0 0 8px ${item.color}20` }
+                    ? { boxShadow: `0 0 0 1px ${item.color}66, 0 0 8px ${item.color}22` }
                     : {}
                 }
               >
