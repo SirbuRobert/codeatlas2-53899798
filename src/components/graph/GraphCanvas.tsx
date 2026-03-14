@@ -27,6 +27,9 @@ interface GraphCanvasProps {
   blastRadiusNodeId: string | null;
   onNodeSelect: (node: AxonNode | null) => void;
   securityOverlay?: SecurityAnalysis | null;
+  searchHighlightIds?: Set<string>;
+  ghostMode?: boolean;
+  tourFocusNodeId?: string | null;
 }
 
 const RELATION_COLORS: Record<string, string> = {
