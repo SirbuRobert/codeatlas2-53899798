@@ -431,9 +431,19 @@ IMPORTANT: Use the real contributor GitHub usernames listed above for the "autho
         strength: e.strength ?? 0.7,
       }));
 
-    // ── 8. Build final response ──────────────────────────────────────────
+    // ── 8. Fix up any remaining "unknown" authors using real contributors ─
+    const fallbackAuthor = topContributors[0]?.login ?? owner;
+    const processedNodes = (graphData.nodes || []).map((n) => {
+      const authorVal = (n.author as string | undefined) ?? "";
+      if (!authorVal || authorVal.toLowerCase() === "unknown" || authorVal.trim() === "") {
+        return { ...n, author: fallbackAuthor };
+      }
+      return n;
+    });
+
+    // ── 9. Build final response ──────────────────────────────────────────
     const response = {
-      nodes: graphData.nodes || [],
+      nodes: processedNodes,
       edges: processedEdges,
       summary: graphData.summary || "",
       language: graphData.primaryLanguage || repoInfo.language || "Unknown",
