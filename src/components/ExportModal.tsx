@@ -375,6 +375,7 @@ export default function ExportModal({ graph, isOpen, onClose }: ExportModalProps
               )}
               <div className="ml-auto font-mono text-[9px] text-foreground-dim">
                 {graph.nodes.length} nodes · {graph.edges.length} edges
+              </div>
             </div>
           </motion.div>
           </div>
