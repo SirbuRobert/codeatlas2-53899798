@@ -180,7 +180,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
                 onNodeSelect={handleNodeSelect}
               />
             </motion.div>
-          ) : (
+          ) : viewMode === 'treemap' ? (
             <motion.div
               key="treemap"
               initial={{ opacity: 0 }}
@@ -189,6 +189,20 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
               className="absolute inset-0"
             >
               <TreemapView graph={graph} onNodeSelect={handleNodeSelect} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="solar"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0"
+            >
+              <SolarSystemView
+                graph={graph}
+                selectedNodeId={selectedNode?.id ?? null}
+                onNodeSelect={handleNodeSelect}
+              />
             </motion.div>
           )}
         </AnimatePresence>
