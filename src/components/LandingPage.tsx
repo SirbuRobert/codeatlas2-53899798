@@ -109,7 +109,7 @@ export default function LandingPage({
   );
 
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden flex flex-col">
+    <div className="relative min-h-screen bg-background flex flex-col">
       {/* Grid bg */}
       <div
         className="absolute inset-0 opacity-[0.03]"
