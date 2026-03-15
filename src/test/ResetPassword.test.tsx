@@ -108,7 +108,7 @@ describe('ResetPassword page', () => {
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'password1' } });
     fireEvent.change(inputs[1], { target: { value: 'password2' } });
-    fireEvent.click(screen.getByText('UPDATE PASSWORD'));
+    fireEvent.submit(inputs[0].closest('form')!);
     await waitFor(() => {
       expect(screen.getByText('Passwords do not match.')).toBeInTheDocument();
     });
@@ -122,7 +122,7 @@ describe('ResetPassword page', () => {
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'newpass123' } });
     fireEvent.change(inputs[1], { target: { value: 'newpass123' } });
-    fireEvent.click(screen.getByText('UPDATE PASSWORD'));
+    fireEvent.submit(inputs[0].closest('form')!);
     await waitFor(() => {
       expect(screen.getByText('Password updated!')).toBeInTheDocument();
     });
@@ -136,7 +136,7 @@ describe('ResetPassword page', () => {
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'newpass123' } });
     fireEvent.change(inputs[1], { target: { value: 'newpass123' } });
-    fireEvent.click(screen.getByText('UPDATE PASSWORD'));
+    fireEvent.submit(inputs[0].closest('form')!);
     await waitFor(() => {
       expect(screen.getByText('Token expired')).toBeInTheDocument();
     });
