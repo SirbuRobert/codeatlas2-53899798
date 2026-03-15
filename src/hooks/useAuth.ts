@@ -37,6 +37,9 @@ export function useAuth() {
     // Set up auth state listener BEFORE calling getSession
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          localStorage.removeItem('axon_gh_token');
+        }
         let profile: Profile | null = null;
         if (session?.user) {
           // Defer Supabase call to avoid deadlock in the listener
@@ -78,6 +81,7 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
+    localStorage.removeItem('axon_gh_token');
     await supabase.auth.signOut();
   }, []);
 
@@ -103,10 +107,9 @@ export function useAuth() {
     return { error };
   }, [state.user]);
 
-  // Resolve the best available token: profile first, then localStorage fallback
+  // Token lives exclusively in the database profile — no localStorage fallback
   const getGithubToken = useCallback((): string | undefined => {
-    if (state.profile?.github_token) return state.profile.github_token;
-    return localStorage.getItem('axon_gh_token') ?? undefined;
+    return state.profile?.github_token ?? undefined;
   }, [state.profile]);
 
   return {
