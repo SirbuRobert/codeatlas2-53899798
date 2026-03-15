@@ -1,12 +1,19 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Bot, User, Loader2, RotateCcw, Mic, MicOff } from 'lucide-react';
+import { X, Send, Bot, User, Loader2, RotateCcw, Mic, MicOff, GitCompare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { CodebaseGraph, AxonNode } from '@/types/graph';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+}
+
+interface DualMessage {
+  role: 'user' | 'dual';
+  content: string;
+  gemini?: string;
+  gpt?: string;
 }
 
 // ── Voice Input Hook ──────────────────────────────────────────────────────────
