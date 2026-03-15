@@ -480,8 +480,12 @@ function ForceScene({
   return (
     <>
       <Stars radius={80} depth={50} count={2000} factor={3} saturation={0} fade speed={0.4} />
-      <ambientLight intensity={0.25} />
-      <pointLight position={[0, 0, 0]} intensity={2} color="#ffffff" distance={60} decay={2} />
+      <ambientLight intensity={1.2} />
+      <pointLight position={[0, 0, 0]} intensity={6} color="#ffffff" distance={120} decay={1.5} />
+      <pointLight position={[0, 30, 0]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
+      <pointLight position={[0, -30, 0]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
+      <pointLight position={[30, 0, 30]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
+      <pointLight position={[-30, 0, -30]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
 
       {/* Edges */}
       {visibleEdges.map((edge) => {
