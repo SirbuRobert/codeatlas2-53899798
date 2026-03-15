@@ -183,8 +183,8 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         style={{ minHeight: 48 }}
       >
         <div className="flex items-center gap-2 pr-4 border-r border-border">
-          <div className="w-5 h-5 rounded-md bg-cyan/10 border border-cyan/30 flex items-center justify-center">
-            <Map className="w-3 h-3 text-cyan" />
+          <div className="w-5 h-5 rounded-md bg-primary/10 border border-primary/30 flex items-center justify-center">
+            <Map className="w-3 h-3 text-primary" />
           </div>
           <span className="font-mono text-xs font-bold text-foreground">CodeAtlas</span>
           <span className="font-mono text-[9px] text-foreground-dim">AXON</span>
