@@ -61,13 +61,10 @@ const KIND_CONFIG: Record<FunctionEntry['kind'], { label: string; color: string 
 
 // ── Utility: build a deep-link GitHub URL ─────────────────────────────────────
 function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
-  // graph.repoUrl is e.g. "github.com/owner/repo"
   const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
-  if (!line) return base;
-  // Link only to the declaration line — same as GitHub's own Symbols panel.
-  // endLine is intentionally ignored: AI bracket-counting is unreliable and
-  // produces ranges like L15-L387 that highlight the entire file.
-  return `${base}#L${line}`;
+  // Defensive validation: line must be a finite positive integer
+  if (!line || !Number.isFinite(line) || line < 1 || Math.floor(line) !== line) return base;
+  return `${base}#L${Math.floor(line)}`;
 }
 
 function MetricBar({ label, value, max = 100, color }: { label: string; value: number; max?: number; color: string }) {
