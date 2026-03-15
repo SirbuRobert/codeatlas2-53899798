@@ -51,22 +51,22 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
         <div className="bg-surface-2 border border-border rounded-xl p-4 mb-4 space-y-1.5">
           <p className="font-mono text-[10px] text-foreground-dim uppercase tracking-wider mb-2">Setup instructions</p>
           <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-cyan flex-shrink-0">1.</span>
+            <span className="text-primary flex-shrink-0">1.</span>
             <span>Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)</span>
           </div>
           <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-cyan flex-shrink-0">2.</span>
-            <span>Click <strong className="text-foreground">Generate new token</strong> and enable the <code className="bg-surface-3 px-1 rounded text-cyan">repo</code> scope</span>
+            <span className="text-primary flex-shrink-0">2.</span>
+            <span>Click <strong className="text-foreground">Generate new token</strong> and enable the <code className="bg-surface-3 px-1 rounded text-primary">repo</code> scope</span>
           </div>
           <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-cyan flex-shrink-0">3.</span>
+            <span className="text-primary flex-shrink-0">3.</span>
             <span>Paste the token below — it stays only on your device</span>
           </div>
           <a
             href="https://github.com/settings/tokens/new?scopes=repo&description=CodeAtlas+AXON"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 mt-2 font-mono text-[10px] text-cyan hover:underline"
+            className="inline-flex items-center gap-1.5 mt-2 font-mono text-[10px] text-primary hover:underline"
           >
             <ExternalLink className="w-3 h-3" />
             Open GitHub token page
@@ -80,7 +80,7 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
             onChange={(e) => setToken(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 pr-10 font-mono text-sm text-foreground placeholder:text-foreground-dim outline-none focus:border-cyan/50 transition-colors"
+            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 pr-10 font-mono text-sm text-foreground placeholder:text-foreground-dim outline-none focus:border-primary/50 transition-colors"
           />
           <button
             type="button"
@@ -94,7 +94,7 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
         <button
           onClick={handleSave}
           disabled={!token.trim() || saved}
-          className="w-full py-2.5 rounded-xl bg-cyan text-primary-foreground font-mono text-xs font-semibold tracking-wider
+          className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
                      hover:bg-primary-glow disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2"
         >
           {saved ? (
@@ -239,18 +239,10 @@ export default function LandingPage({
 
   return (
     <div className="relative min-h-screen bg-background flex flex-col">
-      {/* Grid bg */}
+      {/* Subtle top gradient glow */}
       <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: `linear-gradient(hsl(var(--cyan)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--cyan)) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
-      {/* Top glow */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] opacity-[0.06] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse, hsl(var(--cyan)) 0%, transparent 70%)' }}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] opacity-[0.08] pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse, hsl(245 70% 65%) 0%, transparent 70%)' }}
       />
       {/* Version chip + Auth button */}
       <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
@@ -261,15 +253,15 @@ export default function LandingPage({
             onClick={() => setAccountOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
           >
-            <div className="w-5 h-5 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center">
-              <span className="text-[9px] font-bold text-cyan">{user.email?.[0]?.toUpperCase()}</span>
+          <div className="w-5 h-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-primary">{user.email?.[0]?.toUpperCase()}</span>
             </div>
             {user.email?.split('@')[0]}
           </button>
         ) : (
           <button
             onClick={() => navigate('/auth')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-cyan/30 font-mono text-[10px] text-foreground-muted hover:text-cyan transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-primary/30 font-mono text-[10px] text-foreground-muted hover:text-primary transition-all"
           >
             <LogIn className="w-3 h-3" />
             Sign In
@@ -286,13 +278,13 @@ export default function LandingPage({
           className="flex items-center gap-3 mb-8"
         >
           <div className="relative w-10 h-10">
-            <div className="absolute inset-0 rounded-xl bg-cyan/10 border border-cyan/30" />
+            <div className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/30" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <GitBranch className="w-5 h-5 text-cyan" />
+              <GitBranch className="w-5 h-5 text-primary" />
             </div>
           </div>
           <span className="font-mono text-sm text-foreground-muted tracking-[0.3em] uppercase">CodeAtlas</span>
-          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-cyan/10 text-cyan border border-cyan/20">
+          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
             AXON
           </span>
         </motion.div>
@@ -310,8 +302,8 @@ export default function LandingPage({
             }`}
             style={{
               textShadow: glitchActive
-                ? '2px 0 hsl(var(--alert)), -2px 0 hsl(var(--cyan))'
-                : '0 0 40px hsl(var(--cyan) / 0.3)',
+                ? '2px 0 hsl(var(--alert)), -2px 0 hsl(var(--primary))'
+                : '0 0 30px hsl(var(--primary) / 0.2)',
             }}
           >
             GPS FOR CODE
@@ -331,7 +323,7 @@ export default function LandingPage({
           No config. No setup. Just drop a URL.{' '}
           <button
             onClick={() => setPipelineOpen(true)}
-            className="inline-flex items-center gap-1 text-cyan hover:underline transition-colors"
+            className="inline-flex items-center gap-1 text-primary hover:underline transition-colors"
           >
             <HelpCircle className="w-3.5 h-3.5" />
             How does this work?
@@ -377,7 +369,7 @@ export default function LandingPage({
               </div>
 
               <div className="relative group mb-4">
-                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-cyan/30 via-violet/20 to-cyan/30 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
+                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-accent/15 to-primary/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
                 <div className="relative flex items-center gap-3 bg-surface-1 border border-border rounded-2xl px-5 py-4 shadow-[var(--shadow-panel)]">
                   <Search className="w-4 h-4 text-foreground-dim flex-shrink-0" />
                   <input
@@ -392,7 +384,7 @@ export default function LandingPage({
                   <button
                     onClick={() => handleSubmit()}
                     disabled={!inputUrl.trim()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan text-primary-foreground font-mono text-xs font-semibold tracking-wider
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
                                hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 active:scale-95"
                   >
                     <Zap className="w-3.5 h-3.5" />
@@ -454,7 +446,7 @@ export default function LandingPage({
                       </p>
                       <button
                         onClick={() => setGhModalOpen(true)}
-                        className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-cyan hover:underline"
+                        className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-primary hover:underline"
                       >
                         <Github className="w-3 h-3" />
                         Connect GitHub Token
@@ -486,13 +478,13 @@ export default function LandingPage({
                 <div className="flex items-center justify-between mb-5">
                   <div>
                     <p className="font-mono text-xs text-foreground-dim mb-0.5">ANALYZING</p>
-                    <p className="font-mono text-sm text-cyan truncate max-w-[280px]">{analysisUrl}</p>
+                    <p className="font-mono text-sm text-primary truncate max-w-[280px]">{analysisUrl}</p>
                   </div>
                   <div className="flex gap-1">
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse"
+                        className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
                         style={{ animationDelay: `${i * 0.2}s` }}
                       />
                     ))}
@@ -502,7 +494,7 @@ export default function LandingPage({
                 {/* Progress bar */}
                 <div className="h-px bg-surface-3 rounded-full mb-5 overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-cyan to-violet"
+                    className="h-full bg-gradient-to-r from-primary to-accent"
                     initial={{ width: '0%' }}
                     animate={{ width: `${progressPct}%` }}
                     transition={{ duration: 0.4 }}
@@ -524,7 +516,7 @@ export default function LandingPage({
                             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </motion.svg>
                         )}
-                        {phase.status === 'running' && <div className="w-2 h-2 rounded-full bg-cyan animate-pulse" />}
+                        {phase.status === 'running' && <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
                         {phase.status === 'pending' && <div className="w-2 h-2 rounded-full bg-surface-3 border border-border" />}
                       </div>
                       <span className={`font-mono text-xs transition-colors duration-200 ${
@@ -536,7 +528,7 @@ export default function LandingPage({
                         <span className="ml-auto font-mono text-[10px] text-foreground-dim">{phase.duration}ms</span>
                       )}
                       {phase.status === 'running' && (
-                        <span className="ml-auto font-mono text-[10px] text-cyan terminal-cursor" />
+                        <span className="ml-auto font-mono text-[10px] text-primary terminal-cursor" />
                       )}
                     </motion.div>
                   ))}
@@ -547,10 +539,10 @@ export default function LandingPage({
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="mt-4 flex items-center gap-2 px-3 py-2 bg-cyan/5 rounded-xl border border-cyan/15"
+                    className="mt-4 flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-xl border border-primary/15"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" />
-                    <span className="font-mono text-[10px] text-cyan">Awaiting AI analysis completion…</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="font-mono text-[10px] text-primary">Awaiting AI analysis completion…</span>
                   </motion.div>
                 )}
               </div>
@@ -568,7 +560,7 @@ export default function LandingPage({
           >
             {statsData.map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="font-mono text-2xl font-bold text-cyan">{stat.value}</div>
+                <div className="font-mono text-2xl font-bold text-primary">{stat.value}</div>
                 <div className="font-mono text-[10px] text-foreground-dim tracking-wider uppercase mt-0.5">{stat.label}</div>
               </div>
             ))}

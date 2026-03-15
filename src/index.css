@@ -6,96 +6,101 @@
 
 /* ═══════════════════════════════════════════════
    AXON / CodeAtlas Design System
-   Cyber-Noir Cockpit — All colors in HSL
+   Dark Warm-Grey + Indigo/Violet Gradient
+   All colors in HSL
    ═══════════════════════════════════════════════ */
 
 @layer base {
   :root {
     /* ── Core Surfaces ── */
-    --background: 224 20% 5%;
-    --surface-1: 224 18% 7%;
-    --surface-2: 224 16% 10%;
-    --surface-3: 224 14% 14%;
+    --background: 240 10% 8%;
+    --surface-1: 240 8% 11%;
+    --surface-2: 240 7% 14%;
+    --surface-3: 240 6% 18%;
 
-    --foreground: 210 20% 92%;
-    --foreground-muted: 210 12% 55%;
-    --foreground-dim: 210 10% 35%;
+    --foreground: 220 15% 90%;
+    --foreground-muted: 220 10% 55%;
+    --foreground-dim: 220 8% 35%;
 
     /* ── shadcn tokens (mapped to our system) ── */
-    --card: 224 18% 7%;
-    --card-foreground: 210 20% 92%;
-    --popover: 224 16% 10%;
-    --popover-foreground: 210 20% 92%;
+    --card: 240 8% 11%;
+    --card-foreground: 220 15% 90%;
+    --popover: 240 7% 14%;
+    --popover-foreground: 220 15% 90%;
 
-    /* ── Brand / Interactive ── */
-    --primary: 180 100% 50%;
-    --primary-foreground: 224 20% 5%;
-    --primary-glow: 180 100% 60%;
+    /* ── Brand / Interactive — Indigo/Violet ── */
+    --primary: 245 70% 65%;
+    --primary-foreground: 240 10% 8%;
+    --primary-glow: 245 80% 72%;
 
-    --secondary: 224 14% 14%;
-    --secondary-foreground: 210 20% 80%;
+    --secondary: 240 6% 18%;
+    --secondary-foreground: 220 15% 80%;
 
-    --muted: 224 14% 12%;
-    --muted-foreground: 210 12% 45%;
+    --muted: 240 7% 13%;
+    --muted-foreground: 220 8% 45%;
 
-    --accent: 265 80% 65%;
-    --accent-foreground: 224 20% 5%;
+    --accent: 270 65% 65%;
+    --accent-foreground: 240 10% 8%;
 
     /* ── Semantic Data Colors ── */
-    --cyan: 180 100% 50%;
-    --cyan-dim: 180 70% 30%;
-    --alert: 0 100% 60%;
-    --alert-dim: 0 70% 25%;
-    --stable: 210 20% 40%;
-    --warning: 38 100% 55%;
-    --warning-dim: 38 70% 25%;
-    --success: 142 70% 45%;
-    --success-dim: 142 50% 20%;
-    --violet: 265 80% 65%;
-    --violet-dim: 265 50% 25%;
+    --cyan: 245 70% 65%;
+    --cyan-dim: 245 50% 30%;
+    --alert: 0 85% 58%;
+    --alert-dim: 0 60% 22%;
+    --stable: 220 15% 38%;
+    --warning: 38 95% 52%;
+    --warning-dim: 38 60% 22%;
+    --success: 142 60% 42%;
+    --success-dim: 142 45% 18%;
+    --violet: 270 65% 65%;
+    --violet-dim: 270 45% 25%;
 
     /* ── Graph Node Colors ── */
-    --node-file: 180 100% 50%;
-    --node-class: 265 80% 65%;
-    --node-function: 38 100% 55%;
-    --node-service: 142 70% 45%;
-    --node-module: 210 70% 55%;
-    --node-danger: 0 100% 60%;
+    --node-file: 245 70% 65%;
+    --node-class: 270 65% 65%;
+    --node-function: 38 95% 52%;
+    --node-service: 142 60% 42%;
+    --node-module: 210 65% 55%;
+    --node-danger: 0 85% 58%;
 
     /* ── UI Structure ── */
-    --border: 224 14% 16%;
-    --border-bright: 224 14% 22%;
-    --input: 224 14% 12%;
-    --ring: 180 100% 50%;
+    --border: 240 7% 18%;
+    --border-bright: 240 7% 24%;
+    --input: 240 7% 13%;
+    --ring: 245 70% 65%;
     --radius: 0.75rem;
 
-    /* ── Panel Glassmorphism ── */
-    --panel-bg: 224 20% 6% / 0.85;
+    /* ── Panel Glass ── */
+    --panel-bg: 240 10% 9% / 0.88;
     --panel-border: 255 255 255 / 0.05;
 
+    /* ── Gradients ── */
+    --gradient-brand: linear-gradient(135deg, hsl(245 70% 65%), hsl(270 65% 65%));
+    --gradient-bg: radial-gradient(ellipse at top, hsl(245 40% 12%), hsl(240 10% 8%));
+
     /* ── Shadows ── */
-    --shadow-glow-cyan: 0 0 0 1px rgba(0, 255, 255, 0.15), 0 0 20px rgba(0, 255, 255, 0.1);
-    --shadow-glow-alert: 0 0 0 1px rgba(255, 40, 40, 0.2), 0 0 20px rgba(255, 40, 40, 0.15);
-    --shadow-panel: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 20px 40px rgba(0, 0, 0, 0.5);
-    --shadow-node: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --shadow-glow-cyan: 0 0 0 1px hsl(245 70% 65% / 0.15), 0 0 20px hsl(245 70% 65% / 0.1);
+    --shadow-glow-alert: 0 0 0 1px hsl(0 85% 58% / 0.2), 0 0 20px hsl(0 85% 58% / 0.12);
+    --shadow-panel: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 16px 36px rgba(0, 0, 0, 0.45);
+    --shadow-node: 0 4px 20px rgba(0, 0, 0, 0.35);
 
     /* ── Typography ── */
     --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-ui: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
     /* ── Sidebar (shadcn compat) ── */
-    --sidebar-background: 224 18% 7%;
-    --sidebar-foreground: 210 20% 80%;
-    --sidebar-primary: 180 100% 50%;
-    --sidebar-primary-foreground: 224 20% 5%;
-    --sidebar-accent: 224 14% 12%;
-    --sidebar-accent-foreground: 210 20% 80%;
-    --sidebar-border: 224 14% 14%;
-    --sidebar-ring: 180 100% 50%;
+    --sidebar-background: 240 8% 11%;
+    --sidebar-foreground: 220 15% 80%;
+    --sidebar-primary: 245 70% 65%;
+    --sidebar-primary-foreground: 240 10% 8%;
+    --sidebar-accent: 240 7% 13%;
+    --sidebar-accent-foreground: 220 15% 80%;
+    --sidebar-border: 240 7% 16%;
+    --sidebar-ring: 245 70% 65%;
 
     /* ── Destructive ── */
-    --destructive: 0 100% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 85% 58%;
+    --destructive-foreground: 220 15% 96%;
   }
 }
 
@@ -111,25 +116,9 @@
   body {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: var(--font-ui);
+    font-family: var(--font-mono);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* Scanline overlay for CRT effect on panels */
-  .scanlines::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px
-    );
-    pointer-events: none;
-    border-radius: inherit;
   }
 
   /* Scrollbar */
@@ -145,13 +134,13 @@
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--cyan-dim));
+    background: hsl(var(--primary) / 0.5);
   }
 
   /* Selection */
   ::selection {
-    background: hsl(180 100% 50% / 0.2);
-    color: hsl(var(--cyan));
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
   }
 }
 
@@ -179,7 +168,7 @@
 }
 .react-flow__controls-button:hover {
   background: hsl(var(--surface-3)) !important;
-  fill: hsl(var(--cyan)) !important;
+  fill: hsl(var(--primary)) !important;
 }
 .react-flow__minimap {
   background: hsl(var(--surface-2)) !important;
@@ -192,13 +181,13 @@
   transition: stroke 0.15s ease, stroke-opacity 0.15s ease;
 }
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: hsl(var(--cyan)) !important;
+  stroke: hsl(var(--primary)) !important;
 }
 
 /* ── Animations ── */
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
-  50% { opacity: 0.7; filter: drop-shadow(0 0 12px currentColor); }
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 3px currentColor); }
+  50% { opacity: 0.75; filter: drop-shadow(0 0 8px currentColor); }
 }
 
 @keyframes slide-in-right {
@@ -214,11 +203,6 @@
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@keyframes scan-line {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
 }
 
 @keyframes terminal-blink {
@@ -254,29 +238,29 @@
 /* ── Utility classes ── */
 .font-mono { font-family: var(--font-mono); }
 
-.glow-cyan { 
-  box-shadow: var(--shadow-glow-cyan); 
+.glow-cyan {
+  box-shadow: var(--shadow-glow-cyan);
 }
-.glow-alert { 
-  box-shadow: var(--shadow-glow-alert); 
+.glow-alert {
+  box-shadow: var(--shadow-glow-alert);
 }
 
 .panel-glass {
-  background: rgba(10, 12, 20, 0.85);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  background: hsl(240 9% 10% / 0.88);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
   box-shadow: var(--shadow-panel);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .terminal-cursor::after {
   content: '▋';
   animation: terminal-blink 1s step-end infinite;
-  color: hsl(var(--cyan));
+  color: hsl(var(--primary));
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(135deg, hsl(var(--cyan)), hsl(var(--violet)));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

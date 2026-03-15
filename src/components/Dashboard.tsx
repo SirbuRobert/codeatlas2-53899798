@@ -183,8 +183,8 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         style={{ minHeight: 48 }}
       >
         <div className="flex items-center gap-2 pr-4 border-r border-border">
-          <div className="w-5 h-5 rounded-md bg-cyan/10 border border-cyan/30 flex items-center justify-center">
-            <Map className="w-3 h-3 text-cyan" />
+          <div className="w-5 h-5 rounded-md bg-primary/10 border border-primary/30 flex items-center justify-center">
+            <Map className="w-3 h-3 text-primary" />
           </div>
           <span className="font-mono text-xs font-bold text-foreground">CodeAtlas</span>
           <span className="font-mono text-[9px] text-foreground-dim">AXON</span>
@@ -250,7 +250,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             onClick={() => { setSearchHighlightIds(new Set()); setSearchQuery(''); setStatsHighlightLabel(null); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/30 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 font-mono text-[10px] text-primary hover:bg-primary/15 transition-all"
           >
             <Search className="w-3 h-3" />
             🔍 {searchHighlightIds.size} {statsHighlightLabel ? `${statsHighlightLabel} files` : `matches for "${searchQuery}"`} — click to clear
@@ -273,7 +273,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             onClick={() => setChatOpen(o => !o)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-[10px] transition-all ${
               chatOpen
-                ? 'bg-cyan/10 border-cyan/40 text-cyan'
+                ? 'bg-primary/10 border-primary/40 text-primary'
                 : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground hover:border-border-bright'
             }`}
           >
@@ -329,7 +329,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
           <button
             onClick={() => navigate('/billing')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/25 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/25 font-mono text-[10px] text-primary hover:bg-primary/15 transition-all"
           >
             <CreditCard className="w-3 h-3" />
             Plans
@@ -350,15 +350,15 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
               onClick={() => setAccountOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
             >
-              <div className="w-5 h-5 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-[9px] font-bold text-cyan">{user.email?.[0]?.toUpperCase()}</span>
+              <div className="w-5 h-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-[9px] font-bold text-primary">{user.email?.[0]?.toUpperCase()}</span>
               </div>
               <span className="hidden md:inline">{user.email?.split('@')[0]}</span>
             </button>
           ) : (
             <button
               onClick={() => navigate('/auth')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/25 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/25 font-mono text-[10px] text-primary hover:bg-primary/15 transition-all"
             >
               <LogIn className="w-3 h-3" />
               Sign In
