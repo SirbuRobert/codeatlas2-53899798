@@ -126,6 +126,12 @@ export function useAnalyzeRepo() {
 
         setGraph(codebaseGraph);
         setStatus('success');
+
+        // Fire webhooks for any registered configs on this repo (fire-and-forget)
+        fireWebhooks(repoUrl, codebaseGraph).then((result) => {
+          if (result.sent > 0) setWebhookResult(result);
+        });
+
         return codebaseGraph;
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Analysis failed';
@@ -141,7 +147,8 @@ export function useAnalyzeRepo() {
     setStatus('idle');
     setGraph(null);
     setError(null);
+    setWebhookResult(null);
   }, []);
 
-  return { analyze, status, graph, error, reset };
+  return { analyze, status, graph, error, reset, webhookResult };
 }
