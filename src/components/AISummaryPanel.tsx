@@ -248,11 +248,16 @@ export default function AISummaryPanel({ graph, isOpen, onClose, onNodeSelect }:
                     </p>
                     <div className="space-y-1">
                       {entryPointNodes.map(n => (
-                        <div key={n.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border">
-                          <div className="w-1.5 h-1.5 rounded-full bg-cyan" />
-                          <span className="font-mono text-[10px] text-foreground truncate">{n.label}</span>
-                          <span className="font-mono text-[9px] text-foreground-dim ml-auto">{n.metadata.loc}L</span>
-                        </div>
+                        <button
+                          key={n.id}
+                          onClick={() => handleNodeClick(n.id)}
+                          className="group w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border hover:border-border-bright hover:brightness-110 transition-all cursor-pointer text-left"
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-cyan flex-shrink-0" />
+                          <span className="font-mono text-[10px] text-foreground truncate flex-1">{n.label}</span>
+                          <span className="font-mono text-[9px] text-foreground-dim">{n.metadata.loc}L</span>
+                          <span className="font-mono text-[10px] text-foreground-dim opacity-0 group-hover:opacity-100 transition-opacity ml-1">→</span>
+                        </button>
                       ))}
                     </div>
                   </div>
