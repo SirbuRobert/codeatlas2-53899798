@@ -370,13 +370,14 @@ export default function GraphCanvas({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="panel-glass rounded-xl border flex flex-col gap-2"
+                className="panel-glass rounded-xl border flex flex-col gap-2 overflow-y-auto overscroll-contain"
                 style={{
                   borderColor: 'rgba(168,85,247,0.4)',
                   boxShadow: '0 0 24px rgba(168,85,247,0.15)',
                   padding: '12px 14px',
                   minWidth: 220,
-                  maxWidth: 280,
+                  maxWidth: 'min(280px, calc(100vw - 16px))',
+                  maxHeight: 'calc(100vh - 110px)',
                 }}
               >
                 {/* Header */}

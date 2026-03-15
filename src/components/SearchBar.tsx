@@ -97,7 +97,7 @@ export default function SearchBar({ nodes, onResults, onClose, isOpen }: SearchB
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[480px]"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[calc(100vw-16px)] sm:w-[480px] max-w-[calc(100vw-16px)]"
         >
           <div
             className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-surface-1/95 backdrop-blur-xl border border-border"
