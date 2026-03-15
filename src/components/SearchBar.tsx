@@ -10,7 +10,7 @@ interface SearchBarProps {
   isOpen: boolean;
 }
 
-function scoreNode(node: AxonNode, words: string[]): number {
+export function scoreNode(node: AxonNode, words: string[]): number {
   let score = 0;
   const fnNames = (node.metadata.functions ?? []).map(f => f.name.toLowerCase());
   const haystack = [
