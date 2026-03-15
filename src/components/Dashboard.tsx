@@ -43,6 +43,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [explainerOpen, setExplainerOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
 
   // Auto-show explainer on first visit per repo
