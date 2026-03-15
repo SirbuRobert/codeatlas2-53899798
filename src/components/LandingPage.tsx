@@ -297,7 +297,7 @@ export default function LandingPage({
           className="text-center mb-4"
         >
           <h1
-            className={`font-mono text-5xl md:text-7xl font-bold tracking-tight leading-none mb-4 transition-all duration-75 ${
+            className={`font-mono text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-none mb-4 transition-all duration-75 ${
               glitchActive ? 'text-alert' : 'text-gradient-cyan'
             }`}
             style={{
@@ -308,8 +308,8 @@ export default function LandingPage({
           >
             GPS FOR CODE
           </h1>
-          <p className="font-mono text-foreground-muted text-sm md:text-base tracking-[0.1em]">
-            POINT IT AT A REPO · UNDERSTAND IT IN MINUTES
+          <p className="font-mono text-foreground-muted text-xs sm:text-sm md:text-base tracking-[0.08em] sm:tracking-[0.1em]">
+            POINT IT AT A REPO · UNDERSTAND IN MINUTES
           </p>
         </motion.div>
 
