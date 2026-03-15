@@ -324,7 +324,7 @@ serve(async (req) => {
       .filter((e) => e.content.length > 50)
       .map(
         (e) =>
-          `--- FILE: ${e.path} ---\n${e.content.slice(0, 2500)}\n`,
+          `--- FILE: ${e.path} ---\n${e.content.slice(0, 3800)}\n`,
       )
       .join("\n");
 
