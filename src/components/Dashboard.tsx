@@ -14,7 +14,7 @@ import StatsHUD from '@/components/StatsHUD';
 import TreemapView from '@/components/TreemapView';
 import SolarSystemView from '@/components/graph/SolarSystemView';
 import OnboardingTour from '@/components/OnboardingTour';
-import SearchBar from '@/components/SearchBar';
+import SearchBar, { scoreNode } from '@/components/SearchBar';
 import AISummaryPanel, { AISummaryBanner } from '@/components/AISummaryPanel';
 import BusinessInsightsPanel from '@/components/BusinessInsightsPanel';
 import ExportModal from '@/components/ExportModal';
