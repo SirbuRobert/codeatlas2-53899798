@@ -57,6 +57,11 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [proGateFeature, setProGateFeature] = useState<'chat' | 'business'>('chat');
   const [customCmdExecuting, setCustomCmdExecuting] = useState(false);
 
+  const openProGate = (feature: 'chat' | 'business') => {
+    setProGateFeature(feature);
+    setProGateOpen(true);
+  };
+
   const { commands: customCommands, createCommand, deleteCommand, executeCommand: execCustomCmd } =
     useCustomCommands(repoUrl);
 
