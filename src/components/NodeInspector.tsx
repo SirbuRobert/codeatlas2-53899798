@@ -252,6 +252,46 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph, onN
   // Internal navigation history stack for back-button UX
   const [historyStack, setHistoryStack] = useState<string[]>([]);
 
+  // ── Suggest Fix state ────────────────────────────────────────────────────────
+  type FixState = 'idle' | 'loading' | 'done' | 'error';
+  const [fixState, setFixState] = useState<FixState>('idle');
+  const [fixResult, setFixResult] = useState<{ problem: string; suggestion: string; priority: string } | null>(null);
+  const [fixError, setFixError] = useState<string>('');
+  const [copied, setCopied] = useState(false);
+
+  // Reset fix state when node changes
+  const handleSuggestFix = useCallback(async () => {
+    if (!node) return;
+    setFixState('loading');
+    setFixResult(null);
+    setFixError('');
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-fix', {
+        body: {
+          node,
+          repoUrl: graph?.repoUrl ?? '',
+          lang: navigator.language,
+        },
+      });
+      if (error) throw new Error(error.message ?? 'Unknown error');
+      if (data?.error) throw new Error(data.error);
+      setFixResult(data);
+      setFixState('done');
+    } catch (e) {
+      setFixError(e instanceof Error ? e.message : 'Unknown error');
+      setFixState('error');
+    }
+  }, [node, graph]);
+
+  const handleCopyFix = useCallback(() => {
+    if (!fixResult) return;
+    const text = `PROBLEM:\n${fixResult.problem}\n\nSUGGESTION:\n${fixResult.suggestion}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [fixResult]);
+
   // Reset history when the node changes from an external source (not internal navigation)
   const prevNodeId = useState(node?.id)[0];
 
