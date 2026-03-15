@@ -116,25 +116,9 @@
   body {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: var(--font-ui);
+    font-family: var(--font-mono);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* Scanline overlay for CRT effect on panels */
-  .scanlines::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px
-    );
-    pointer-events: none;
-    border-radius: inherit;
   }
 
   /* Scrollbar */
@@ -150,13 +134,13 @@
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--cyan-dim));
+    background: hsl(var(--primary) / 0.5);
   }
 
   /* Selection */
   ::selection {
-    background: hsl(180 100% 50% / 0.2);
-    color: hsl(var(--cyan));
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
   }
 }
 
