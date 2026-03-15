@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.suggest-fix]
 verify_jwt = false
+
+[functions.voice-command]
+verify_jwt = false
