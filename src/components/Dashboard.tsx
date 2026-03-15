@@ -283,6 +283,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           )}
 
           <button
+            onClick={() => setExplainerOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground hover:border-border-bright transition-all"
+          >
+            <BookOpen className="w-3 h-3" />
+            Explain Repo
+          </button>
+
+          <button
             onClick={() => setTourActive(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 border border-success/25 font-mono text-[10px] text-success hover:bg-success/15 transition-all"
           >
