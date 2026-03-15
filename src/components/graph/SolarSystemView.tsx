@@ -358,9 +358,9 @@ function NodeSphere({
         <meshStandardMaterial
           color={effectiveColor}
           emissive={isCritical ? riskColor : effectiveColor}
-          emissiveIntensity={isDimmed ? 0.04 : (hovered || isSelected ? 2.2 : 1.2)}
-          roughness={isOrphan ? 0.5 : 0.2}
-          metalness={isOrphan ? 0 : 0.15}
+          emissiveIntensity={isDimmed ? 0.15 : (hovered || isSelected ? 4.5 : 2.8)}
+          roughness={0.0}
+          metalness={0.0}
           transparent
           opacity={opacity}
         />
