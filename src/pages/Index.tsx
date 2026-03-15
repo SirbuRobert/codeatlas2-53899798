@@ -24,7 +24,7 @@ export default function Index() {
   const { getGithubToken } = useAuth();
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const autoTriggeredRef = useRef(false);
 
   const handleAnalyze = useCallback(
@@ -56,16 +56,29 @@ export default function Index() {
     [analyze, getGithubToken],
   );
 
-  // Auto-analyze when launched from Chrome extension with ?repo=owner/repo&auto=true
+  // Auto-analyze from ?url=FULL_GITHUB_URL (shareable/refresh-safe link)
   useEffect(() => {
+    const urlParam = searchParams.get('url');
+    if (urlParam && !autoTriggeredRef.current) {
+      autoTriggeredRef.current = true;
+      handleAnalyze(urlParam);
+      return;
+    }
+    // Legacy Chrome extension format: ?repo=owner/repo&auto=true
     const repoParam = searchParams.get('repo');
     const autoParam = searchParams.get('auto');
     if (repoParam && autoParam === 'true' && !autoTriggeredRef.current) {
       autoTriggeredRef.current = true;
-      const fullUrl = `https://github.com/${repoParam}`;
-      handleAnalyze(fullUrl);
+      handleAnalyze(`https://github.com/${repoParam}`);
     }
   }, [searchParams, handleAnalyze]);
+
+  // Update URL to ?url=REPO when dashboard is ready (enables refresh & sharing)
+  useEffect(() => {
+    if (stage === 'dashboard' && repoUrl) {
+      setSearchParams({ url: repoUrl }, { replace: true });
+    }
+  }, [stage, repoUrl, setSearchParams]);
 
   // Show toast when a webhook fires successfully after analysis
   useEffect(() => {
@@ -76,7 +89,6 @@ export default function Index() {
       description: urls ? `Notified: ${urls.length > 60 ? urls.slice(0, 57) + '…' : urls}` : 'analysis.complete event delivered',
     });
   }, [webhookResult]);
-
 
   const handleAnimationComplete = useCallback(() => {
     animationDoneRef.current = true;
@@ -91,10 +103,11 @@ export default function Index() {
     reset();
     setStage('landing');
     setRepoUrl('');
+    setSearchParams({}, { replace: true });
     animationDoneRef.current = false;
     graphRef.current = null;
     autoTriggeredRef.current = false;
-  }, [reset]);
+  }, [reset, setSearchParams]);
 
   if (stage === 'dashboard' && graph) {
     return <Dashboard graph={graph} repoUrl={repoUrl} onReset={handleReset} webhookResult={webhookResult} />;
