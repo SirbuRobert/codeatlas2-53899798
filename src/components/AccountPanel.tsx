@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Github, Eye, EyeOff, Check, LogOut, User, ExternalLink, Loader2, Trash2 } from 'lucide-react';
+import { X, Github, Eye, EyeOff, Check, LogOut, User, ExternalLink, Loader2, Trash2, Webhook, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface AccountPanelProps {
   isOpen: boolean;
