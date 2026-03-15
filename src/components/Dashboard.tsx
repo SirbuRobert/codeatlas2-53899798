@@ -290,22 +290,6 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             Business View
           </button>
 
-          {/* Ghost City */}
-          {orphanCount > 0 && (
-            <button
-              onClick={handleGhostCity}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-[10px] transition-all ${
-                ghostMode
-                  ? 'bg-surface-3 border-border-bright text-foreground-muted'
-                  : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground'
-              }`}
-            >
-              <Ghost className="w-3 h-3" />
-              Dead Code
-              <span className="font-mono text-[9px] px-1 rounded bg-surface-3 text-foreground-dim">{orphanCount}</span>
-            </button>
-          )}
-
           <button
             onClick={() => setExplainerOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground hover:border-border-bright transition-all"
