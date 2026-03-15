@@ -249,10 +249,13 @@ const SUGGESTIONS = [
   'What does the database layer look like?',
 ];
 
+type AnyMessage = Message | DualMessage;
+
 export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: RepoChatPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<AnyMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [dualMode, setDualMode] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const graphContext = useMemo(() => buildGraphContext(graph), [graph]);
@@ -267,6 +270,57 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Send in regular streaming mode
+  const sendSingle = useCallback(async (trimmed: string, newMessages: AnyMessage[]) => {
+    abortRef.current = new AbortController();
+    let assistantSoFar = '';
+
+    const upsert = (chunk: string) => {
+      assistantSoFar += chunk;
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last && 'role' in last && last.role === 'assistant') {
+          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
+        }
+        return [...prev, { role: 'assistant' as const, content: assistantSoFar }];
+      });
+    };
+
+    try {
+      await streamChat({
+        messages: newMessages.filter((m): m is Message => m.role === 'user' || m.role === 'assistant'),
+        graphContext,
+        onDelta: upsert,
+        onDone: () => setIsLoading(false),
+        onError: (err) => {
+          setMessages(prev => [...prev, { role: 'assistant' as const, content: `⚠️ ${err}` }]);
+          setIsLoading(false);
+        },
+        signal: abortRef.current.signal,
+      });
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name !== 'AbortError') {
+        setMessages(prev => [...prev, { role: 'assistant' as const, content: '⚠️ Failed to reach AI. Please try again.' }]);
+      }
+      setIsLoading(false);
+    }
+  }, [graphContext]);
+
+  // Send in dual mode — calls both models
+  const sendDual = useCallback(async (trimmed: string, newMessages: AnyMessage[]) => {
+    try {
+      const result = await fetchDualChat({
+        messages: newMessages.filter((m): m is Message => m.role === 'user' || m.role === 'assistant'),
+        graphContext,
+      });
+      setMessages(prev => [...prev, { role: 'dual' as const, content: '', gemini: result.gemini, gpt: result.gpt }]);
+    } catch (e: unknown) {
+      setMessages(prev => [...prev, { role: 'assistant' as const, content: `⚠️ ${e instanceof Error ? e.message : 'Dual AI failed'}` }]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [graphContext]);
+
   const send = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isLoading) return;
@@ -277,39 +331,12 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
     setMessages(newMessages);
     setIsLoading(true);
 
-    abortRef.current = new AbortController();
-    let assistantSoFar = '';
-
-    const upsert = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
-          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-        }
-        return [...prev, { role: 'assistant', content: assistantSoFar }];
-      });
-    };
-
-    try {
-      await streamChat({
-        messages: newMessages,
-        graphContext,
-        onDelta: upsert,
-        onDone: () => setIsLoading(false),
-        onError: (err) => {
-          setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${err}` }]);
-          setIsLoading(false);
-        },
-        signal: abortRef.current.signal,
-      });
-    } catch (e: unknown) {
-      if (e instanceof Error && e.name !== 'AbortError') {
-        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Failed to reach AI. Please try again.' }]);
-      }
-      setIsLoading(false);
+    if (dualMode) {
+      await sendDual(trimmed, newMessages);
+    } else {
+      await sendSingle(trimmed, newMessages);
     }
-  }, [messages, graphContext, isLoading]);
+  }, [messages, isLoading, dualMode, sendSingle, sendDual]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); }
@@ -346,20 +373,36 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
               <p className="font-mono text-[11px] font-bold text-foreground">Ask your codebase</p>
               <p className="font-mono text-[9px] text-foreground-dim truncate">{repoSlug}</p>
             </div>
+            {/* Second Opinion toggle */}
             <button
-              onClick={reset}
-              title="Clear conversation"
-              className="text-foreground-dim hover:text-foreground transition-colors p-1 rounded"
+              onClick={() => setDualMode(d => !d)}
+              title={dualMode ? 'Disable Second Opinion (dual AI)' : 'Enable Second Opinion — compare Gemini vs GPT'}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg font-mono text-[9px] transition-all flex-shrink-0 border ${
+                dualMode
+                  ? 'bg-violet/10 border-violet/40 text-violet'
+                  : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground'
+              }`}
             >
+              <GitCompare className="w-3 h-3" />
+              {dualMode ? 'DUAL ON' : '2nd Opinion'}
+            </button>
+            <button onClick={reset} title="Clear conversation" className="text-foreground-dim hover:text-foreground transition-colors p-1 rounded">
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
-            <button
-              onClick={onClose}
-              className="text-foreground-dim hover:text-foreground transition-colors p-1 rounded"
-            >
+            <button onClick={onClose} className="text-foreground-dim hover:text-foreground transition-colors p-1 rounded">
               <X className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Dual mode banner */}
+          {dualMode && (
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-violet/5">
+              <GitCompare className="w-3 h-3 text-violet flex-shrink-0" />
+              <span className="font-mono text-[10px] text-violet leading-tight">
+                Second Opinion ON — Gemini Flash vs GPT-5 mini will answer in parallel
+              </span>
+            </div>
+          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
@@ -382,21 +425,35 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
               </div>
             )}
 
-            {messages.map((msg, i) => (
-              <ChatMessage
-                key={i}
-                message={msg}
-                nodes={graph.nodes}
-                onNodeFocus={onNodeFocus}
-              />
-            ))}
+            {messages.map((msg, i) => {
+              if (msg.role === 'dual') {
+                return (
+                  <DualChatMessage
+                    key={i}
+                    gemini={(msg as DualMessage).gemini ?? ''}
+                    gpt={(msg as DualMessage).gpt ?? ''}
+                    nodes={graph.nodes}
+                    onNodeFocus={onNodeFocus}
+                  />
+                );
+              }
+              return (
+                <ChatMessage
+                  key={i}
+                  message={msg as Message}
+                  nodes={graph.nodes}
+                  onNodeFocus={onNodeFocus}
+                />
+              );
+            })}
 
-            {isLoading && messages[messages.length - 1]?.role === 'user' && (
+            {isLoading && (
               <div className="flex items-center gap-2 text-foreground-dim">
                 <div className="w-6 h-6 rounded-full bg-cyan/10 border border-cyan/20 flex items-center justify-center flex-shrink-0">
                   <Bot className="w-3 h-3 text-cyan" />
                 </div>
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan" />
+                {dualMode && <span className="font-mono text-[9px] text-foreground-dim">Asking 2 models…</span>}
               </div>
             )}
 
@@ -409,14 +466,14 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
               className="flex items-end gap-2 rounded-xl px-3 py-2"
               style={{
                 background: 'hsl(var(--surface-2))',
-                border: '1px solid hsl(var(--border))',
+                border: `1px solid ${dualMode ? 'hsl(var(--violet) / 0.4)' : 'hsl(var(--border))'}`,
               }}
             >
               <textarea
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about architecture, functions, risk…"
+                placeholder={dualMode ? 'Ask — both Gemini and GPT will answer…' : 'Ask about architecture, functions, risk…'}
                 rows={1}
                 disabled={isLoading}
                 className="flex-1 bg-transparent border-none outline-none resize-none font-mono text-[11px] text-foreground placeholder:text-foreground-dim leading-relaxed max-h-[120px] overflow-y-auto disabled:opacity-50"
@@ -444,7 +501,11 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
               <button
                 onClick={() => send(input)}
                 disabled={!input.trim() || isLoading}
-                className="flex-shrink-0 w-7 h-7 rounded-lg bg-cyan/10 border border-cyan/30 flex items-center justify-center text-cyan hover:bg-cyan/20 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 disabled:pointer-events-none ${
+                  dualMode
+                    ? 'bg-violet/10 border border-violet/30 text-violet hover:bg-violet/20'
+                    : 'bg-cyan/10 border border-cyan/30 text-cyan hover:bg-cyan/20'
+                }`}
               >
                 <Send className="w-3 h-3" />
               </button>
