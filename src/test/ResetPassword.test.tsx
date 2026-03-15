@@ -1,26 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import React from 'react';
 
 // ── Mock framer-motion ──────────────────────────
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_t, tag) => {
-      const Component = ({ children, ...props }: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }) => {
-        const Tag = tag as keyof JSX.IntrinsicElements;
-        const filtered: Record<string, unknown> = {};
-        for (const key of Object.keys(props)) {
-          if (!['initial','animate','exit','transition','variants','whileHover','whileTap','layout'].includes(key)) {
-            filtered[key] = (props as Record<string, unknown>)[key];
-          }
+vi.mock('framer-motion', () => {
+  const passthrough = (tag: string) => {
+    const Cmp = ({ children, ...props }: Record<string, unknown>) => {
+      const filtered: Record<string, unknown> = {};
+      for (const key of Object.keys(props)) {
+        if (!['initial','animate','exit','transition','variants','whileHover','whileTap','layout'].includes(key)) {
+          filtered[key] = props[key];
         }
-        return <Tag {...(filtered as React.HTMLAttributes<HTMLElement>)}>{children}</Tag>;
-      };
-      return Component;
-    },
-  }),
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+      }
+      return React.createElement(tag, filtered, children as React.ReactNode);
+    };
+    return Cmp;
+  };
+  return {
+    motion: new Proxy({}, { get: (_t, tag: string) => passthrough(tag) }),
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
 
 // ── Mock useNavigate ─────────────────────────────
 const mockNavigate = vi.fn();
