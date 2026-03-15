@@ -286,7 +286,7 @@ export default function Billing() {
           className="mt-12 text-center"
         >
           <p className="font-mono text-[11px] text-foreground-dim">
-            All plans include a 14-day free trial. No credit card required for Free tier.{' '}
+            No credit card required for the Free tier.{' '}
             <span className="text-foreground-muted">Questions?</span>{' '}
             <button onClick={() => navigate('/feedback')} className="text-cyan cursor-pointer hover:underline">Contact us →</button>
           </p>
