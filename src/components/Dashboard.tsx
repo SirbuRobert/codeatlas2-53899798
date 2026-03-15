@@ -439,6 +439,22 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
       {/* Export Modal */}
       <ExportModal graph={graph} isOpen={exportOpen} onClose={() => setExportOpen(false)} />
+
+      {/* Repo Explainer Modal */}
+      <RepoExplainerModal
+        graph={graph}
+        isOpen={explainerOpen}
+        onClose={() => {
+          setExplainerOpen(false);
+          const slug = graph.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\//g, '_');
+          localStorage.setItem(`axon_explained_${slug}`, '1');
+        }}
+        onFocusNode={(id) => {
+          setSelectedNode(graph.nodes.find((n) => n.id === id) ?? null);
+          setTourFocusNodeId(id);
+          setViewMode('topology');
+        }}
+      />
     </div>
   );
 }
