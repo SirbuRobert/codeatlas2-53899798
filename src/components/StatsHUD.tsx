@@ -14,36 +14,30 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
   const { stats, nodes } = graph;
   const [complexityOpen, setComplexityOpen] = useState(false);
 
-  // Node sets for each stat
+  // Node sets for each stat — strict thresholds, no fallbacks
   const getNodeIds = (label: string): Set<string> => {
     switch (label) {
       case 'FILES':
         return new Set(nodes.map(n => n.id));
-      case 'HOTSPOTS': {
-        const strict = nodes.filter(n => n.metadata.complexity > 10 && n.metadata.churn > 40);
-        if (strict.length > 0) return new Set(strict.map(n => n.id));
-        // fallback: orice nod cu complexitate ridicată SAU churn ridicat
-        return new Set(nodes.filter(n => n.metadata.complexity > 8 || n.metadata.churn > 50).map(n => n.id));
-      }
-      case 'ORPHANS': {
-        const orphans = nodes.filter(n => n.metadata.isOrphan === true);
-        if (orphans.length > 0) return new Set(orphans.map(n => n.id));
-        // fallback: noduri fără dependenți
-        return new Set(nodes.filter(n => n.metadata.dependents === 0).map(n => n.id));
-      }
+      case 'HOTSPOTS':
+        return new Set(nodes.filter(n => n.metadata.complexity > 10 && n.metadata.churn > 40).map(n => n.id));
+      case 'ORPHANS':
+        return new Set(nodes.filter(n => n.metadata.isOrphan === true).map(n => n.id));
       case 'CIRCULAR DEPS':
         return new Set(nodes.filter(n => n.metadata.flags?.includes('circular-dep')).map(n => n.id));
-      case 'COVERAGE': {
-        // Încearcă threshold strict (<70), apoi fallback la sub medie
-        const lowCov = nodes.filter(n => n.metadata.coverage < 70);
-        if (lowCov.length > 0) return new Set(lowCov.map(n => n.id));
-        const avgCov = nodes.reduce((s, n) => s + n.metadata.coverage, 0) / nodes.length;
-        return new Set(nodes.filter(n => n.metadata.coverage < avgCov).map(n => n.id));
-      }
+      case 'COVERAGE':
+        return new Set(nodes.filter(n => n.metadata.coverage < 70).map(n => n.id));
       default:
         return new Set();
     }
   };
+
+  // Live counts derived from the actual node set (not pre-baked stats)
+  const liveFilesCount = nodes.length;
+  const liveHotspotsCount = getNodeIds('HOTSPOTS').size;
+  const liveOrphansCount = getNodeIds('ORPHANS').size;
+  const liveCircularCount = getNodeIds('CIRCULAR DEPS').size;
+  const liveCoverageCount = getNodeIds('COVERAGE').size;
 
   const topComplexNodes = [...nodes]
     .sort((a, b) => b.metadata.complexity - a.metadata.complexity)
@@ -66,7 +60,7 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: FileCode,
       label: 'FILES',
-      value: stats.totalFiles,
+      value: liveFilesCount,
       color: 'hsl(var(--cyan))',
       sub: `${(stats.totalLines / 1000).toFixed(1)}k lines`,
       tooltip: 'Click to highlight all files in the graph.',
@@ -84,16 +78,16 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: AlertTriangle,
       label: 'HOTSPOTS',
-      value: stats.hotspots,
+      value: liveHotspotsCount,
       color: 'hsl(var(--destructive))',
       sub: 'critical risk',
-      tooltip: 'Click to highlight hotspot files.',
+      tooltip: 'Click to highlight hotspot files (complexity > 10 & churn > 40).',
       clickable: true,
     },
     {
       icon: Zap,
       label: 'ORPHANS',
-      value: stats.orphans,
+      value: liveOrphansCount,
       color: 'hsl(var(--muted-foreground))',
       sub: 'dead code',
       tooltip: 'Click to highlight orphaned (dead) files.',
@@ -102,8 +96,8 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: GitBranch,
       label: 'CIRCULAR DEPS',
-      value: stats.circularDeps,
-      color: stats.circularDeps > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--success))',
+      value: liveCircularCount,
+      color: liveCircularCount > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--success))',
       sub: 'detected',
       tooltip: 'Click to highlight files with circular dependencies.',
       clickable: true,
@@ -111,15 +105,15 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: CheckCircle,
       label: 'COVERAGE',
-      value: `${stats.testCoverage}%`,
+      value: `${liveCoverageCount}`,
       color:
-        stats.testCoverage >= 80
+        liveCoverageCount === 0
           ? 'hsl(var(--success))'
-          : stats.testCoverage >= 60
+          : liveCoverageCount <= 2
           ? 'hsl(var(--warning))'
           : 'hsl(var(--destructive))',
-      sub: 'test coverage',
-      tooltip: 'Click to highlight files with low test coverage (<60%).',
+      sub: 'low coverage files',
+      tooltip: 'Click to highlight files with test coverage < 70%.',
       clickable: true,
     },
   ];

@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -236,7 +236,11 @@ export default function GraphCanvas({
   }, [graph.edges, hoveredNodeId, blastRadius, blastRadiusNodeId, securityOverlay]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
-  const [edges, , onEdgesChange] = useEdgesState(rfEdges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
+
+  // Sync rfNodes/rfEdges into React Flow state whenever highlight/overlay state changes
+  useEffect(() => { setNodes(rfNodes); }, [rfNodes]);
+  useEffect(() => { setEdges(rfEdges); }, [rfEdges]);
 
   const nodeTypes = useMemo(() => ({ axon: AxonGraphNode }), []);
 
