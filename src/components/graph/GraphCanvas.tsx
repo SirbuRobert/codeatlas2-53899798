@@ -486,6 +486,50 @@ export default function GraphCanvas({
           )}
         </AnimatePresence>
 
+        {/* ── Stats Filter Banner ── */}
+        <AnimatePresence>
+          {statsHighlightLabel && searchHighlightIds.size > 0 && (
+            <Panel position="bottom-center">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+                transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+                className="panel-glass flex items-center gap-3 px-4 py-2 rounded-xl border mb-4"
+                style={{
+                  borderColor: `${STAT_ACCENT[statsHighlightLabel] ?? '#00ffff'}55`,
+                  boxShadow: `0 0 20px ${STAT_ACCENT[statsHighlightLabel] ?? '#00ffff'}22`,
+                }}
+              >
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: STAT_ACCENT[statsHighlightLabel] ?? '#00ffff' }}
+                />
+                <span
+                  className="font-mono text-[10px] font-bold tracking-widest"
+                  style={{ color: STAT_ACCENT[statsHighlightLabel] ?? '#00ffff' }}
+                >
+                  {statsHighlightLabel}
+                </span>
+                <span className="font-mono text-[10px] text-foreground-dim">
+                  {searchHighlightIds.size} / {graph.nodes.length} nodes
+                </span>
+                <button
+                  onClick={onClearStatFilter}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[9px] transition-all hover:opacity-80 ml-1"
+                  style={{
+                    background: `${STAT_ACCENT[statsHighlightLabel] ?? '#00ffff'}18`,
+                    border: `1px solid ${STAT_ACCENT[statsHighlightLabel] ?? '#00ffff'}35`,
+                    color: STAT_ACCENT[statsHighlightLabel] ?? '#00ffff',
+                  }}
+                >
+                  ✕ Clear
+                </button>
+              </motion.div>
+            </Panel>
+          )}
+        </AnimatePresence>
+
         {/* ── Blast Radius Indicator ── */}
         <AnimatePresence>
           {blastRadiusNodeId && blastRadius && !securityOverlay && (
