@@ -3,6 +3,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { computeHierarchicalLayout } from '@/lib/graphLayout';
 import type { CodebaseGraph, AxonNode, AxonEdge, NodeType, RiskLevel, Language, FunctionEntry } from '@/types/graph';
 
+async function fireWebhooks(repoUrl: string, graph: CodebaseGraph) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return { sent: 0 };
+
+    const { data } = await supabase.functions.invoke('webhook-notify', {
+      body: {
+        repo_url: repoUrl,
+        event: 'analysis.complete',
+        payload: {
+          stats: graph.stats,
+          nodeCount: graph.nodes.length,
+          edgeCount: graph.edges.length,
+          language: graph.language,
+          analyzedAt: graph.analyzedAt,
+        },
+      },
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    return data ?? { sent: 0 };
+  } catch {
+    return { sent: 0 };
+  }
+}
+
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,6 +64,7 @@ export function useAnalyzeRepo() {
   const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [graph, setGraph] = useState<CodebaseGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [webhookResult, setWebhookResult] = useState<{ sent: number; results?: Array<{ url: string; status: string }> } | null>(null);
 
   const analyze = useCallback(
     async (repoUrl: string, token?: string): Promise<CodebaseGraph | null> => {
@@ -100,6 +126,12 @@ export function useAnalyzeRepo() {
 
         setGraph(codebaseGraph);
         setStatus('success');
+
+        // Fire webhooks for any registered configs on this repo (fire-and-forget)
+        fireWebhooks(repoUrl, codebaseGraph).then((result) => {
+          if (result.sent > 0) setWebhookResult(result);
+        });
+
         return codebaseGraph;
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Analysis failed';
@@ -115,7 +147,8 @@ export function useAnalyzeRepo() {
     setStatus('idle');
     setGraph(null);
     setError(null);
+    setWebhookResult(null);
   }, []);
 
-  return { analyze, status, graph, error, reset };
+  return { analyze, status, graph, error, reset, webhookResult };
 }

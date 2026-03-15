@@ -4,6 +4,7 @@ import LandingPage from '@/components/LandingPage';
 import Dashboard from '@/components/Dashboard';
 import { useAnalyzeRepo } from '@/hooks/useAnalyzeRepo';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 import type { CodebaseGraph } from '@/types/graph';
 import type { SessionStats } from '@/components/LiveStatsBar';
 
@@ -19,7 +20,7 @@ export default function Index() {
   const [stage, setStage] = useState<AppStage>('landing');
   const [repoUrl, setRepoUrl] = useState('');
   const [sessionStats, setSessionStats] = useState<SessionStats>(BASELINE_STATS);
-  const { analyze, status, graph, error, reset } = useAnalyzeRepo();
+  const { analyze, status, graph, error, reset, webhookResult } = useAnalyzeRepo();
   const { getGithubToken } = useAuth();
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
@@ -65,6 +66,17 @@ export default function Index() {
       handleAnalyze(fullUrl);
     }
   }, [searchParams, handleAnalyze]);
+
+  // Show toast when a webhook fires successfully after analysis
+  useEffect(() => {
+    if (!webhookResult || webhookResult.sent === 0) return;
+    const urls = webhookResult.results?.map(r => r.url).join(', ') ?? '';
+    toast({
+      title: `📡 Webhook sent (${webhookResult.sent})`,
+      description: urls ? `Notified: ${urls.length > 60 ? urls.slice(0, 57) + '…' : urls}` : 'analysis.complete event delivered',
+    });
+  }, [webhookResult]);
+
 
   const handleAnimationComplete = useCallback(() => {
     animationDoneRef.current = true;
