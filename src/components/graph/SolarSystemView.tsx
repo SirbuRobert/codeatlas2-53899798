@@ -512,7 +512,7 @@ function ForceScene({
             from={fromPos}
             to={toPos}
             color={baseColor}
-            opacity={dimEdge ? 0.04 : isHighlighted ? 1 : 0.28}
+            opacity={dimEdge ? 0.04 : isHighlighted ? 1 : 0.45}
             highlighted={!!isHighlighted}
             animated={
               selectedNodeId != null &&
