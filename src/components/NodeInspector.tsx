@@ -175,7 +175,11 @@ function FunctionsSection({ functions, graph, path }: {
   path: string;
 }) {
   const [open, setOpen] = useState(true);
-  if (!functions || functions.length === 0) return null;
+  // Filter out entries with invalid line numbers before rendering
+  const validFunctions = (functions ?? []).filter(
+    fn => fn.line && Number.isFinite(fn.line) && fn.line >= 1
+  );
+  if (validFunctions.length === 0) return null;
 
   return (
     <div>
