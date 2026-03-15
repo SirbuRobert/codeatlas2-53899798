@@ -19,7 +19,13 @@ import type { AxonNode, AxonEdge, CodebaseGraph } from '@/types/graph';
 import { calculateBlastRadius } from '@/types/graph';
 import type { SecurityAnalysis } from '@/lib/securityAnalysis';
 import AxonGraphNode from './AxonGraphNode';
-import { ShieldAlert, ShieldCheck, AlertTriangle, Lock } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Lock, ExternalLink, Search } from 'lucide-react';
+
+// Build a GitHub deep-link URL for a file path (with optional line number)
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
+  const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
+  return line ? `${base}#L${line}` : base;
+}
 
 interface GraphCanvasProps {
   graph: CodebaseGraph;
@@ -30,6 +36,7 @@ interface GraphCanvasProps {
   searchHighlightIds?: Set<string>;
   ghostMode?: boolean;
   tourFocusNodeId?: string | null;
+  onFindingNodeSelect?: (nodeId: string) => void;
 }
 
 const RELATION_COLORS: Record<string, string> = {
