@@ -321,6 +321,19 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
                 {searchHighlightIds.size} matches — clear
               </motion.button>
             )}
+            {/* Webhook dispatched badge */}
+            {webhookBadgeVisible && webhookBadgeData && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                onClick={() => setWebhookBadgeVisible(false)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-[10px] transition-all whitespace-nowrap flex-shrink-0"
+                style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', color: '#4ade80' }}
+                title={webhookBadgeData.results?.map(r => `${r.url}: ${r.status}`).join('\n') ?? 'Webhook sent'}
+              >
+                <Radio className="w-3 h-3" />
+                📡 Signal sent ({webhookBadgeData.sent}) — click to dismiss
+              </motion.button>
+            )}
           </div>
 
           {/* Auth — right side */}
