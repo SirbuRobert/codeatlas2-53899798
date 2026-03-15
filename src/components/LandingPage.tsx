@@ -369,7 +369,7 @@ export default function LandingPage({
               </div>
 
               <div className="relative group mb-4">
-                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-cyan/30 via-violet/20 to-cyan/30 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
+                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-accent/15 to-primary/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
                 <div className="relative flex items-center gap-3 bg-surface-1 border border-border rounded-2xl px-5 py-4 shadow-[var(--shadow-panel)]">
                   <Search className="w-4 h-4 text-foreground-dim flex-shrink-0" />
                   <input
