@@ -19,7 +19,7 @@ import type { AxonNode, AxonEdge, CodebaseGraph } from '@/types/graph';
 import { calculateBlastRadius } from '@/types/graph';
 import type { SecurityAnalysis } from '@/lib/securityAnalysis';
 import AxonGraphNode from './AxonGraphNode';
-import { ShieldAlert, AlertTriangle, Lock, ExternalLink, Search } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Lock, ExternalLink, Search, RotateCcw } from 'lucide-react';
 
 // Build a GitHub deep-link URL for a file path (with optional line number)
 function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
@@ -235,10 +235,23 @@ export default function GraphCanvas({
     });
   }, [graph.edges, hoveredNodeId, blastRadius, blastRadiusNodeId, securityOverlay]);
 
-  const [nodes, , onNodesChange] = useNodesState(rfNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, , onEdgesChange] = useEdgesState(rfEdges);
 
   const nodeTypes = useMemo(() => ({ axon: AxonGraphNode }), []);
+
+  const hasDraggedNodes = useMemo(() => {
+    return nodes.some(n => {
+      const orig = rfNodes.find(r => r.id === n.id);
+      if (!orig) return false;
+      return Math.abs(n.position.x - orig.position.x) > 2 ||
+             Math.abs(n.position.y - orig.position.y) > 2;
+    });
+  }, [nodes, rfNodes]);
+
+  const handleResetLayout = useCallback(() => {
+    setNodes(rfNodes);
+  }, [setNodes, rfNodes]);
 
   const handleNodeClick: NodeMouseHandler = useCallback((_, node) => {
     const axonNode = graph.nodes.find(n => n.id === node.id);
@@ -526,6 +539,25 @@ export default function GraphCanvas({
                   ✕ Clear
                 </button>
               </motion.div>
+            </Panel>
+          )}
+        </AnimatePresence>
+
+        {/* ── Reset Layout Button ── */}
+        <AnimatePresence>
+          {hasDraggedNodes && (
+            <Panel position="top-right">
+              <motion.button
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                transition={{ duration: 0.15, ease: [0.2, 0, 0, 1] }}
+                onClick={handleResetLayout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg panel-glass border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground transition-all mr-2 mt-2"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset Layout
+              </motion.button>
             </Panel>
           )}
         </AnimatePresence>
