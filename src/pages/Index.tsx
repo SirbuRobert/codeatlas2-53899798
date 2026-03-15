@@ -97,7 +97,7 @@ export default function Index() {
   }, [reset]);
 
   if (stage === 'dashboard' && graph) {
-    return <Dashboard graph={graph} repoUrl={repoUrl} onReset={handleReset} />;
+    return <Dashboard graph={graph} repoUrl={repoUrl} onReset={handleReset} webhookResult={webhookResult} />;
   }
 
   return (
