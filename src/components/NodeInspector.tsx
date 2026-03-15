@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown, ExternalLink, ArrowLeft } from 'lucide-react';
+import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown, ExternalLink, ArrowLeft, Sparkles, Copy, Check, Loader2 } from 'lucide-react';
 import type { AxonNode, NodeType, CodebaseGraph, FunctionEntry } from '@/types/graph';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NodeInspectorProps {
   node: AxonNode | null;
