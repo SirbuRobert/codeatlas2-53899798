@@ -239,18 +239,10 @@ export default function LandingPage({
 
   return (
     <div className="relative min-h-screen bg-background flex flex-col">
-      {/* Grid bg */}
+      {/* Subtle top gradient glow */}
       <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: `linear-gradient(hsl(var(--cyan)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--cyan)) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
-      {/* Top glow */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] opacity-[0.06] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse, hsl(var(--cyan)) 0%, transparent 70%)' }}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] opacity-[0.08] pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse, hsl(245 70% 65%) 0%, transparent 70%)' }}
       />
       {/* Version chip + Auth button */}
       <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
