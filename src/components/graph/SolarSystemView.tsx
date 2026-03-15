@@ -364,6 +364,18 @@ function NodeSphere({
         </mesh>
       )}
 
+      {/* Pulse halo — entry-point (cyan) or critical (red) */}
+      {(isEntryPoint || isCritical) && !isDimmed && (
+        <mesh ref={pulseHaloRef}>
+          <sphereGeometry args={[size * 2.2, 12, 12]} />
+          <meshBasicMaterial
+            color={isCritical ? '#ef4444' : '#00ffff'}
+            transparent
+            opacity={0.22}
+          />
+        </mesh>
+      )}
+
       {/* Main sphere */}
       <mesh
         ref={meshRef}
