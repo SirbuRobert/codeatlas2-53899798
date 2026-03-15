@@ -32,6 +32,9 @@ interface UseVoiceCommandReturn {
   isListening: boolean;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type AnyWindow = any;
+
 export function useVoiceCommand(
   graph: CodebaseGraph | null,
   onResult: (result: VoiceCommandResult) => void,
@@ -39,7 +42,7 @@ export function useVoiceCommand(
   const [status, setStatus] = useState<VoiceStatus>('idle');
   const [transcript, setTranscript] = useState('');
   const [lastResult, setLastResult] = useState<VoiceCommandResult | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const processTranscript = useCallback(async (text: string) => {
     if (!text.trim() || !graph) return;
@@ -80,10 +83,8 @@ export function useVoiceCommand(
   }, [graph, onResult]);
 
   const startListening = useCallback(() => {
-    type SpeechRecognitionCtor = new () => SpeechRecognition;
-    const SpeechRecognitionAPI: SpeechRecognitionCtor | undefined =
-      (window as Record<string, unknown>).SpeechRecognition as SpeechRecognitionCtor ??
-      (window as Record<string, unknown>).webkitSpeechRecognition as SpeechRecognitionCtor;
+    const w = window as AnyWindow;
+    const SpeechRecognitionAPI = w.SpeechRecognition ?? w.webkitSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
       setStatus('unsupported');
@@ -102,7 +103,7 @@ export function useVoiceCommand(
       setLastResult(null);
     };
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: any) => {
       let interim = '';
       let final = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -125,12 +126,12 @@ export function useVoiceCommand(
     };
 
     recognition.onend = () => {
-      if (status === 'listening') setStatus('idle');
+      recognitionRef.current = null;
     };
 
     recognitionRef.current = recognition;
     recognition.start();
-  }, [processTranscript, status]);
+  }, [processTranscript]);
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
