@@ -124,11 +124,11 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="flex items-center gap-px bg-surface-1 border-b border-border px-4 overflow-x-auto"
-        style={{ height: 48 }}
+        className="flex items-center gap-px bg-surface-1 border-b border-border px-2 sm:px-4 overflow-x-auto"
+        style={{ height: 44, scrollbarWidth: 'none' } as React.CSSProperties}
       >
         {/* Repo info */}
-        <div className="flex items-center gap-2 pr-4 border-r border-border mr-3 flex-shrink-0">
+        <div className="hidden sm:flex items-center gap-2 pr-4 border-r border-border mr-3 flex-shrink-0">
           <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           <span className="font-mono text-[10px] text-foreground">{graph.repoUrl}</span>
           <span className="font-mono text-[9px] text-foreground-dim px-1.5 py-0.5 bg-surface-3 rounded border border-border">
@@ -138,7 +138,7 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
         </div>
 
         {/* Stats items */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-0.5 flex-shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
           {items.map((item) => {
             const Icon = item.icon;
             const isActive = activeStatLabel === item.label || (item.label === 'AVG COMPLEXITY' && complexityOpen);
@@ -180,7 +180,7 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
         </div>
 
         {/* Language breakdown */}
-        <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+        <div className="hidden sm:flex ml-auto items-center gap-2 flex-shrink-0">
           {Object.entries(stats.languages).map(([lang, pct]) => (
             <div key={lang} className="flex items-center gap-1">
               <div

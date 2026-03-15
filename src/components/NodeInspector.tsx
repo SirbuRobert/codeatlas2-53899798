@@ -291,7 +291,7 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph, onN
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: '100%', opacity: 0 }}
         transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
-        className="absolute right-0 top-0 bottom-0 w-[340px] z-20 flex flex-col panel-glass border-l border-border overflow-hidden"
+        className="absolute right-0 top-0 bottom-0 w-full sm:w-[340px] z-20 flex flex-col panel-glass border-l border-border overflow-hidden"
       >
         {/* ── Header ── */}
         <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-border">

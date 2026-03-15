@@ -245,23 +245,23 @@ export default function LandingPage({
         style={{ background: 'radial-gradient(ellipse, hsl(245 70% 65%) 0%, transparent 70%)' }}
       />
       {/* Version chip + Auth button */}
-      <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 sm:gap-3 z-20">
         <span className="font-mono text-[10px] text-foreground-dim tracking-[0.2em] uppercase hidden sm:block">AXON v2.1.0</span>
         <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse hidden sm:block" />
         {user ? (
           <button
             onClick={() => setAccountOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
           >
-          <div className="w-5 h-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
               <span className="text-[9px] font-bold text-primary">{user.email?.[0]?.toUpperCase()}</span>
             </div>
-            {user.email?.split('@')[0]}
+            <span className="hidden xs:inline">{user.email?.split('@')[0]}</span>
           </button>
         ) : (
           <button
             onClick={() => navigate('/auth')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-primary/30 font-mono text-[10px] text-foreground-muted hover:text-primary transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-primary/30 font-mono text-[10px] text-foreground-muted hover:text-primary transition-all"
           >
             <LogIn className="w-3 h-3" />
             Sign In
@@ -270,7 +270,7 @@ export default function LandingPage({
       </div>
 
       {/* Main */}
-      <div className="relative z-10 flex flex-col items-center px-6 py-20">
+      <div className="relative z-10 flex flex-col items-center px-4 sm:px-6 pt-16 sm:pt-20 pb-6">
         {/* Brand */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -297,7 +297,7 @@ export default function LandingPage({
           className="text-center mb-4"
         >
           <h1
-            className={`font-mono text-5xl md:text-7xl font-bold tracking-tight leading-none mb-4 transition-all duration-75 ${
+            className={`font-mono text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-none mb-4 transition-all duration-75 ${
               glitchActive ? 'text-alert' : 'text-gradient-cyan'
             }`}
             style={{
@@ -308,8 +308,8 @@ export default function LandingPage({
           >
             GPS FOR CODE
           </h1>
-          <p className="font-mono text-foreground-muted text-sm md:text-base tracking-[0.1em]">
-            POINT IT AT A REPO · UNDERSTAND IT IN MINUTES
+          <p className="font-mono text-foreground-muted text-xs sm:text-sm md:text-base tracking-[0.08em] sm:tracking-[0.1em]">
+            POINT IT AT A REPO · UNDERSTAND IN MINUTES
           </p>
         </motion.div>
 
@@ -317,9 +317,9 @@ export default function LandingPage({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-foreground-dim text-sm text-center max-w-md mb-10 leading-relaxed"
+          className="text-foreground-dim text-xs sm:text-sm text-center max-w-md mb-8 sm:mb-10 leading-relaxed px-2"
         >
-          GitHub API → Tree-sitter AST → Knowledge Graph → AI Semantic Layer → Interactive 60fps WebGL map.
+          GitHub API → AST → Knowledge Graph → AI Layer → WebGL map.
           No config. No setup. Just drop a URL.{' '}
           <button
             onClick={() => setPipelineOpen(true)}
@@ -370,52 +370,54 @@ export default function LandingPage({
 
               <div className="relative group mb-4">
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-accent/15 to-primary/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
-                <div className="relative flex items-center gap-3 bg-surface-1 border border-border rounded-2xl px-5 py-4 shadow-[var(--shadow-panel)]">
+                <div className="relative flex items-center gap-2 sm:gap-3 bg-surface-1 border border-border rounded-2xl px-3 sm:px-5 py-3 sm:py-4 shadow-[var(--shadow-panel)]">
                   <Search className="w-4 h-4 text-foreground-dim flex-shrink-0" />
                   <input
                     type="text"
                     value={inputUrl}
                     onChange={(e) => setInputUrl(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                    placeholder="github.com/org/repository  or  https://github.com/org/repo"
-                    className="flex-1 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
+                    placeholder="github.com/org/repo"
+                    className="flex-1 min-w-0 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
                     autoFocus
                   />
                   <button
                     onClick={() => handleSubmit()}
                     disabled={!inputUrl.trim()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
-                               hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 active:scale-95"
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
+                               hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 active:scale-95 flex-shrink-0"
                   >
                     <Zap className="w-3.5 h-3.5" />
-                    ANALYZE
+                    <span className="hidden xs:inline">ANALYZE</span>
+                    <span className="xs:hidden">GO</span>
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                <span className="font-mono text-[11px] text-foreground-dim mr-1">TRY:</span>
-                {exampleRepos.map((repo) => (
-                  <button
-                    key={repo.url}
-                    onClick={() => handleSubmit(repo.url)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright hover:bg-surface-3 transition-all duration-150 group"
-                  >
-                    {repo.private ? (
-                      <Lock className="w-2.5 h-2.5 text-warning" />
-                    ) : (
-                      <Globe className="w-2.5 h-2.5 text-foreground-dim" />
-                    )}
-                    {repo.label}
-                    {repo.stars && (
-                      <span className="flex items-center gap-0.5 text-foreground-dim">
-                        <Star className="w-2.5 h-2.5" />
-                        {(repo.stars / 1000).toFixed(0)}k
-                      </span>
-                    )}
-                    <ChevronRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                ))}
+              <div className="flex items-start gap-2">
+                <span className="font-mono text-[11px] text-foreground-dim flex-shrink-0 mt-1.5">TRY:</span>
+                <div className="flex flex-wrap gap-2">
+                  {exampleRepos.map((repo) => (
+                    <button
+                      key={repo.url}
+                      onClick={() => handleSubmit(repo.url)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright hover:bg-surface-3 transition-all duration-150 group"
+                    >
+                      {repo.private ? (
+                        <Lock className="w-2.5 h-2.5 text-warning" />
+                      ) : (
+                        <Globe className="w-2.5 h-2.5 text-foreground-dim" />
+                      )}
+                      {repo.label}
+                      {repo.stars && (
+                        <span className="hidden sm:flex items-center gap-0.5 text-foreground-dim">
+                          <Star className="w-2.5 h-2.5" />
+                          {(repo.stars / 1000).toFixed(0)}k
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </motion.div>
           ) : analysisError ? (
