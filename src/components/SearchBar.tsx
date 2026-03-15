@@ -141,7 +141,7 @@ export default function SearchBar({ nodes, onResults, onClose, isOpen }: SearchB
             )}
 
             {/* Close */}
-            <button onClick={() => { onResults(new Set(), ''); onClose(); }} className="text-foreground-dim hover:text-foreground transition-colors">
+            <button onClick={() => { onResults(new Set(), ''); onClose(); }} className="flex-shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center text-foreground-dim hover:text-foreground transition-colors">
               <kbd className="font-mono text-[9px] bg-surface-3 px-1.5 py-0.5 rounded border border-border text-foreground-dim">ESC</kbd>
             </button>
           </div>
