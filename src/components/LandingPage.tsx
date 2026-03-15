@@ -252,10 +252,31 @@ export default function LandingPage({
         className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] opacity-[0.06] pointer-events-none"
         style={{ background: 'radial-gradient(ellipse, hsl(var(--cyan)) 0%, transparent 70%)' }}
       />
-      {/* Version chip */}
-      <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
-        <span className="font-mono text-[10px] text-foreground-dim tracking-[0.2em] uppercase">AXON v2.1.0</span>
-        <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+      {/* Version chip + Auth button */}
+      <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
+        <span className="font-mono text-[10px] text-foreground-dim tracking-[0.2em] uppercase hidden sm:block">AXON v2.1.0</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse hidden sm:block" />
+        {!authLoading && (
+          user ? (
+            <button
+              onClick={() => setAccountOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
+            >
+              <div className="w-5 h-5 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center">
+                <span className="text-[9px] font-bold text-cyan">{user.email?.[0]?.toUpperCase()}</span>
+              </div>
+              {user.email?.split('@')[0]}
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/auth')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-cyan/30 font-mono text-[10px] text-foreground-muted hover:text-cyan transition-all"
+            >
+              <LogIn className="w-3 h-3" />
+              Sign In
+            </button>
+          )
+        )}
       </div>
 
       {/* Main */}
