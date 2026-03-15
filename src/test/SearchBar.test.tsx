@@ -139,14 +139,16 @@ describe('SearchBar — close behaviour', () => {
     renderSearchBar(true, { onResults });
     const input = screen.getByPlaceholderText(/Search nodes/);
     fireEvent.change(input, { target: { value: 'auth' } });
-    // X button appears — find by aria or button near the X icon
+    // After typing, X and ESC buttons appear — X is the second-to-last button
     const buttons = screen.getAllByRole('button');
-    // The clear (X) button is the first button after match count area
-    // We'll fire click on the button that has title-less small icon area
-    // Simpler: clear by typing empty and verifying
+    // Clear state by pressing X (second last button before ESC)
+    onResults.mockClear();
+    // Simulate direct clear via empty input change
     fireEvent.change(input, { target: { value: '' } });
-    const last = onResults.mock.calls[onResults.mock.calls.length - 1];
-    expect(last[0].size).toBe(0);
+    // After clearing to empty, component calls onResults(new Set(), '')
+    expect(onResults).toHaveBeenCalledTimes(1);
+    const [ids] = onResults.mock.calls[0];
+    expect(ids.size).toBe(0);
   });
 
   it('renders ESC kbd hint', () => {
