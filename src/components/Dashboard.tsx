@@ -238,12 +238,13 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
       }
       case 'search':
         if (result.target) {
+          const words = result.target.toLowerCase().trim().split(/\s+/);
+          const matched = new Set<string>();
+          for (const node of graph.nodes) {
+            if (scoreNode(node, words) > 0) matched.add(node.id);
+          }
+          handleSearchResults(matched, result.target);
           setSearchOpen(true);
-          // Pre-populate search with the target query via a short delay to let SearchBar mount
-          setTimeout(() => {
-            const evt = new CustomEvent('voice-search', { detail: result.target });
-            window.dispatchEvent(evt);
-          }, 100);
         }
         break;
       case 'show-summary':
