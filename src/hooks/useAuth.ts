@@ -37,6 +37,9 @@ export function useAuth() {
     // Set up auth state listener BEFORE calling getSession
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          localStorage.removeItem('axon_gh_token');
+        }
         let profile: Profile | null = null;
         if (session?.user) {
           // Defer Supabase call to avoid deadlock in the listener
