@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Github, Eye, EyeOff, Check, LogOut, User, ExternalLink, Loader2, Trash2 } from 'lucide-react';
+import { X, Github, Eye, EyeOff, Check, LogOut, User, ExternalLink, Loader2, Trash2, Webhook, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface AccountPanelProps {
   isOpen: boolean;
@@ -12,11 +14,17 @@ interface AccountPanelProps {
 export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
   const { user, profile, signOut, saveGithubToken } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [token, setToken] = useState('');
   const [showToken, setShowToken] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Webhook state
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookRepoUrl, setWebhookRepoUrl] = useState('');
+  const [savingWebhook, setSavingWebhook] = useState(false);
 
   // Populate token from profile when panel opens
   useEffect(() => {
@@ -211,10 +219,90 @@ export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
                   Unlimited analyses, all views, AI summaries included.
                 </p>
                 <button
-                  onClick={() => { onClose(); window.location.href = '/billing'; }}
+                  onClick={() => { onClose(); navigate('/billing'); }}
                   className="w-full py-1.5 rounded-lg bg-surface-3 border border-border font-mono text-[10px] text-foreground-muted hover:text-foreground hover:border-border-bright transition-colors"
                 >
                   View Plans →
+                </button>
+              </div>
+
+              {/* Webhook Settings */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Webhook className="w-3.5 h-3.5 text-foreground-muted" />
+                  <span className="font-mono text-[10px] font-bold text-foreground-muted tracking-wider uppercase">
+                    Webhook Notifications
+                  </span>
+                </div>
+                <p className="font-mono text-[10px] text-foreground-dim leading-relaxed mb-3">
+                  Get notified when a repo analysis completes. We'll POST to your URL with the graph data.
+                </p>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={webhookRepoUrl}
+                    onChange={e => setWebhookRepoUrl(e.target.value)}
+                    placeholder="https://github.com/owner/repo"
+                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 font-mono text-[11px] text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/50 transition-colors"
+                  />
+                  <div className="relative">
+                    <input
+                      type="url"
+                      value={webhookUrl}
+                      onChange={e => setWebhookUrl(e.target.value)}
+                      placeholder="https://your-server.com/webhook"
+                      className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 pr-9 font-mono text-[11px] text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-primary/50 transition-colors"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!webhookUrl || !webhookRepoUrl || !user) return;
+                        setSavingWebhook(true);
+                        const { error } = await supabase.from('webhook_configs').insert({
+                          user_id: user.id,
+                          repo_url: webhookRepoUrl.trim(),
+                          url: webhookUrl.trim(),
+                          events: ['analysis.complete'],
+                        });
+                        setSavingWebhook(false);
+                        if (error) {
+                          toast({ title: 'Error', description: error.message, variant: 'destructive' });
+                        } else {
+                          toast({ title: '✓ Webhook saved', description: 'You\'ll be notified on analysis completion.' });
+                          setWebhookUrl('');
+                          setWebhookRepoUrl('');
+                        }
+                      }}
+                      disabled={savingWebhook || !webhookUrl.trim() || !webhookRepoUrl.trim()}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary hover:bg-primary/20 disabled:opacity-40 transition-all"
+                    >
+                      {savingWebhook ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                    </button>
+                  </div>
+                </div>
+                <a
+                  href="https://webhook.site"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 font-mono text-[10px] text-foreground-dim hover:text-foreground transition-colors"
+                >
+                  <ExternalLink className="w-2.5 h-2.5" />
+                  Test with webhook.site
+                </a>
+              </div>
+
+              {/* Links */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { onClose(); navigate('/api-docs'); }}
+                  className="flex-1 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground transition-colors"
+                >
+                  API Docs →
+                </button>
+                <button
+                  onClick={() => { onClose(); navigate('/feedback'); }}
+                  className="flex-1 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground transition-colors"
+                >
+                  Feedback →
                 </button>
               </div>
             </div>

@@ -29,7 +29,7 @@ Your role:
 - Be concise and specific. Reference actual file names, function names, risk levels, and author names from the context.
 - If asked about a function, identify which node/file contains it and explain its role.
 - Highlight critical/high-risk nodes when relevant.
-- You can answer in the same language the user uses.
+- CRITICAL: Always detect the language the user is writing in and respond in that SAME language. If the user writes in Romanian, respond in Romanian. If in English, respond in English. If in French, respond in French. Never ask about language preference — auto-detect and adapt instantly. Maintain language consistency throughout the conversation.
 - Format your response with markdown for clarity.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

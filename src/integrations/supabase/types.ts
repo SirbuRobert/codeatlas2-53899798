@@ -68,6 +68,69 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          category: string | null
+          created_at: string
+          email: string | null
+          feedback_text: string
+          id: string
+          name: string | null
+          rating: number | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          email?: string | null
+          feedback_text: string
+          id?: string
+          name?: string | null
+          rating?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          email?: string | null
+          feedback_text?: string
+          id?: string
+          name?: string | null
+          rating?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      webhook_configs: {
+        Row: {
+          created_at: string
+          events: string[]
+          id: string
+          repo_url: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          events?: string[]
+          id?: string
+          repo_url: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          events?: string[]
+          id?: string
+          repo_url?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

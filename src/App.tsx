@@ -8,6 +8,8 @@ import NotFound from "./pages/NotFound.tsx";
 import Billing from "./pages/Billing.tsx";
 import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import ApiDocs from "./pages/ApiDocs.tsx";
+import Feedback from "./pages/Feedback.tsx";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/billing" element={<Billing />} />
+          <Route path="/api-docs" element={<ApiDocs />} />
+          <Route path="/feedback" element={<Feedback />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -31,3 +35,4 @@ const App = () => (
 );
 
 export default App;
+
