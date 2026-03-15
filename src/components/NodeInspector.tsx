@@ -297,6 +297,18 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph, onN
         <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-border">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
+              {/* Back button — only visible when there's history */}
+              {historyStack.length > 0 && (
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-surface-3 border border-border
+                             font-mono text-[9px] text-foreground-dim hover:text-foreground transition-colors mr-1"
+                  title="Back to previous node"
+                >
+                  <ArrowLeft className="w-3 h-3" />
+                  Back
+                </button>
+              )}
               <div
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ background: typeColor, boxShadow: `0 0 8px ${typeColor}` }}
@@ -309,7 +321,7 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph, onN
               </span>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="w-6 h-6 flex items-center justify-center rounded-lg bg-surface-3 text-foreground-dim
                          hover:text-foreground hover:bg-surface-3 transition-colors"
             >
