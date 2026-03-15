@@ -393,6 +393,20 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
                   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
                 }}
               />
+              {voiceSupported && (
+                <button
+                  onClick={toggleListening}
+                  disabled={isLoading}
+                  title={isListening ? 'Stop recording' : 'Voice input'}
+                  className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 disabled:pointer-events-none ${
+                    isListening
+                      ? 'bg-destructive/20 border border-destructive/50 text-destructive animate-pulse'
+                      : 'bg-surface-3 border border-border text-foreground-dim hover:text-foreground hover:border-border-bright'
+                  }`}
+                >
+                  {isListening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+                </button>
+              )}
               <button
                 onClick={() => send(input)}
                 disabled={!input.trim() || isLoading}
@@ -402,7 +416,7 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
               </button>
             </div>
             <p className="font-mono text-[9px] text-foreground-dim mt-1.5 text-center">
-              Enter to send · Shift+Enter for newline
+              Enter to send · Shift+Enter for newline{voiceSupported ? ' · 🎙 mic to speak' : ''}
             </p>
           </div>
         </motion.div>
