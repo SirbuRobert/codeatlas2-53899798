@@ -159,11 +159,14 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
   // Critical: exposed APIs
   for (const id of exposedApiIds) {
     const node = graph.nodes.find((n) => n.id === id)!;
+    const fns = node.metadata.functions ?? [];
+    const line = fns[0]?.line;
     findings.push({
       severity: 'critical',
       label: `Exposed API: ${node.label}`,
       nodeId: id,
       path: node.metadata.path,
+      line,
       detail: `API endpoint has no auth guard in its call chain. Potential unauthorized access.`,
     });
   }
@@ -171,11 +174,15 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
   // High: unprotected database routes
   for (const id of unprotectedDbIds) {
     const node = graph.nodes.find((n) => n.id === id)!;
+    const fns = node.metadata.functions ?? [];
+    const methodFn = fns.find((f) => f.kind === 'method') ?? fns[0];
+    const line = methodFn?.line;
     findings.push({
       severity: 'high',
       label: `Unprotected DB: ${node.label}`,
       nodeId: id,
       path: node.metadata.path,
+      line,
       detail: `Database node is reachable from API layer without passing through an auth check.`,
     });
   }
@@ -184,11 +191,14 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
   for (const id of securityNodeIds) {
     const node = graph.nodes.find((n) => n.id === id)!;
     if (node.metadata.complexity >= 12) {
+      const fns = node.metadata.functions ?? [];
+      const line = fns.length > 0 ? fns[fns.length - 1].line : undefined;
       findings.push({
         severity: 'medium',
         label: `Complex Auth Logic: ${node.label}`,
         nodeId: id,
         path: node.metadata.path,
+        line,
         detail: `Security-critical node has complexity ${node.metadata.complexity} — prone to logic errors.`,
       });
     }
@@ -198,11 +208,14 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
   for (const id of securityNodeIds) {
     const node = graph.nodes.find((n) => n.id === id)!;
     if (node.metadata.coverage < 60) {
+      const fns = node.metadata.functions ?? [];
+      const line = fns[0]?.line;
       findings.push({
         severity: 'medium',
         label: `Low Test Coverage: ${node.label}`,
         nodeId: id,
         path: node.metadata.path,
+        line,
         detail: `Auth node has only ${node.metadata.coverage}% test coverage — security regressions likely undetected.`,
       });
     }
