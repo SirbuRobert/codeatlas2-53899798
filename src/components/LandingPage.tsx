@@ -560,7 +560,7 @@ export default function LandingPage({
           >
             {statsData.map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="font-mono text-2xl font-bold text-cyan">{stat.value}</div>
+                <div className="font-mono text-2xl font-bold text-primary">{stat.value}</div>
                 <div className="font-mono text-[10px] text-foreground-dim tracking-wider uppercase mt-0.5">{stat.label}</div>
               </div>
             ))}

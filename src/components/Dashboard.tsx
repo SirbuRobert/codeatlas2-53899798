@@ -358,7 +358,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           ) : (
             <button
               onClick={() => navigate('/auth')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/25 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/25 font-mono text-[10px] text-primary hover:bg-primary/15 transition-all"
             >
               <LogIn className="w-3 h-3" />
               Sign In
