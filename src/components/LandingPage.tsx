@@ -51,7 +51,7 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
         <div className="bg-surface-2 border border-border rounded-xl p-4 mb-4 space-y-1.5">
           <p className="font-mono text-[10px] text-foreground-dim uppercase tracking-wider mb-2">Setup instructions</p>
           <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-cyan flex-shrink-0">1.</span>
+            <span className="text-primary flex-shrink-0">1.</span>
             <span>Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)</span>
           </div>
           <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
