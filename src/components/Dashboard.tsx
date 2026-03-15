@@ -50,6 +50,10 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
+  const [customCmdExecuting, setCustomCmdExecuting] = useState(false);
+
+  const { commands: customCommands, createCommand, deleteCommand, executeCommand: execCustomCmd } =
+    useCustomCommands(repoUrl);
 
   // Auto-show explainer on first visit per repo
   useEffect(() => {
