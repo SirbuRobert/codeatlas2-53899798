@@ -262,7 +262,7 @@ export default function LandingPage({
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright hover:bg-surface-3 transition-all duration-150 group"
                     >
                       {repo.private ? (
-                        <Lock className="w-2.5 h-2.5 text-warning" />
+                        <span className="text-warning text-[9px]">🔒</span>
                       ) : (
                         <Globe className="w-2.5 h-2.5 text-foreground-dim" />
                       )}
