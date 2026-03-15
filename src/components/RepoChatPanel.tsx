@@ -224,6 +224,10 @@ export default function RepoChatPanel({ graph, isOpen, onClose, onNodeFocus }: R
   const graphContext = useMemo(() => buildGraphContext(graph), [graph]);
   const repoSlug = graph.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '');
 
+  const { isListening, toggleListening, isSupported: voiceSupported } = useVoiceInput((transcript) => {
+    setInput(transcript);
+  });
+
   // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
