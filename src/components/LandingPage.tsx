@@ -317,9 +317,9 @@ export default function LandingPage({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-foreground-dim text-sm text-center max-w-md mb-10 leading-relaxed"
+          className="text-foreground-dim text-xs sm:text-sm text-center max-w-md mb-8 sm:mb-10 leading-relaxed px-2"
         >
-          GitHub API → Tree-sitter AST → Knowledge Graph → AI Semantic Layer → Interactive 60fps WebGL map.
+          GitHub API → AST → Knowledge Graph → AI Layer → WebGL map.
           No config. No setup. Just drop a URL.{' '}
           <button
             onClick={() => setPipelineOpen(true)}
