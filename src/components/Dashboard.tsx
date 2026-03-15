@@ -468,6 +468,9 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
             Search
           </button>
 
+          {/* ── Voice Command mic button ── */}
+          <VoiceMicButton graph={graph} onResult={handleVoiceCommand} />
+
           <button
             onClick={() => {
               if (!isPro) { openProGate('chat'); return; }
