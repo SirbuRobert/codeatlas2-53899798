@@ -242,7 +242,32 @@ function FunctionsSection({ functions, graph, path }: {
   );
 }
 
-export default function NodeInspector({ node, onClose, onBlastRadius, graph }: NodeInspectorProps) {
+export default function NodeInspector({ node, onClose, onBlastRadius, graph, onNodeNavigate }: NodeInspectorProps) {
+  // Internal navigation history stack for back-button UX
+  const [historyStack, setHistoryStack] = useState<string[]>([]);
+
+  // Reset history when the node changes from an external source (not internal navigation)
+  const prevNodeId = useState(node?.id)[0];
+
+  const handleNavigate = useCallback((targetNodeId: string) => {
+    if (!node || !onNodeNavigate) return;
+    // Push current node onto the back-stack
+    setHistoryStack(prev => [...prev, node.id]);
+    onNodeNavigate(targetNodeId);
+  }, [node, onNodeNavigate]);
+
+  const handleBack = useCallback(() => {
+    if (historyStack.length === 0 || !onNodeNavigate) return;
+    const prev = historyStack[historyStack.length - 1];
+    setHistoryStack(s => s.slice(0, -1));
+    onNodeNavigate(prev);
+  }, [historyStack, onNodeNavigate]);
+
+  const handleClose = useCallback(() => {
+    setHistoryStack([]);
+    onClose();
+  }, [onClose]);
+
   if (!node) return null;
 
   const typeColor = TYPE_COLORS[node.type] ?? '#00ffff';
