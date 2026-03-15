@@ -398,7 +398,7 @@ export default function GraphCanvas({
                     {securityOverlay.findings.slice(0, 5).map((finding, i) => {
                       const SeverityIcon = SEVERITY_ICON[finding.severity];
                       const color = SEVERITY_COLOR[finding.severity];
-                      const githubUrl = finding.path ? buildGitHubUrl(graph, finding.path) : null;
+                      const githubUrl = finding.path ? buildGitHubUrl(graph, finding.path, finding.line) : null;
                       return (
                         <div
                           key={i}
