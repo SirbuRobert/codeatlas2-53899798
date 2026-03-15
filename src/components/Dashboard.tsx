@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn, Loader2, Zap, Radio } from 'lucide-react';
+import VoiceMicButton from '@/components/VoiceMicButton';
+import type { VoiceCommandResult } from '@/hooks/useVoiceCommand';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import AccountPanel from '@/components/AccountPanel';
@@ -207,6 +209,57 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
   const handleCreateCustomCommand = useCallback(async (name: string, description: string) => {
     await createCommand(name, description);
   }, [createCommand]);
+
+  const handleVoiceCommand = useCallback((result: VoiceCommandResult) => {
+    switch (result.action) {
+      case 'blast-radius': {
+        const targetId = result.nodeId
+          ?? graph.nodes.find(n =>
+            n.label.toLowerCase().includes((result.target ?? '').toLowerCase()) ||
+            n.metadata.path.toLowerCase().includes((result.target ?? '').toLowerCase())
+          )?.id
+          ?? graph.nodes.find(n => n.metadata.isEntryPoint)?.id
+          ?? graph.nodes[0]?.id;
+        if (targetId) handleBlastRadius(targetId);
+        break;
+      }
+      case 'security-review':
+        handleSecurityReview();
+        break;
+      case 'ghost-city':
+        handleGhostCity();
+        break;
+      case 'switch-view': {
+        const view = (result.target ?? '').toLowerCase();
+        if (view === 'topology' || view === 'treemap' || view === 'solar') {
+          setViewMode(view);
+        }
+        break;
+      }
+      case 'search':
+        if (result.target) {
+          setSearchOpen(true);
+          // Pre-populate search with the target query via a short delay to let SearchBar mount
+          setTimeout(() => {
+            const evt = new CustomEvent('voice-search', { detail: result.target });
+            window.dispatchEvent(evt);
+          }, 100);
+        }
+        break;
+      case 'show-summary':
+        setSummaryOpen(true);
+        break;
+      case 'clear':
+        clearAll();
+        break;
+      case 'open-chat':
+        if (isPro) setChatOpen(true);
+        else openProGate('chat');
+        break;
+      default:
+        break;
+    }
+  }, [graph, handleBlastRadius, handleSecurityReview, handleGhostCity, clearAll, isPro]);
 
   // CMD+K
   useEffect(() => {
@@ -414,6 +467,9 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
             <Search className="w-3 h-3" />
             Search
           </button>
+
+          {/* ── Voice Command mic button ── */}
+          <VoiceMicButton graph={graph} onResult={handleVoiceCommand} />
 
           <button
             onClick={() => {
