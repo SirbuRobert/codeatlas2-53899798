@@ -64,8 +64,10 @@ function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number, endLi
   // graph.repoUrl is e.g. "github.com/owner/repo"
   const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
   if (!line) return base;
-  // Use range highlight (#L10-L25) when endLine is known and differs from start
-  if (endLine && endLine > line) return `${base}#L${line}-L${endLine}`;
+  // Sanitize endLine: must be strictly > line, and range must be ≤300 lines
+  // (larger ranges = AI hallucination / wrong bracket counting)
+  const safeEnd = endLine && endLine > line && (endLine - line) <= 300 ? endLine : undefined;
+  if (safeEnd) return `${base}#L${line}-L${safeEnd}`;
   return `${base}#L${line}`;
 }
 
