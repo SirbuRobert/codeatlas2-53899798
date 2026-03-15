@@ -140,12 +140,15 @@ export default function LandingPage({
   onAnimationComplete,
   sessionStats,
 }: LandingPageProps) {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [inputUrl, setInputUrl] = useState('');
   const [phases, setPhases] = useState<AnalysisPhase[]>(ANALYSIS_PHASES);
   const [glitchActive, setGlitchActive] = useState(false);
   const [analysisUrl, setAnalysisUrl] = useState('');
   const [pipelineOpen, setPipelineOpen] = useState(false);
   const [ghModalOpen, setGhModalOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [ghConnected, setGhConnected] = useState(() => !!localStorage.getItem(GH_TOKEN_KEY));
   const animFinishedRef = useRef(false);
 
