@@ -43,12 +43,6 @@ export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
     if (error) {
       toast({ title: 'Error saving token', description: error.message, variant: 'destructive' });
     } else {
-      // Also sync to localStorage as fallback
-      if (token.trim()) {
-        localStorage.setItem('axon_gh_token', token.trim());
-      } else {
-        localStorage.removeItem('axon_gh_token');
-      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       toast({ title: '✓ GitHub token saved', description: 'Private repos are now accessible.' });
