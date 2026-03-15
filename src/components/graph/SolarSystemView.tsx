@@ -9,6 +9,7 @@
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Stars, OrbitControls, Html, Line } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type { AxonNode, AxonEdge, CodebaseGraph, NodeType } from '@/types/graph';
 import { calculateBlastRadius } from '@/types/graph';
@@ -597,6 +598,17 @@ function ForceScene({
         rotateSpeed={0.6}
         zoomSpeed={0.8}
       />
+
+      {/* ── Bloom post-processing ─────────────────────────────────────────── */}
+      <EffectComposer>
+        <Bloom
+          intensity={1.4}
+          luminanceThreshold={0.25}
+          luminanceSmoothing={0.9}
+          mipmapBlur
+          radius={0.85}
+        />
+      </EffectComposer>
     </>
   );
 }
@@ -697,7 +709,7 @@ export default function SolarSystemView({
     <div className="w-full h-full relative bg-background">
       <Canvas
         camera={{ position: [0, 12, 32], fov: 55, near: 0.1, far: 300 }}
-        gl={{ antialias: true, alpha: false }}
+        gl={{ antialias: true, alpha: false, toneMapping: THREE.NoToneMapping }}
         dpr={[1, 1.5]}
       >
         {!ready ? (
