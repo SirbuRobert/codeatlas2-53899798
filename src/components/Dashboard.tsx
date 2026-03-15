@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import AccountPanel from '@/components/AccountPanel';
 import GraphCanvas from '@/components/graph/GraphCanvas';
@@ -19,6 +19,7 @@ import RepoExplainerModal from '@/components/RepoExplainerModal';
 import RepoChatPanel from '@/components/RepoChatPanel';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
+import { useCustomCommands } from '@/hooks/useCustomCommands';
 
 type ViewMode = 'topology' | 'treemap' | 'solar';
 
