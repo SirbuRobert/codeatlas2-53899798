@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Check, CreditCard, Lock, ArrowLeft, Zap, Building2, User } from 'lucide-react';
+import { Check, CreditCard, Lock, ArrowLeft, Zap, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const PLANS = [
@@ -11,20 +11,22 @@ const PLANS = [
     price: 0,
     icon: User,
     color: '#64748b',
-    description: 'For individuals exploring their first repo.',
+    description: 'For individuals and teams exploring codebases.',
     features: [
-      '3 repo analyses / month',
-      'Public repos only',
-      'Topology view',
-      'Basic node inspection',
+      'Unlimited repo analyses',
+      'Public repos',
+      'All views (Topology, Solar, Treemap)',
+      'AI semantic summaries (Gemini)',
+      'Blast Radius & Security Topology',
+      'Business Insights panel',
+      'GitHub PAT for private repos',
       'Community support',
     ],
     missing: [
-      'Private repos',
-      'Solar System & Treemap views',
-      'AI semantic summaries',
-      'Multi-repo analysis',
-      'Business Insights panel',
+      'Multi-Repo Analysis',
+      'Team dashboards',
+      'SSO / SAML integration',
+      'Priority support + SLA',
     ],
     cta: 'Current Plan',
     ctaDisabled: true,
@@ -36,42 +38,21 @@ const PLANS = [
     icon: Zap,
     color: '#00ffff',
     badge: 'MOST POPULAR',
-    description: 'For developers and engineering leads who need the full picture.',
+    description: 'For engineering leads and organisations that need governance.',
     features: [
-      'Unlimited repo analyses',
-      'Private repos (OAuth)',
-      'Solar System + Treemap views',
-      'AI semantic summaries (Gemini)',
-      'Blast Radius & Security Topology',
-      'Business Insights panel',
+      'Everything in Free',
       '✦ Multi-Repo Analysis',
-      'Email support',
-    ],
-    missing: [],
-    cta: 'Upgrade to Pro',
-    ctaDisabled: false,
-    highlight: true,
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 99,
-    icon: Building2,
-    color: '#a855f7',
-    description: 'For engineering organisations that need governance and team dashboards.',
-    features: [
-      'Everything in Pro',
       'Team dashboards',
       'SSO / SAML integration',
       'Role-based access control',
-      'Custom retention policies',
       'Audit logs',
       'Priority support + SLA',
       'Dedicated success manager',
     ],
     missing: [],
-    cta: 'Contact Sales',
+    cta: 'Upgrade to Pro',
     ctaDisabled: false,
+    highlight: true,
   },
 ];
 
@@ -258,7 +239,7 @@ export default function Billing() {
         </motion.div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto w-full">
           {PLANS.map((plan, i) => {
             const Icon = plan.icon;
             return (

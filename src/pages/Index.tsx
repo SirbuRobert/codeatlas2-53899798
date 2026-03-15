@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import LandingPage from '@/components/LandingPage';
 import Dashboard from '@/components/Dashboard';
 import { useAnalyzeRepo } from '@/hooks/useAnalyzeRepo';
+import { useAuth } from '@/hooks/useAuth';
 import type { CodebaseGraph } from '@/types/graph';
 import type { SessionStats } from '@/components/LiveStatsBar';
 
@@ -18,6 +19,7 @@ export default function Index() {
   const [repoUrl, setRepoUrl] = useState('');
   const [sessionStats, setSessionStats] = useState<SessionStats>(BASELINE_STATS);
   const { analyze, status, graph, error, reset } = useAnalyzeRepo();
+  const { getGithubToken } = useAuth();
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
 
@@ -28,8 +30,8 @@ export default function Index() {
       animationDoneRef.current = false;
       graphRef.current = null;
 
-      // Automatically include GitHub PAT if available
-      const token = localStorage.getItem('axon_gh_token') ?? undefined;
+      // Prefer profile token, fall back to localStorage
+      const token = getGithubToken();
       const result = await analyze(url, token);
       graphRef.current = result;
 
