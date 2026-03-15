@@ -253,8 +253,8 @@ export default function LandingPage({
             onClick={() => setAccountOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
           >
-            <div className="w-5 h-5 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center">
-              <span className="text-[9px] font-bold text-cyan">{user.email?.[0]?.toUpperCase()}</span>
+          <div className="w-5 h-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-primary">{user.email?.[0]?.toUpperCase()}</span>
             </div>
             {user.email?.split('@')[0]}
           </button>
