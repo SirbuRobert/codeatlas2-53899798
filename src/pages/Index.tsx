@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import LandingPage from '@/components/LandingPage';
 import Dashboard from '@/components/Dashboard';
 import { useAnalyzeRepo } from '@/hooks/useAnalyzeRepo';
+import { useAuth } from '@/hooks/useAuth';
 import type { CodebaseGraph } from '@/types/graph';
 import type { SessionStats } from '@/components/LiveStatsBar';
 
