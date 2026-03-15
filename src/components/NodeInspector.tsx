@@ -60,10 +60,13 @@ const KIND_CONFIG: Record<FunctionEntry['kind'], { label: string; color: string 
 };
 
 // ── Utility: build a deep-link GitHub URL ─────────────────────────────────────
-function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number, endLine?: number): string {
   // graph.repoUrl is e.g. "github.com/owner/repo"
   const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
-  return line ? `${base}#L${line}` : base;
+  if (!line) return base;
+  // Use range highlight (#L10-L25) when endLine is known and differs from start
+  if (endLine && endLine > line) return `${base}#L${line}-L${endLine}`;
+  return `${base}#L${line}`;
 }
 
 function MetricBar({ label, value, max = 100, color }: { label: string; value: number; max?: number; color: string }) {
