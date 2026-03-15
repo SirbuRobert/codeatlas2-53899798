@@ -296,21 +296,14 @@ export default function LandingPage({
                 </div>
 
                 {/* Private repo hint */}
-                {isPrivateError && !ghConnected && (
+                {isPrivateError && (
                   <div className="mb-4 flex items-start gap-2.5 px-3 py-2.5 bg-warning/5 border border-warning/20 rounded-xl">
-                    <Lock className="w-3.5 h-3.5 text-warning flex-shrink-0 mt-0.5" />
+                    <span className="text-warning flex-shrink-0 mt-0.5">🔒</span>
                     <div>
                       <p className="font-mono text-[11px] text-warning font-semibold mb-0.5">Private repository?</p>
                       <p className="font-mono text-[10px] text-foreground-muted leading-relaxed">
-                        Connect your GitHub token to access private repos.
+                        Add your GitHub token in the account panel (top-right) to access private repos.
                       </p>
-                      <button
-                        onClick={() => setGhModalOpen(true)}
-                        className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-primary hover:underline"
-                      >
-                        <Github className="w-3 h-3" />
-                        Connect GitHub Token
-                      </button>
                     </div>
                   </div>
                 )}
