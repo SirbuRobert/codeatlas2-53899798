@@ -67,6 +67,17 @@ export default function Index() {
     }
   }, [searchParams, handleAnalyze]);
 
+  // Show toast when a webhook fires successfully after analysis
+  useEffect(() => {
+    if (!webhookResult || webhookResult.sent === 0) return;
+    const urls = webhookResult.results?.map(r => r.url).join(', ') ?? '';
+    toast({
+      title: `📡 Webhook sent (${webhookResult.sent})`,
+      description: urls ? `Notified: ${urls.length > 60 ? urls.slice(0, 57) + '…' : urls}` : 'analysis.complete event delivered',
+    });
+  }, [webhookResult]);
+
+
   const handleAnimationComplete = useCallback(() => {
     animationDoneRef.current = true;
     if (graphRef.current) {
