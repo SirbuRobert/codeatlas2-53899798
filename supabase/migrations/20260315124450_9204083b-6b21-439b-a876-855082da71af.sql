@@ -1,0 +1,28 @@
+CREATE OR REPLACE FUNCTION public.encrypt_github_token(p_token text, p_key text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_catalog
+AS $$
+BEGIN
+  RETURN encode(extensions.pgp_sym_encrypt(p_token::text, p_key::text), 'base64');
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.decrypt_github_token(p_user_id uuid, p_key text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_catalog
+AS $$
+DECLARE
+  v_result text;
+BEGIN
+  SELECT extensions.pgp_sym_decrypt(decode(github_token, 'base64'), p_key::text)
+  INTO v_result
+  FROM public.profiles
+  WHERE id = p_user_id
+    AND github_token IS NOT NULL;
+  RETURN v_result;
+END;
+$$;
