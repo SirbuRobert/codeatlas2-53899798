@@ -92,7 +92,11 @@ RULES:
 - For databases: identify ORM schemas, migration files, DB clients
 - DO NOT include test files as primary nodes — mention coverage in the tested module instead
 - Map only the architecturally significant edges (max 30 edges)
-- For each node, list the top 8 exported functions/classes/methods. The file contents include explicit line numbers at the start of each line (e.g. "42: export function foo()"). Use these EXACT line numbers — do NOT estimate or count manually. For each function, also provide the "endLine" — the line number of the closing brace or end of the block. This enables GitHub range highlighting (e.g. #L42-L87). Look for the matching closing "}" or "end" at the correct nesting depth.
+- For each node, list the top 8 exported functions/classes/methods. The file contents include explicit line numbers at the start of each line (e.g. "42: export function foo()"). Use these EXACT line numbers — do NOT estimate or count manually.
+- CRITICAL — line number rules:
+  • "line" MUST point to the line containing the actual declaration keyword: "function", "class", "const", "export function", "async function", "export const", "export default function", "export class", "=>" (arrow). NEVER point to a comment (// ...), a JSDoc block (/** */), an import statement, or a type alias.
+  • Example: if line 38 is "// loginUser handles auth" and line 42 is "export async function loginUser(", then line MUST be 42, NOT 38.
+  • "endLine" MUST be the line number of the closing "}" at the SAME indentation level as the opening declaration. Count brackets carefully. If you are not 100% certain of the closing line, OMIT endLine entirely — it is better to have no range than a wrong range that highlights too much code.
 
 NODE TYPE GUIDE:
 - service: Application bootstrap, server entry, main process
