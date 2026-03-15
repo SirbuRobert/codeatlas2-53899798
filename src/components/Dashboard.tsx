@@ -148,6 +148,33 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     setGhostMode(false);
   }, [statsHighlightLabel]);
 
+  const handleExecuteCustomCommand = useCallback(async (cmd: import('@/hooks/useCustomCommands').CustomCommand) => {
+    setCustomCmdExecuting(true);
+    try {
+      const ids = await execCustomCmd(cmd, graph);
+      if (ids.size > 0) {
+        setSearchHighlightIds(ids);
+        setSearchQuery(`/${cmd.name}`);
+        setStatsHighlightLabel(`/${cmd.name}`);
+        setSecurityOverlayActive(false);
+        setBlastRadiusNodeId(null);
+        setGhostMode(false);
+        setViewMode('topology');
+      } else {
+        // Nothing matched — clear any existing highlight
+        setSearchHighlightIds(new Set());
+        setSearchQuery('');
+        setStatsHighlightLabel(null);
+      }
+    } finally {
+      setCustomCmdExecuting(false);
+    }
+  }, [execCustomCmd, graph]);
+
+  const handleCreateCustomCommand = useCallback(async (name: string, description: string) => {
+    await createCommand(name, description);
+  }, [createCommand]);
+
   // CMD+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
