@@ -494,7 +494,7 @@ export default function LandingPage({
                 {/* Progress bar */}
                 <div className="h-px bg-surface-3 rounded-full mb-5 overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-cyan to-violet"
+                    className="h-full bg-gradient-to-r from-primary to-accent"
                     initial={{ width: '0%' }}
                     animate={{ width: `${progressPct}%` }}
                     transition={{ duration: 0.4 }}
