@@ -10,6 +10,7 @@ interface AISummaryPanelProps {
   graph: CodebaseGraph;
   isOpen: boolean;
   onClose: () => void;
+  onNodeSelect?: (nodeId: string) => void;
 }
 
 const TYPE_COLORS: Record<NodeType, string> = {
