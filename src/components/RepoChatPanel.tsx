@@ -1,12 +1,76 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Bot, User, Loader2, RotateCcw } from 'lucide-react';
+import { X, Send, Bot, User, Loader2, RotateCcw, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { CodebaseGraph, AxonNode } from '@/types/graph';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+}
+
+// ── Voice Input Hook ──────────────────────────────────────────────────────────
+const SpeechRecognitionAPI =
+  typeof window !== 'undefined'
+    ? (window.SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null)
+    : null;
+
+function useVoiceInput(onTranscript: (text: string) => void) {
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const isSupported = SpeechRecognitionAPI !== null;
+
+  const stop = useCallback(() => {
+    recognitionRef.current?.stop();
+  }, []);
+
+  const toggleListening = useCallback(() => {
+    if (!SpeechRecognitionAPI) return;
+
+    if (isListening) {
+      stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = navigator.language?.startsWith('ro') ? 'ro-RO' : 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    let finalSoFar = '';
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onresult = (e: any) => {
+      let interim = '';
+      let final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      if (final) finalSoFar += final;
+      onTranscript(finalSoFar || interim);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      finalSoFar = '';
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      finalSoFar = '';
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, [isListening, stop, onTranscript]);
+
+  // cleanup on unmount
+  useEffect(() => () => recognitionRef.current?.abort(), []);
+
+  return { isListening, toggleListening, isSupported };
 }
 
 interface RepoChatPanelProps {
