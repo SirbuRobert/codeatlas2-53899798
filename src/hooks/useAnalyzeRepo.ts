@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { computeHierarchicalLayout } from '@/lib/graphLayout';
-import type { CodebaseGraph, AxonNode, AxonEdge, NodeType, RiskLevel, Language } from '@/types/graph';
+import type { CodebaseGraph, AxonNode, AxonEdge, NodeType, RiskLevel, Language, FunctionEntry } from '@/types/graph';
 
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -27,8 +27,9 @@ function toAxonNode(raw: RawNode, position: { x: number; y: number }): AxonNode 
       lastModified: (raw.lastModified as string) ?? 'unknown',
       riskLevel: (raw.riskLevel as RiskLevel) ?? 'none',
       flags: (raw.flags as string[]) ?? [],
-      isEntryPoint: (raw.isEntryPoint as boolean) ?? false,
+    isEntryPoint: (raw.isEntryPoint as boolean) ?? false,
       isOrphan: (raw.isOrphan as boolean) ?? false,
+      functions: (raw.functions as FunctionEntry[]) ?? [],
     },
     position,
   };

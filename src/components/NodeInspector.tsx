@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown } from 'lucide-react';
-import type { AxonNode, NodeType, CodebaseGraph } from '@/types/graph';
+import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown, ExternalLink } from 'lucide-react';
+import type { AxonNode, NodeType, CodebaseGraph, FunctionEntry } from '@/types/graph';
 
 interface NodeInspectorProps {
   node: AxonNode | null;
@@ -49,6 +49,21 @@ const FLAG_LABELS: Record<string, { text: string; color: string }> = {
   'no-tests': { text: 'No Tests', color: '#f59e0b' },
   'no-integration-tests': { text: 'No Integration Tests', color: '#f59e0b' },
 };
+
+const KIND_CONFIG: Record<FunctionEntry['kind'], { label: string; color: string }> = {
+  function: { label: 'fn', color: '#f59e0b' },
+  class:    { label: 'cls', color: '#a855f7' },
+  export:   { label: 'exp', color: '#06b6d4' },
+  const:    { label: 'cst', color: '#64748b' },
+  method:   { label: 'mth', color: '#22c55e' },
+};
+
+// ── Utility: build a deep-link GitHub URL ─────────────────────────────────────
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
+  // graph.repoUrl is e.g. "github.com/owner/repo"
+  const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
+  return line ? `${base}#L${line}` : base;
+}
 
 function MetricBar({ label, value, max = 100, color }: { label: string; value: number; max?: number; color: string }) {
   const pct = Math.min(100, (value / max) * 100);
@@ -129,6 +144,81 @@ function CollapsibleSection({ title, count, color, children }: {
   );
 }
 
+// ── Functions & Exports section ────────────────────────────────────────────────
+function FunctionsSection({ functions, graph, path }: {
+  functions: FunctionEntry[];
+  graph: CodebaseGraph;
+  path: string;
+}) {
+  const [open, setOpen] = useState(true);
+  if (!functions || functions.length === 0) return null;
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 mb-2"
+      >
+        <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase">Functions &amp; Exports</p>
+        <span
+          className="font-mono text-[9px] px-1.5 py-0.5 rounded-full border"
+          style={{ color: '#f59e0b', borderColor: '#f59e0b30', background: '#f59e0b10' }}
+        >
+          {functions.length}
+        </span>
+        <ChevronDown className={`w-3 h-3 text-foreground-dim ml-auto transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden space-y-0.5"
+          >
+            {functions.map((fn, i) => {
+              const cfg = KIND_CONFIG[fn.kind] ?? KIND_CONFIG.function;
+              const url = buildGitHubUrl(graph, path, fn.line);
+              return (
+                <button
+                  key={i}
+                  onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border
+                             hover:border-border hover:bg-surface-3 group transition-colors text-left"
+                  title={`Open ${fn.name} at line ${fn.line} on GitHub`}
+                >
+                  {/* Kind badge */}
+                  <span
+                    className="font-mono text-[9px] px-1.5 py-0.5 rounded border flex-shrink-0 w-7 text-center"
+                    style={{ color: cfg.color, borderColor: `${cfg.color}30`, background: `${cfg.color}10` }}
+                  >
+                    {cfg.label}
+                  </span>
+
+                  {/* Name */}
+                  <span className="font-mono text-[11px] text-foreground flex-1 truncate">
+                    {fn.name}
+                  </span>
+
+                  {/* Line number */}
+                  <span className="font-mono text-[9px] text-foreground-dim flex-shrink-0">
+                    L{fn.line}
+                  </span>
+
+                  {/* External link icon — visible on hover */}
+                  <ExternalLink className="w-3 h-3 text-foreground-dim opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function NodeInspector({ node, onClose, onBlastRadius, graph }: NodeInspectorProps) {
   if (!node) return null;
 
@@ -142,6 +232,8 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph }: N
   const exportsTo = graph
     ? graph.edges.filter(e => e.source === node.id).map(e => e.target).slice(0, 8)
     : [];
+
+  const functions = node.metadata.functions ?? [];
 
   return (
     <AnimatePresence>
@@ -216,6 +308,15 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph }: N
                 </p>
               </div>
             </div>
+          )}
+
+          {/* Functions & Exports */}
+          {graph && functions.length > 0 && (
+            <FunctionsSection
+              functions={functions}
+              graph={graph}
+              path={node.metadata.path}
+            />
           )}
 
           {/* Flags */}
@@ -350,12 +451,19 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph }: N
             </span>
           </button>
           <button
+            onClick={() => {
+              if (graph) {
+                window.open(buildGitHubUrl(graph, node.metadata.path), '_blank', 'noopener,noreferrer');
+              }
+            }}
+            disabled={!graph}
             className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-semibold
                        bg-cyan/10 border border-cyan/25 text-cyan hover:bg-cyan/15
-                       transition-all duration-150 active:scale-[0.98]"
+                       transition-all duration-150 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
           >
             <Code2 className="w-3.5 h-3.5" />
             VIEW SOURCE
+            <ExternalLink className="w-3 h-3 ml-auto opacity-60" />
           </button>
         </div>
       </motion.div>
