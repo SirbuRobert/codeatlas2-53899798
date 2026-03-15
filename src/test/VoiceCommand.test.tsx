@@ -185,9 +185,9 @@ describe('Voice command → clear', () => {
   it('clears ghost overlay when clear is called', () => {
     renderDashboard();
     act(() => { capturedOnResult!(makeResult({ action: 'ghost-city' })); });
-    expect(screen.getByText(/GHOST/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/GHOST/i).length).toBeGreaterThan(0);
     act(() => { capturedOnResult!(makeResult({ action: 'clear' })); });
-    expect(screen.queryByText(/GHOST/i)).not.toBeInTheDocument();
+    expect(screen.queryAllByText(/GHOST/i)).toHaveLength(0);
   });
 });
 
