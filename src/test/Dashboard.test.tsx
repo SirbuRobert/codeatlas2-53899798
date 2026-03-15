@@ -57,7 +57,10 @@ vi.mock('@/components/RepoExplainerModal', () => ({ default: () => <div data-tes
 vi.mock('@/components/RepoChatPanel', () => ({ default: () => <div data-testid="chat-panel" /> }));
 vi.mock('@/components/AccountPanel', () => ({ default: () => <div data-testid="account-panel" /> }));
 vi.mock('@/components/StatsHUD', () => ({ default: () => <div data-testid="stats-hud" /> }));
-vi.mock('@/components/SearchBar', () => ({ default: () => <div data-testid="search-bar" /> }));
+vi.mock('@/components/SearchBar', () => ({
+  default: () => <div data-testid="search-bar" />,
+  scoreNode: () => 0,
+}));
 
 // ── use-toast ──────────────────────────────────────────────────
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
