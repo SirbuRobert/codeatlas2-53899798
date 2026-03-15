@@ -528,7 +528,7 @@ export default function LandingPage({
                         <span className="ml-auto font-mono text-[10px] text-foreground-dim">{phase.duration}ms</span>
                       )}
                       {phase.status === 'running' && (
-                        <span className="ml-auto font-mono text-[10px] text-cyan terminal-cursor" />
+                        <span className="ml-auto font-mono text-[10px] text-primary terminal-cursor" />
                       )}
                     </motion.div>
                   ))}
