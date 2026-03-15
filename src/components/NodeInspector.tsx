@@ -450,6 +450,99 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph, onN
             </div>
           )}
 
+          {/* ── AI Suggest Fix result panel ── */}
+          <AnimatePresence>
+            {(fixState === 'loading' || fixState === 'done' || fixState === 'error') && (
+              <motion.div
+                key="fix-panel"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="rounded-xl border border-border overflow-hidden"
+                  style={{ background: 'rgba(168,85,247,0.04)' }}>
+
+                  {/* Loading state */}
+                  {fixState === 'loading' && (
+                    <div className="flex items-center gap-2.5 px-4 py-3.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: '#a855f7' }} />
+                      <span className="font-mono text-[10px]" style={{ color: '#a855f7' }}>
+                        Analyzing node…
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Error state */}
+                  {fixState === 'error' && (
+                    <div className="flex items-center gap-2.5 px-4 py-3.5">
+                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#ef4444' }} />
+                      <span className="font-mono text-[10px] text-foreground-muted">{fixError}</span>
+                    </div>
+                  )}
+
+                  {/* Done state */}
+                  {fixState === 'done' && fixResult && (
+                    <div className="p-4 space-y-3.5">
+                      {/* Header row */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Sparkles className="w-3 h-3" style={{ color: '#a855f7' }} />
+                          <span className="font-mono text-[9px] tracking-widest uppercase font-bold"
+                            style={{ color: '#a855f7' }}>
+                            AI Fix Suggestion
+                          </span>
+                        </div>
+                        <button
+                          onClick={handleCopyFix}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-md border transition-colors"
+                          style={{
+                            borderColor: copied ? '#22c55e40' : '#a855f740',
+                            background: copied ? '#22c55e10' : 'transparent',
+                            color: copied ? '#22c55e' : '#a855f7',
+                          }}
+                          title="Copy to clipboard"
+                        >
+                          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          <span className="font-mono text-[9px]">{copied ? 'Copied' : 'Copy'}</span>
+                        </button>
+                      </div>
+
+                      {/* Problem */}
+                      <div>
+                        <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase mb-1.5">
+                          ⚠ Problemă detectată
+                        </p>
+                        <p className="text-[11px] text-foreground-muted leading-relaxed">
+                          {fixResult.problem}
+                        </p>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-px" style={{ background: 'rgba(168,85,247,0.15)' }} />
+
+                      {/* Suggestion */}
+                      <div>
+                        <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase mb-1.5">
+                          ✦ Propunere de rezolvare
+                        </p>
+                        <div className="space-y-1">
+                          {fixResult.suggestion.split('\n').filter(Boolean).map((line, i) => (
+                            <p key={i} className="text-[11px] leading-relaxed"
+                              style={{ color: 'hsl(var(--foreground) / 0.8)' }}>
+                              {line}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Metrics */}
           <div>
             <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase mb-3">
@@ -561,6 +654,31 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph, onN
               {node.metadata.dependents} upstream nodes
             </span>
           </button>
+
+          {/* Suggest Fix — visible when node has risk flags or non-none risk */}
+          {(node.metadata.flags.length > 0 || node.metadata.riskLevel !== 'none') && (
+            <button
+              onClick={handleSuggestFix}
+              disabled={fixState === 'loading'}
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-semibold
+                         transition-all duration-150 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
+              style={{
+                background: 'rgba(168,85,247,0.10)',
+                border: '1px solid rgba(168,85,247,0.30)',
+                color: '#a855f7',
+              }}
+            >
+              {fixState === 'loading'
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <Sparkles className="w-3.5 h-3.5" />
+              }
+              {fixState === 'loading' ? 'Se analizează…' : fixState === 'done' ? 'REGENERATE FIX' : '✦ SUGGEST FIX'}
+              {fixState === 'idle' && (
+                <span className="ml-auto text-[9px] opacity-60 font-normal">AI</span>
+              )}
+            </button>
+          )}
+
           <button
             onClick={() => {
               if (graph) {
