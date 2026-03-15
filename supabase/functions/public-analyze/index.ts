@@ -5,6 +5,29 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── In-memory rate limiter: max 3 analyses / 15 min per IP ───────────────────
+const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_PER_IP = 3;
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSecs: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return { allowed: true, retryAfterSecs: 0 };
+  }
+
+  if (entry.count >= MAX_PER_IP) {
+    const retryAfterSecs = Math.ceil((RATE_WINDOW_MS - (now - entry.windowStart)) / 1000);
+    return { allowed: false, retryAfterSecs };
+  }
+
+  entry.count++;
+  return { allowed: true, retryAfterSecs: 0 };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -13,6 +36,29 @@ serve(async (req) => {
       status: 405,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+
+  // ── Rate limit by IP ────────────────────────────────────────────────────
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    ?? req.headers.get("cf-connecting-ip")
+    ?? "unknown";
+
+  const { allowed, retryAfterSecs } = checkRateLimit(ip);
+  if (!allowed) {
+    const mins = Math.ceil(retryAfterSecs / 60);
+    return new Response(
+      JSON.stringify({
+        error: `Too many requests. Please wait ~${mins} minute${mins !== 1 ? "s" : ""} before trying again.`,
+      }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfterSecs),
+        },
+      },
+    );
   }
 
   try {
@@ -56,7 +102,6 @@ serve(async (req) => {
 
     const graph = await analyzeResp.json();
 
-    // Return graph with metadata
     return new Response(
       JSON.stringify({
         success: true,

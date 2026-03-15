@@ -6,6 +6,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── In-memory rate limiter (sliding window) ──────────────────────────────────
+// Per-user: max 5 analyses / 15 min  |  Per-IP (no auth): max 3 analyses / 15 min
+const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_PER_USER = 5;
+const MAX_PER_IP = 3;
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+
+function checkRateLimit(key: string, max: number): { allowed: boolean; retryAfterSecs: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+
+  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
+    rateLimitMap.set(key, { count: 1, windowStart: now });
+    return { allowed: true, retryAfterSecs: 0 };
+  }
+
+  if (entry.count >= max) {
+    const retryAfterSecs = Math.ceil((RATE_WINDOW_MS - (now - entry.windowStart)) / 1000);
+    return { allowed: false, retryAfterSecs };
+  }
+
+  entry.count++;
+  return { allowed: true, retryAfterSecs: 0 };
+}
+
 // ── Ignore patterns for file tree filtering ──────────────────────────────────
 const IGNORED_SEGMENTS = [
   "node_modules", ".git", "dist", "build", ".next", ".nuxt", ".output",
@@ -35,25 +60,58 @@ function parseGitHubUrl(url: string): { owner: string; repo: string } {
     .replace(/^github\.com\//, "")
     .replace(/\.git$/, "")
     .replace(/\/$/, "")
-    .replace(/^github\.com\//, ""); // handle double
+    .replace(/^github\.com\//, "");
   const parts = cleaned.split("/");
   if (parts.length < 2) throw new Error(`Invalid GitHub URL: "${url}". Expected format: github.com/owner/repo`);
   return { owner: parts[0], repo: parts[1] };
 }
 
-async function githubFetch(path: string, headers: Record<string, string>) {
-  const res = await fetch(`https://api.github.com${path}`, { headers });
-  if (!res.ok) {
-    const body = await res.text();
-    if (res.status === 404) throw new Error("Repository not found or is private. For private repos, add a GitHub token.");
-    if (res.status === 403 || res.status === 429) {
-      throw new Error("GitHub API rate limit reached. Wait a minute or add a GitHub token for higher limits.");
-    }
-    throw new Error(`GitHub API error ${res.status}: ${body.slice(0, 300)}`);
-  }
-  return res.json();
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// ── GitHub fetch with retry on 429/403 ──────────────────────────────────────
+async function githubFetch(
+  path: string,
+  headers: Record<string, string>,
+  retries = 2,
+): Promise<unknown> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(`https://api.github.com${path}`, { headers });
+    if (res.ok) return res.json();
+
+    // On last attempt, throw descriptive errors
+    if (attempt === retries) {
+      const body = await res.text();
+      if (res.status === 404) throw new Error("Repository not found or is private. For private repos, add a GitHub token.");
+      if (res.status === 403 || res.status === 429) {
+        const resetHeader = res.headers.get("X-RateLimit-Reset");
+        const resetIn = resetHeader
+          ? Math.max(0, Math.ceil((Number(resetHeader) * 1000 - Date.now()) / 60000))
+          : 1;
+        throw new Error(
+          `GitHub API rate limit reached. ${resetIn > 0 ? `Resets in ~${resetIn} min.` : ""} Add a GitHub token for 5,000 req/hour instead of 60.`,
+        );
+      }
+      throw new Error(`GitHub API error ${res.status}: ${body.slice(0, 300)}`);
+    }
+
+    // 429 or 403: wait before retry
+    if (res.status === 429 || res.status === 403) {
+      const retryAfter = res.headers.get("Retry-After");
+      const waitMs = retryAfter ? Number(retryAfter) * 1000 : 1500 * (attempt + 1);
+      console.warn(`GitHub rate limit hit (attempt ${attempt + 1}/${retries + 1}), waiting ${waitMs}ms...`);
+      await sleep(waitMs);
+    } else {
+      // Other errors: no retry
+      const body = await res.text();
+      throw new Error(`GitHub API error ${res.status}: ${body.slice(0, 300)}`);
+    }
+  }
+  throw new Error("GitHub fetch exhausted all retries");
+}
+
+// ── Fetch a single file content with retry ───────────────────────────────────
 async function fetchFileContent(
   owner: string,
   repo: string,
@@ -61,18 +119,50 @@ async function fetchFileContent(
   headers: Record<string, string>,
 ): Promise<string> {
   try {
-    const data = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, headers);
+    const data = await githubFetch(
+      `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
+      headers,
+    ) as Record<string, unknown>;
     if (data.encoding === "base64" && data.content) {
-      const decoded = atob(data.content.replace(/\n/g, ""));
-      // Prepend line numbers so AI uses exact line positions, not estimates
-      const lines = decoded.split('\n');
-      const numbered = lines.map((line, i) => `${i + 1}: ${line}`).join('\n');
+      const decoded = atob((data.content as string).replace(/\n/g, ""));
+      const lines = decoded.split("\n");
+      const numbered = lines.map((line, i) => `${i + 1}: ${line}`).join("\n");
       return numbered.slice(0, 4000);
     }
     return "";
   } catch {
     return "";
   }
+}
+
+// ── Batch file fetches: serial batches of 3, 350ms delay between batches ─────
+async function fetchFilesBatched(
+  paths: string[],
+  owner: string,
+  repo: string,
+  headers: Record<string, string>,
+  batchSize = 3,
+  batchDelayMs = 350,
+): Promise<Array<{ path: string; content: string }>> {
+  const results: Array<{ path: string; content: string }> = [];
+
+  for (let i = 0; i < paths.length; i += batchSize) {
+    const batch = paths.slice(i, i + batchSize);
+    const batchResults = await Promise.all(
+      batch.map(async (p) => ({
+        path: p,
+        content: await fetchFileContent(owner, repo, p, headers),
+      })),
+    );
+    results.push(...batchResults);
+
+    // Delay between batches (except after the last one)
+    if (i + batchSize < paths.length) {
+      await sleep(batchDelayMs);
+    }
+  }
+
+  return results;
 }
 
 // ── AI System Prompt ─────────────────────────────────────────────────────────
@@ -226,6 +316,57 @@ serve(async (req) => {
   }
 
   try {
+    // ── Extract user identity for rate limiting ──────────────────────────
+    const authHeader = req.headers.get("Authorization") ?? "";
+    let rateLimitKey: string;
+    let maxAllowed: number;
+
+    // Try to extract JWT sub (user ID) from Bearer token
+    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (bearerMatch) {
+      try {
+        // Decode JWT payload (middle part) without verification — for rate limit key only
+        const payload = JSON.parse(atob(bearerMatch[1].split(".")[1]));
+        if (payload?.sub) {
+          rateLimitKey = `user:${payload.sub}`;
+          maxAllowed = MAX_PER_USER;
+        } else {
+          throw new Error("no sub");
+        }
+      } catch {
+        // Fall back to IP
+        const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+          ?? req.headers.get("cf-connecting-ip")
+          ?? "unknown";
+        rateLimitKey = `ip:${ip}`;
+        maxAllowed = MAX_PER_IP;
+      }
+    } else {
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+        ?? req.headers.get("cf-connecting-ip")
+        ?? "unknown";
+      rateLimitKey = `ip:${ip}`;
+      maxAllowed = MAX_PER_IP;
+    }
+
+    const { allowed, retryAfterSecs } = checkRateLimit(rateLimitKey, maxAllowed);
+    if (!allowed) {
+      const mins = Math.ceil(retryAfterSecs / 60);
+      return new Response(
+        JSON.stringify({
+          error: `Too many analyses. Please wait ~${mins} minute${mins !== 1 ? "s" : ""} before trying again.`,
+        }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(retryAfterSecs),
+          },
+        },
+      );
+    }
+
     const body = await req.json();
     const { repoUrl, token } = body as { repoUrl: string; token?: string };
 
@@ -249,15 +390,15 @@ serve(async (req) => {
     const [repoInfo, contributorsRaw] = await Promise.all([
       githubFetch(`/repos/${owner}/${repo}`, ghHeaders),
       githubFetch(`/repos/${owner}/${repo}/contributors?per_page=15&anon=0`, ghHeaders).catch(() => []),
-    ]);
-    const defaultBranch: string = repoInfo.default_branch || "main";
+    ]) as [Record<string, unknown>, unknown];
 
-    // Build contributor list: login + contributions count
+    const defaultBranch: string = (repoInfo.default_branch as string) || "main";
+
     const contributors: Array<{ login: string; contributions: number }> =
       Array.isArray(contributorsRaw)
-        ? contributorsRaw
-            .filter((c: Record<string, unknown>) => c.type !== "Bot" && c.login)
-            .map((c: Record<string, unknown>) => ({
+        ? (contributorsRaw as Array<Record<string, unknown>>)
+            .filter((c) => c.type !== "Bot" && c.login)
+            .map((c) => ({
               login: c.login as string,
               contributions: (c.contributions as number) ?? 0,
             }))
@@ -270,13 +411,12 @@ serve(async (req) => {
       treeData = await githubFetch(
         `/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`,
         ghHeaders,
-      );
+      ) as typeof treeData;
     } catch {
-      // Fallback: try alternate branch names
       try {
-        treeData = await githubFetch(`/repos/${owner}/${repo}/git/trees/main?recursive=1`, ghHeaders);
+        treeData = await githubFetch(`/repos/${owner}/${repo}/git/trees/main?recursive=1`, ghHeaders) as typeof treeData;
       } catch {
-        treeData = await githubFetch(`/repos/${owner}/${repo}/git/trees/master?recursive=1`, ghHeaders);
+        treeData = await githubFetch(`/repos/${owner}/${repo}/git/trees/master?recursive=1`, ghHeaders) as typeof treeData;
       }
     }
 
@@ -286,10 +426,9 @@ serve(async (req) => {
 
     const totalFilesFiltered = allFiles.length;
 
-    // ── 3. Identify key files to fetch content for ──────────────────────
+    // ── 3. Identify key files to fetch (max 10) ──────────────────────────
     const keyFilePaths: string[] = [];
 
-    // Priority filenames first
     for (const name of PRIORITY_FILE_NAMES) {
       const found = allFiles.find(
         (f) => f.path === name || f.path.endsWith(`/${name}`),
@@ -309,28 +448,20 @@ serve(async (req) => {
             f.path.endsWith(".rb") || f.path.endsWith(".php"))
         );
       })
-      .slice(0, 6);
+      .slice(0, 5);
 
     for (const f of shallowSrc) {
-      if (!keyFilePaths.includes(f.path) && keyFilePaths.length < 14) {
+      if (!keyFilePaths.includes(f.path) && keyFilePaths.length < 10) {
         keyFilePaths.push(f.path);
       }
     }
 
-    // ── 4. Fetch file contents concurrently ─────────────────────────────
-    const contentEntries = await Promise.all(
-      keyFilePaths.map(async (p) => ({
-        path: p,
-        content: await fetchFileContent(owner, repo, p, ghHeaders),
-      })),
-    );
+    // ── 4. Fetch file contents in serial batches (3 at a time, 350ms apart) ─
+    const contentEntries = await fetchFilesBatched(keyFilePaths, owner, repo, ghHeaders);
 
     const fileContentsText = contentEntries
       .filter((e) => e.content.length > 50)
-      .map(
-        (e) =>
-          `--- FILE: ${e.path} ---\n${e.content.slice(0, 3800)}\n`,
-      )
+      .map((e) => `--- FILE: ${e.path} ---\n${e.content.slice(0, 3800)}\n`)
       .join("\n");
 
     // ── 5. Build compact directory summary ─────────────────────────────
@@ -484,7 +615,7 @@ IMPORTANT: Use the real contributor GitHub usernames listed above for the "autho
         orphans: graphData.stats?.orphans ?? 0,
         circularDeps: graphData.stats?.circularDeps ?? 0,
         testCoverage: graphData.stats?.testCoverage ?? 0,
-        languages: graphData.stats?.languages ?? { [repoInfo.language || "Unknown"]: 100 },
+        languages: graphData.stats?.languages ?? { [repoInfo.language as string || "Unknown"]: 100 },
       },
     };
 
@@ -494,8 +625,9 @@ IMPORTANT: Use the real contributor GitHub usernames listed above for the "autho
   } catch (error) {
     console.error("analyze-repo error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
+    const isRateLimit = message.includes("rate limit") || message.includes("Too many");
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status: isRateLimit ? 429 : 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
