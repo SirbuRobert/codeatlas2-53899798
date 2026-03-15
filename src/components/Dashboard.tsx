@@ -273,7 +273,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             onClick={() => setChatOpen(o => !o)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-[10px] transition-all ${
               chatOpen
-                ? 'bg-cyan/10 border-cyan/40 text-cyan'
+                ? 'bg-primary/10 border-primary/40 text-primary'
                 : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground hover:border-border-bright'
             }`}
           >
