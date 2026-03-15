@@ -51,8 +51,8 @@ vi.mock('@/hooks/useAuth', () => ({
 
 const defaultSessionStats: SessionStats = {
   reposAnalyzed: 0,
-  nodesRendered: 0,
-  activeUsers: 0,
+  nodesMapped: 0,
+  riskFlags: 0,
 };
 
 const renderLanding = (user: null | { email: string } = null) => {
