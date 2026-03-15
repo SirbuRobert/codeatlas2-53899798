@@ -7,6 +7,13 @@ export type EdgeRelation = 'imports' | 'calls' | 'inherits' | 'composes' | 'quer
 export type RiskLevel = 'critical' | 'high' | 'medium' | 'low' | 'none';
 export type Language = 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java' | 'unknown';
 
+export interface FunctionEntry {
+  name: string;
+  line: number;
+  kind: 'function' | 'class' | 'export' | 'const' | 'method';
+  isExported: boolean;
+}
+
 export interface AxonNode {
   id: string;
   type: NodeType;

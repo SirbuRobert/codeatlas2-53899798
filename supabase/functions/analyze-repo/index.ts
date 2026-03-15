@@ -89,6 +89,7 @@ RULES:
 - For databases: identify ORM schemas, migration files, DB clients
 - DO NOT include test files as primary nodes — mention coverage in the tested module instead
 - Map only the architecturally significant edges (max 30 edges)
+- For each node, list the top 8 exported functions/classes/methods with their approximate line numbers from the file content
 
 NODE TYPE GUIDE:
 - service: Application bootstrap, server entry, main process
