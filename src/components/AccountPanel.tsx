@@ -14,11 +14,17 @@ interface AccountPanelProps {
 export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
   const { user, profile, signOut, saveGithubToken } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [token, setToken] = useState('');
   const [showToken, setShowToken] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Webhook state
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookRepoUrl, setWebhookRepoUrl] = useState('');
+  const [savingWebhook, setSavingWebhook] = useState(false);
 
   // Populate token from profile when panel opens
   useEffect(() => {
