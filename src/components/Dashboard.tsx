@@ -493,6 +493,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           setViewMode('topology');
         }}
       />
+
+      {/* Repo Chat Panel */}
+      <RepoChatPanel
+        graph={graph}
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        onNodeFocus={handleNodeFocusFromChat}
+      />
     </div>
   );
 }
