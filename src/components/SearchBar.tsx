@@ -109,8 +109,8 @@ export default function SearchBar({ nodes, onResults, onClose, isOpen }: SearchB
               value={query}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              placeholder='Search nodes… "auth logic", "database queries", "entry point"'
-              className="flex-1 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
+              placeholder='Search nodes…'
+              className="flex-1 min-w-0 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
             />
 
             {/* Match count */}
