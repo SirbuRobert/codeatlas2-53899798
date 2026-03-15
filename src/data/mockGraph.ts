@@ -76,6 +76,13 @@ const nodes: AxonNode[] = [
       coverage: 95, author: 'maya.r', path: 'src/utils/jwt.util.ts', language: 'typescript',
       lastModified: '2w ago', riskLevel: 'high', flags: ['security-critical'],
       semanticSummary: 'JWT token utilities: sign(), verify(), decode(), and refresh token rotation logic. Used by 4 modules — any change here is high risk.',
+      functions: [
+        { name: 'signToken', line: 14, kind: 'function', isExported: true },
+        { name: 'verifyToken', line: 34, kind: 'function', isExported: true },
+        { name: 'decodeToken', line: 54, kind: 'function', isExported: true },
+        { name: 'rotateRefreshToken', line: 68, kind: 'function', isExported: true },
+        { name: 'JWT_EXPIRY', line: 8, kind: 'const', isExported: true },
+      ],
     },
     position: { x: -80, y: 720 },
   },
