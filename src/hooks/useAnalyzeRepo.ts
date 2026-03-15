@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { computeHierarchicalLayout } from '@/lib/graphLayout';
-import type { CodebaseGraph, AxonNode, AxonEdge, NodeType, RiskLevel, Language } from '@/types/graph';
+import type { CodebaseGraph, AxonNode, AxonEdge, NodeType, RiskLevel, Language, FunctionEntry } from '@/types/graph';
 
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
 

@@ -150,6 +150,20 @@ const GRAPH_TOOLS = [
                 },
                 isEntryPoint: { type: "boolean" },
                 isOrphan: { type: "boolean" },
+                functions: {
+                  type: "array",
+                  description: "Top 8 exported functions/classes/methods with line numbers",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "Function or class name" },
+                      line: { type: "number", description: "Approximate line number" },
+                      kind: { type: "string", enum: ["function", "class", "export", "const", "method"] },
+                      isExported: { type: "boolean" },
+                    },
+                    required: ["name", "line", "kind", "isExported"],
+                  },
+                },
               },
               required: ["id", "type", "label", "path", "semanticSummary", "riskLevel", "language", "loc", "complexity"],
             },

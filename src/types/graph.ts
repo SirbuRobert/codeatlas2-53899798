@@ -34,6 +34,7 @@ export interface AxonNode {
     flags: string[];           // e.g. ['single-point-of-failure', 'no-tests', 'circular-dep']
     isEntryPoint?: boolean;
     isOrphan?: boolean;
+    functions?: FunctionEntry[];
   };
   position: { x: number; y: number };
 }
