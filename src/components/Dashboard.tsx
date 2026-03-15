@@ -63,6 +63,22 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
   const [proGateOpen, setProGateOpen] = useState(false);
   const [proGateFeature, setProGateFeature] = useState<'chat' | 'business'>('chat');
   const [customCmdExecuting, setCustomCmdExecuting] = useState(false);
+  const [webhookBadgeVisible, setWebhookBadgeVisible] = useState(false);
+  const [webhookBadgeData, setWebhookBadgeData] = useState<WebhookResult | null>(null);
+
+  // Show toast + persistent badge when webhook fires
+  useEffect(() => {
+    if (!webhookResult || webhookResult.sent === 0) return;
+    setWebhookBadgeData(webhookResult);
+    setWebhookBadgeVisible(true);
+    const urls = webhookResult.results?.map(r => r.url).join(', ') ?? '';
+    toast({
+      title: `📡 Webhook dispatched (${webhookResult.sent})`,
+      description: urls
+        ? `Notified: ${urls.length > 60 ? urls.slice(0, 57) + '…' : urls}`
+        : 'analysis.complete event delivered',
+    });
+  }, [webhookResult]);
 
   const openProGate = (feature: 'chat' | 'business') => {
     setProGateFeature(feature);
