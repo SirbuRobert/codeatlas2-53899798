@@ -270,7 +270,7 @@ export default function LandingPage({
       </div>
 
       {/* Main */}
-      <div className="relative z-10 flex flex-col items-center px-6 py-20">
+      <div className="relative z-10 flex flex-col items-center px-4 sm:px-6 pt-16 sm:pt-20 pb-6">
         {/* Brand */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
