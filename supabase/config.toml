@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.check-subscription]
 verify_jwt = false
+
+[functions.suggest-fix]
+verify_jwt = false
