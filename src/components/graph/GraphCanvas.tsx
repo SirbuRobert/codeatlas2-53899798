@@ -78,6 +78,7 @@ export default function GraphCanvas({
   searchHighlightIds = new Set(),
   ghostMode = false,
   tourFocusNodeId = null,
+  onFindingNodeSelect,
 }: GraphCanvasProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
