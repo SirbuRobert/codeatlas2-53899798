@@ -101,19 +101,9 @@ describe('Auth page', () => {
   it('shows an error message when signIn returns an error', async () => {
     mockSignIn.mockResolvedValueOnce({ error: { message: 'Invalid credentials' }, data: null });
     renderAuth();
-
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-      target: { value: 'test@test.com' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
-      target: { value: 'wrongpass' },
-    });
-    // The submit button in the login form has text "SIGN IN" 
-    const submitButtons = screen.getAllByText('SIGN IN');
-    // Click the button element (not the tab)
-    const submitBtn = submitButtons.find((el) => el.closest('button')?.type === 'submit') ?? submitButtons[0];
-    fireEvent.click(submitBtn.closest('button') ?? submitBtn);
-
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'test@test.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'wrongpass' } });
+    fireEvent.submit(screen.getByPlaceholderText('you@example.com').closest('form')!);
     await waitFor(() => {
       expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
     });
