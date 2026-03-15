@@ -34,9 +34,8 @@ export default function Index() {
       animationDoneRef.current = false;
       graphRef.current = null;
 
-      // Prefer profile token, fall back to localStorage
-      const token = getGithubToken();
-      const result = await analyze(url, token || undefined);
+      // Token is resolved server-side from encrypted DB — just pass the URL
+      const result = await analyze(url);
       graphRef.current = result;
 
       if (result) {
