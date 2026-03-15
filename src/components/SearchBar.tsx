@@ -12,6 +12,7 @@ interface SearchBarProps {
 
 function scoreNode(node: AxonNode, words: string[]): number {
   let score = 0;
+  const fnNames = (node.metadata.functions ?? []).map(f => f.name.toLowerCase());
   const haystack = [
     node.label.toLowerCase(),
     node.type.toLowerCase(),
@@ -19,11 +20,17 @@ function scoreNode(node: AxonNode, words: string[]): number {
     (node.metadata.semanticSummary ?? '').toLowerCase(),
     ...node.metadata.flags.map(f => f.toLowerCase()),
     node.metadata.author.toLowerCase(),
+    ...fnNames,
   ].join(' ');
 
   for (const word of words) {
     if (!word) continue;
-    if (node.label.toLowerCase().includes(word)) score += 4;  // label exact → high weight
+    // Function name exact match — highest priority (user searched for a specific function)
+    if (fnNames.some(fn => fn === word)) score += 8;
+    // Function name partial match — high priority
+    else if (fnNames.some(fn => fn.includes(word))) score += 5;
+    // Node label match
+    if (node.label.toLowerCase().includes(word)) score += 4;
     if (node.type.toLowerCase() === word) score += 3;
     if (haystack.includes(word)) score += 1;
   }

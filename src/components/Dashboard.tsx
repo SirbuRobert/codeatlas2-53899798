@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -14,6 +14,7 @@ import AISummaryPanel, { AISummaryBanner } from '@/components/AISummaryPanel';
 import BusinessInsightsPanel from '@/components/BusinessInsightsPanel';
 import ExportModal from '@/components/ExportModal';
 import RepoExplainerModal from '@/components/RepoExplainerModal';
+import RepoChatPanel from '@/components/RepoChatPanel';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 
@@ -42,6 +43,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [explainerOpen, setExplainerOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
 
   // Auto-show explainer on first visit per repo
@@ -102,6 +104,15 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       setGhostMode(false);
     }
   }, []);
+
+  const handleNodeFocusFromChat = useCallback((nodeId: string) => {
+    const node = graph.nodes.find(n => n.id === nodeId);
+    if (node) {
+      setSelectedNode(node);
+      setViewMode('topology');
+      setTourFocusNodeId(nodeId);
+    }
+  }, [graph.nodes]);
 
   const clearAll = useCallback(() => {
     setBlastRadiusNodeId(null);
@@ -251,6 +262,19 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             <Search className="w-3 h-3" />
             Search
             <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">⌘F</kbd>
+          </button>
+
+          {/* Ask AI */}
+          <button
+            onClick={() => setChatOpen(o => !o)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-[10px] transition-all ${
+              chatOpen
+                ? 'bg-cyan/10 border-cyan/40 text-cyan'
+                : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground hover:border-border-bright'
+            }`}
+          >
+            <MessageSquare className="w-3 h-3" />
+            Ask AI
           </button>
 
           {/* Business View */}
@@ -468,6 +492,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           setTourFocusNodeId(id);
           setViewMode('topology');
         }}
+      />
+
+      {/* Repo Chat Panel */}
+      <RepoChatPanel
+        graph={graph}
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        onNodeFocus={handleNodeFocusFromChat}
       />
     </div>
   );
