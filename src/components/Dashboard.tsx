@@ -251,7 +251,7 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
               <Map className="w-3 h-3 text-primary" />
             </div>
             <span className="font-mono text-xs font-bold text-foreground">CodeAtlas</span>
-            <span className="font-mono text-[9px] text-foreground-dim hidden sm:inline">AXON</span>
+            
           </div>
 
           {/* View toggle */}
