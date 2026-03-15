@@ -21,7 +21,6 @@ export default function Index() {
   const [repoUrl, setRepoUrl] = useState('');
   const [sessionStats, setSessionStats] = useState<SessionStats>(BASELINE_STATS);
   const { analyze, status, graph, error, reset, webhookResult } = useAnalyzeRepo();
-  const { getGithubToken } = useAuth();
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
