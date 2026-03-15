@@ -365,6 +365,12 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
                   const n = graph.nodes.find(x => x.id === nodeId);
                   if (n) setSelectedNode(n);
                 }}
+                statsHighlightLabel={statsHighlightLabel}
+                onClearStatFilter={() => {
+                  setSearchHighlightIds(new Set());
+                  setSearchQuery('');
+                  setStatsHighlightLabel(null);
+                }}
               />
             </motion.div>
           ) : viewMode === 'treemap' ? (

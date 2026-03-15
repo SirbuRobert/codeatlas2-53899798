@@ -27,6 +27,14 @@ function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): stri
   return line ? `${base}#L${line}` : base;
 }
 
+const STAT_ACCENT: Record<string, string> = {
+  'HOTSPOTS': '#f59e0b',
+  'ORPHANS': '#94a3b8',
+  'COVERAGE': '#22c55e',
+  'FILES': '#00ffff',
+  'CIRCULAR DEPS': '#ef4444',
+};
+
 interface GraphCanvasProps {
   graph: CodebaseGraph;
   selectedNodeId: string | null;
@@ -37,6 +45,8 @@ interface GraphCanvasProps {
   ghostMode?: boolean;
   tourFocusNodeId?: string | null;
   onFindingNodeSelect?: (nodeId: string) => void;
+  statsHighlightLabel?: string | null;
+  onClearStatFilter?: () => void;
 }
 
 const RELATION_COLORS: Record<string, string> = {
