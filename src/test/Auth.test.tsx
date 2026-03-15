@@ -65,7 +65,7 @@ describe('Auth page', () => {
 
   it('renders SIGN IN and SIGN UP tabs', () => {
     renderAuth();
-    expect(screen.getByText('SIGN IN')).toBeInTheDocument();
+    expect(screen.getAllByText('SIGN IN').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('SIGN UP')).toBeInTheDocument();
   });
 

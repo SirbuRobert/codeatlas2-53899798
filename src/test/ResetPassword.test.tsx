@@ -30,10 +30,12 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// ── Supabase mock ────────────────────────────────
-const mockOnAuthStateChange = vi.fn();
-const mockGetSession = vi.fn();
-const mockUpdateUser = vi.fn();
+// ── Supabase mock using vi.hoisted to avoid init order issues ────
+const { mockOnAuthStateChange, mockGetSession, mockUpdateUser } = vi.hoisted(() => ({
+  mockOnAuthStateChange: vi.fn(),
+  mockGetSession: vi.fn(),
+  mockUpdateUser: vi.fn(),
+}));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -61,11 +63,8 @@ describe('ResetPassword page', () => {
   });
 
   it('renders loading spinner while session is being detected', () => {
-    // getSession never resolves → validSession stays null
     mockGetSession.mockReturnValue(new Promise(() => {}));
     renderPage();
-    // Loading spinner is shown (Loader2 icon renders via lucide)
-    // We check that the form is NOT shown yet
     expect(screen.queryByText('NEW PASSWORD')).not.toBeInTheDocument();
   });
 
@@ -106,12 +105,10 @@ describe('ResetPassword page', () => {
     mockGetSession.mockResolvedValueOnce({ data: { session: { user: { id: 'uid' } } } });
     renderPage();
     await waitFor(() => screen.getByText('NEW PASSWORD'));
-
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'password1' } });
     fireEvent.change(inputs[1], { target: { value: 'password2' } });
     fireEvent.click(screen.getByText('UPDATE PASSWORD'));
-
     await waitFor(() => {
       expect(screen.getByText('Passwords do not match.')).toBeInTheDocument();
     });
@@ -122,12 +119,10 @@ describe('ResetPassword page', () => {
     mockUpdateUser.mockResolvedValueOnce({ error: null });
     renderPage();
     await waitFor(() => screen.getByText('NEW PASSWORD'));
-
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'newpass123' } });
     fireEvent.change(inputs[1], { target: { value: 'newpass123' } });
     fireEvent.click(screen.getByText('UPDATE PASSWORD'));
-
     await waitFor(() => {
       expect(screen.getByText('Password updated!')).toBeInTheDocument();
     });
@@ -138,12 +133,10 @@ describe('ResetPassword page', () => {
     mockUpdateUser.mockResolvedValueOnce({ error: { message: 'Token expired' } });
     renderPage();
     await waitFor(() => screen.getByText('NEW PASSWORD'));
-
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'newpass123' } });
     fireEvent.change(inputs[1], { target: { value: 'newpass123' } });
     fireEvent.click(screen.getByText('UPDATE PASSWORD'));
-
     await waitFor(() => {
       expect(screen.getByText('Token expired')).toBeInTheDocument();
     });
