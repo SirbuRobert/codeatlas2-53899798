@@ -284,7 +284,7 @@ export default function LandingPage({
             </div>
           </div>
           <span className="font-mono text-sm text-foreground-muted tracking-[0.3em] uppercase">CodeAtlas</span>
-          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-cyan/10 text-cyan border border-cyan/20">
+          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
             AXON
           </span>
         </motion.div>
