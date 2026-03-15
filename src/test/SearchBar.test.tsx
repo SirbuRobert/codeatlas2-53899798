@@ -133,21 +133,17 @@ describe('SearchBar — close behaviour', () => {
     expect(onResults).toHaveBeenCalledWith(new Set(), '');
   });
 
-  it('clicking X button clears the query', () => {
+  it('clicking X button calls onResults with empty set', () => {
     const onResults = vi.fn();
     renderSearchBar(true, { onResults });
     const input = screen.getByPlaceholderText(/Search nodes/);
     fireEvent.change(input, { target: { value: 'auth' } });
-    // After typing, X and ESC buttons appear — X is the second-to-last button
+    // X clear button appears — it's the second-to-last button (before ESC)
     const buttons = screen.getAllByRole('button');
-    // Clear state by pressing X (second last button before ESC)
+    const xBtn = buttons[buttons.length - 2];
     onResults.mockClear();
-    // Simulate direct clear via empty input change
-    fireEvent.change(input, { target: { value: '' } });
-    // After clearing to empty, component calls onResults(new Set(), '')
-    expect(onResults).toHaveBeenCalledTimes(1);
-    const [ids] = onResults.mock.calls[0];
-    expect(ids.size).toBe(0);
+    fireEvent.click(xBtn);
+    expect(onResults).toHaveBeenCalledWith(new Set(), '');
   });
 
   it('renders ESC kbd hint', () => {
