@@ -341,8 +341,8 @@ function NodeSphere({
       {/* Glow halo */}
       {!isOrphan && !isDimmed && (
         <mesh>
-          <sphereGeometry args={[size * 1.5, 12, 12]} />
-          <meshBasicMaterial color={effectiveColor} transparent opacity={0.06} />
+          <sphereGeometry args={[size * 1.8, 12, 12]} />
+          <meshBasicMaterial color={effectiveColor} transparent opacity={0.18} />
         </mesh>
       )}
 
@@ -358,9 +358,9 @@ function NodeSphere({
         <meshStandardMaterial
           color={effectiveColor}
           emissive={isCritical ? riskColor : effectiveColor}
-          emissiveIntensity={isDimmed ? 0.04 : (hovered || isSelected ? 1.4 : 0.55)}
-          roughness={isOrphan ? 0.9 : 0.45}
-          metalness={isOrphan ? 0 : 0.3}
+          emissiveIntensity={isDimmed ? 0.04 : (hovered || isSelected ? 2.2 : 1.2)}
+          roughness={isOrphan ? 0.5 : 0.2}
+          metalness={isOrphan ? 0 : 0.15}
           transparent
           opacity={opacity}
         />
