@@ -361,6 +361,10 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
                 searchHighlightIds={searchHighlightIds}
                 ghostMode={ghostMode}
                 tourFocusNodeId={tourFocusNodeId}
+                onFindingNodeSelect={(nodeId) => {
+                  const n = graph.nodes.find(x => x.id === nodeId);
+                  if (n) setSelectedNode(n);
+                }}
               />
             </motion.div>
           ) : viewMode === 'treemap' ? (
