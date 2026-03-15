@@ -549,11 +549,13 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
         {/* Business Insights Panel */}
         <div className="pointer-events-auto">
-          <BusinessInsightsPanel
-            graph={graph}
-            isOpen={businessPanelOpen}
-            onClose={() => setBusinessPanelOpen(false)}
-          />
+          {isPro && (
+            <BusinessInsightsPanel
+              graph={graph}
+              isOpen={businessPanelOpen}
+              onClose={() => setBusinessPanelOpen(false)}
+            />
+          )}
         </div>
 
         {/* Onboarding tour — bottom-center */}
