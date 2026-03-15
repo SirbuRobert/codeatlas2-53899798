@@ -192,7 +192,7 @@ export default function CommandBar({
                                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                                 style={{ background: `${cmd.color}15`, border: `1px solid ${cmd.color}25` }}
                               >
-                                <Sparkles className="w-4 h-4" style={{ color: cmd.color }} />
+                                <span style={{ color: cmd.color }}><Sparkles className="w-4 h-4" /></span>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <span className="font-mono text-xs font-semibold text-foreground">/{cmd.name}</span>
