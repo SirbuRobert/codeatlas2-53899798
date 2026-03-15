@@ -241,7 +241,7 @@ export default function LandingPage({
     <div className="relative min-h-screen bg-background flex flex-col">
       {/* Grid bg */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(hsl(var(--cyan)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--cyan)) 1px, transparent 1px)`,
           backgroundSize: '60px 60px',
