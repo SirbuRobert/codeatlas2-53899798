@@ -9,6 +9,7 @@
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Stars, OrbitControls, Html, Line } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type { AxonNode, AxonEdge, CodebaseGraph, NodeType } from '@/types/graph';
 import { calculateBlastRadius } from '@/types/graph';
