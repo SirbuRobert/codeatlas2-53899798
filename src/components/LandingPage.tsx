@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle, HelpCircle, Github, Check, Eye, EyeOff, X, ExternalLink, UserCircle, LogIn } from 'lucide-react';
+import { GitBranch, Zap, Search, ChevronRight, Star, Globe, AlertCircle, HelpCircle, LogIn } from 'lucide-react';
 import { exampleRepos } from '@/data/mockGraph';
 import type { AnalysisPhase } from '@/types/graph';
 import LiveStatsBar from '@/components/LiveStatsBar';
@@ -9,108 +9,6 @@ import type { SessionStats } from '@/components/LiveStatsBar';
 import PipelineExplainer from '@/components/PipelineExplainer';
 import AccountPanel from '@/components/AccountPanel';
 import { useAuth } from '@/hooks/useAuth';
-
-const GH_TOKEN_KEY = 'axon_gh_token';
-
-function GitHubTokenModal({ onClose }: { onClose: () => void }) {
-  const [token, setToken] = useState('');
-  const [showToken, setShowToken] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  const handleSave = () => {
-    const trimmed = token.trim();
-    if (!trimmed) return;
-    localStorage.setItem(GH_TOKEN_KEY, trimmed);
-    setSaved(true);
-    setTimeout(onClose, 900);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="relative w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 shadow-[var(--shadow-panel)]"
-      >
-        <button onClick={onClose} className="absolute right-4 top-4 text-foreground-dim hover:text-foreground transition-colors">
-          <X className="w-4 h-4" />
-        </button>
-
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center">
-            <Github className="w-4 h-4 text-foreground" />
-          </div>
-          <div>
-            <p className="font-mono text-sm font-bold text-foreground">Connect GitHub</p>
-            <p className="font-mono text-[10px] text-foreground-dim">Access private repositories</p>
-          </div>
-        </div>
-
-        <div className="bg-surface-2 border border-border rounded-xl p-4 mb-4 space-y-1.5">
-          <p className="font-mono text-[10px] text-foreground-dim uppercase tracking-wider mb-2">Setup instructions</p>
-          <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-primary flex-shrink-0">1.</span>
-            <span>Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)</span>
-          </div>
-          <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-primary flex-shrink-0">2.</span>
-            <span>Click <strong className="text-foreground">Generate new token</strong> and enable the <code className="bg-surface-3 px-1 rounded text-primary">repo</code> scope</span>
-          </div>
-          <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-primary flex-shrink-0">3.</span>
-            <span>Paste the token below — it stays only on your device</span>
-          </div>
-          <a
-            href="https://github.com/settings/tokens/new?scopes=repo&description=CodeAtlas+AXON"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 mt-2 font-mono text-[10px] text-primary hover:underline"
-          >
-            <ExternalLink className="w-3 h-3" />
-            Open GitHub token page
-          </a>
-        </div>
-
-        <div className="relative mb-4">
-          <input
-            type={showToken ? 'text' : 'password'}
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 pr-10 font-mono text-sm text-foreground placeholder:text-foreground-dim outline-none focus:border-primary/50 transition-colors"
-          />
-          <button
-            type="button"
-            onClick={() => setShowToken((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-dim hover:text-foreground transition-colors"
-          >
-            {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={!token.trim() || saved}
-          className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
-                     hover:bg-primary-glow disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2"
-        >
-          {saved ? (
-            <><Check className="w-3.5 h-3.5" />SAVED</>
-          ) : (
-            'SAVE TOKEN'
-          )}
-        </button>
-
-        <p className="font-mono text-[10px] text-foreground-dim text-center mt-3">
-          Token stored locally in your browser — never sent to our servers
-        </p>
-      </motion.div>
-    </div>
-  );
-}
 
 interface LandingPageProps {
   onAnalyze: (url: string) => void;
@@ -147,21 +45,8 @@ export default function LandingPage({
   const [glitchActive, setGlitchActive] = useState(false);
   const [analysisUrl, setAnalysisUrl] = useState('');
   const [pipelineOpen, setPipelineOpen] = useState(false);
-  const [ghModalOpen, setGhModalOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [ghConnected, setGhConnected] = useState(() => !!localStorage.getItem(GH_TOKEN_KEY));
   const animFinishedRef = useRef(false);
-
-  // Sync ghConnected whenever modal closes
-  const handleModalClose = () => {
-    setGhModalOpen(false);
-    setGhConnected(!!localStorage.getItem(GH_TOKEN_KEY));
-  };
-
-  const handleDisconnect = () => {
-    localStorage.removeItem(GH_TOKEN_KEY);
-    setGhConnected(false);
-  };
 
   // Glitch title effect
   useEffect(() => {
@@ -341,33 +226,6 @@ export default function LandingPage({
               transition={{ delay: 0.4 }}
               className="w-full max-w-2xl"
             >
-              {/* GitHub connect chip */}
-              <div className="flex justify-end mb-2">
-                {ghConnected ? (
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-success/10 border border-success/30 font-mono text-[10px] text-success">
-                      <Check className="w-3 h-3" />
-                      GitHub Connected
-                    </span>
-                    <button
-                      onClick={handleDisconnect}
-                      className="font-mono text-[10px] text-foreground-dim hover:text-alert transition-colors underline"
-                    >
-                      disconnect
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setGhModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-muted hover:text-foreground hover:border-border-bright transition-all duration-150"
-                  >
-                    <Github className="w-3 h-3" />
-                    Connect GitHub
-                    <Lock className="w-2.5 h-2.5 text-warning ml-0.5" />
-                  </button>
-                )}
-              </div>
-
               <div className="relative group mb-4">
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-accent/15 to-primary/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
                 <div className="relative flex items-center gap-2 sm:gap-3 bg-surface-1 border border-border rounded-2xl px-3 sm:px-5 py-3 sm:py-4 shadow-[var(--shadow-panel)]">
@@ -404,7 +262,7 @@ export default function LandingPage({
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright hover:bg-surface-3 transition-all duration-150 group"
                     >
                       {repo.private ? (
-                        <Lock className="w-2.5 h-2.5 text-warning" />
+                        <span className="text-warning text-[9px]">🔒</span>
                       ) : (
                         <Globe className="w-2.5 h-2.5 text-foreground-dim" />
                       )}
@@ -438,21 +296,14 @@ export default function LandingPage({
                 </div>
 
                 {/* Private repo hint */}
-                {isPrivateError && !ghConnected && (
+                {isPrivateError && (
                   <div className="mb-4 flex items-start gap-2.5 px-3 py-2.5 bg-warning/5 border border-warning/20 rounded-xl">
-                    <Lock className="w-3.5 h-3.5 text-warning flex-shrink-0 mt-0.5" />
+                    <span className="text-warning flex-shrink-0 mt-0.5">🔒</span>
                     <div>
                       <p className="font-mono text-[11px] text-warning font-semibold mb-0.5">Private repository?</p>
                       <p className="font-mono text-[10px] text-foreground-muted leading-relaxed">
-                        Connect your GitHub token to access private repos.
+                        Add your GitHub token in the account panel (top-right) to access private repos.
                       </p>
-                      <button
-                        onClick={() => setGhModalOpen(true)}
-                        className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-primary hover:underline"
-                      >
-                        <Github className="w-3 h-3" />
-                        Connect GitHub Token
-                      </button>
                     </div>
                   </div>
                 )}
@@ -562,11 +413,6 @@ export default function LandingPage({
 
       {/* Pipeline Explainer Modal */}
       <PipelineExplainer isOpen={pipelineOpen} onClose={() => setPipelineOpen(false)} />
-
-      {/* GitHub Token Modal */}
-      <AnimatePresence>
-        {ghModalOpen && <GitHubTokenModal onClose={handleModalClose} />}
-      </AnimatePresence>
 
       {/* Account Panel (logged-in users) */}
       <AccountPanel isOpen={accountOpen} onClose={() => setAccountOpen(false)} />
