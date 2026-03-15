@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn, Loader2, Zap } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn, Loader2, Zap, Radio } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import AccountPanel from '@/components/AccountPanel';
 import GraphCanvas from '@/components/graph/GraphCanvas';
@@ -25,13 +26,19 @@ import { useSubscription } from '@/hooks/useSubscription';
 
 type ViewMode = 'topology' | 'treemap' | 'solar';
 
+interface WebhookResult {
+  sent: number;
+  results?: Array<{ url: string; status: string }>;
+}
+
 interface DashboardProps {
   graph: CodebaseGraph;
   repoUrl: string;
   onReset: () => void;
+  webhookResult?: WebhookResult | null;
 }
 
-export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
+export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: DashboardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isPro } = useSubscription();
@@ -56,6 +63,22 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [proGateOpen, setProGateOpen] = useState(false);
   const [proGateFeature, setProGateFeature] = useState<'chat' | 'business'>('chat');
   const [customCmdExecuting, setCustomCmdExecuting] = useState(false);
+  const [webhookBadgeVisible, setWebhookBadgeVisible] = useState(false);
+  const [webhookBadgeData, setWebhookBadgeData] = useState<WebhookResult | null>(null);
+
+  // Show toast + persistent badge when webhook fires
+  useEffect(() => {
+    if (!webhookResult || webhookResult.sent === 0) return;
+    setWebhookBadgeData(webhookResult);
+    setWebhookBadgeVisible(true);
+    const urls = webhookResult.results?.map(r => r.url).join(', ') ?? '';
+    toast({
+      title: `📡 Webhook dispatched (${webhookResult.sent})`,
+      description: urls
+        ? `Notified: ${urls.length > 60 ? urls.slice(0, 57) + '…' : urls}`
+        : 'analysis.complete event delivered',
+    });
+  }, [webhookResult]);
 
   const openProGate = (feature: 'chat' | 'business') => {
     setProGateFeature(feature);
@@ -296,6 +319,19 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
               >
                 <Search className="w-3 h-3" />
                 {searchHighlightIds.size} matches — clear
+              </motion.button>
+            )}
+            {/* Webhook dispatched badge */}
+            {webhookBadgeVisible && webhookBadgeData && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                onClick={() => setWebhookBadgeVisible(false)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-[10px] transition-all whitespace-nowrap flex-shrink-0"
+                style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', color: '#4ade80' }}
+                title={webhookBadgeData.results?.map(r => `${r.url}: ${r.status}`).join('\n') ?? 'Webhook sent'}
+              >
+                <Radio className="w-3 h-3" />
+                📡 Signal sent ({webhookBadgeData.sent}) — click to dismiss
               </motion.button>
             )}
           </div>
