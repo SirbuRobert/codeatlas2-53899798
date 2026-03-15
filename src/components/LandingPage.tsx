@@ -370,25 +370,26 @@ export default function LandingPage({
 
               <div className="relative group mb-4">
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-accent/15 to-primary/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
-                <div className="relative flex items-center gap-3 bg-surface-1 border border-border rounded-2xl px-5 py-4 shadow-[var(--shadow-panel)]">
+                <div className="relative flex items-center gap-2 sm:gap-3 bg-surface-1 border border-border rounded-2xl px-3 sm:px-5 py-3 sm:py-4 shadow-[var(--shadow-panel)]">
                   <Search className="w-4 h-4 text-foreground-dim flex-shrink-0" />
                   <input
                     type="text"
                     value={inputUrl}
                     onChange={(e) => setInputUrl(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                    placeholder="github.com/org/repository  or  https://github.com/org/repo"
-                    className="flex-1 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
+                    placeholder="github.com/org/repo"
+                    className="flex-1 min-w-0 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
                     autoFocus
                   />
                   <button
                     onClick={() => handleSubmit()}
                     disabled={!inputUrl.trim()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
-                               hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 active:scale-95"
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
+                               hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 active:scale-95 flex-shrink-0"
                   >
                     <Zap className="w-3.5 h-3.5" />
-                    ANALYZE
+                    <span className="hidden xs:inline">ANALYZE</span>
+                    <span className="xs:hidden">GO</span>
                   </button>
                 </div>
               </div>
