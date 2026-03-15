@@ -226,33 +226,6 @@ export default function LandingPage({
               transition={{ delay: 0.4 }}
               className="w-full max-w-2xl"
             >
-              {/* GitHub connect chip */}
-              <div className="flex justify-end mb-2">
-                {ghConnected ? (
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-success/10 border border-success/30 font-mono text-[10px] text-success">
-                      <Check className="w-3 h-3" />
-                      GitHub Connected
-                    </span>
-                    <button
-                      onClick={handleDisconnect}
-                      className="font-mono text-[10px] text-foreground-dim hover:text-alert transition-colors underline"
-                    >
-                      disconnect
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setGhModalOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-muted hover:text-foreground hover:border-border-bright transition-all duration-150"
-                  >
-                    <Github className="w-3 h-3" />
-                    Connect GitHub
-                    <Lock className="w-2.5 h-2.5 text-warning ml-0.5" />
-                  </button>
-                )}
-              </div>
-
               <div className="relative group mb-4">
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-accent/15 to-primary/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
                 <div className="relative flex items-center gap-2 sm:gap-3 bg-surface-1 border border-border rounded-2xl px-3 sm:px-5 py-3 sm:py-4 shadow-[var(--shadow-panel)]">
