@@ -19,7 +19,7 @@ import type { AxonNode, AxonEdge, CodebaseGraph } from '@/types/graph';
 import { calculateBlastRadius } from '@/types/graph';
 import type { SecurityAnalysis } from '@/lib/securityAnalysis';
 import AxonGraphNode from './AxonGraphNode';
-import { ShieldAlert, AlertTriangle, Lock, ExternalLink, Search } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Lock, ExternalLink, Search, RotateCcw } from 'lucide-react';
 
 // Build a GitHub deep-link URL for a file path (with optional line number)
 function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
