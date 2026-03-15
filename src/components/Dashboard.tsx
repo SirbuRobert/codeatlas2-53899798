@@ -34,6 +34,7 @@ interface DashboardProps {
 export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPro } = useSubscription();
   const [accountOpen, setAccountOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<AxonNode | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
@@ -52,6 +53,8 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
+  const [proGateOpen, setProGateOpen] = useState(false);
+  const [proGateFeature, setProGateFeature] = useState<'chat' | 'business'>('chat');
   const [customCmdExecuting, setCustomCmdExecuting] = useState(false);
 
   const { commands: customCommands, createCommand, deleteCommand, executeCommand: execCustomCmd } =
