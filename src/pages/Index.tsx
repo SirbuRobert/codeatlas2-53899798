@@ -23,6 +23,8 @@ export default function Index() {
   const { getGithubToken } = useAuth();
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
+  const [searchParams] = useSearchParams();
+  const autoTriggeredRef = useRef(false);
 
   const handleAnalyze = useCallback(
     async (url: string) => {
@@ -53,6 +55,17 @@ export default function Index() {
     [analyze, getGithubToken],
   );
 
+  // Auto-analyze when launched from Chrome extension with ?repo=owner/repo&auto=true
+  useEffect(() => {
+    const repoParam = searchParams.get('repo');
+    const autoParam = searchParams.get('auto');
+    if (repoParam && autoParam === 'true' && !autoTriggeredRef.current) {
+      autoTriggeredRef.current = true;
+      const fullUrl = `https://github.com/${repoParam}`;
+      handleAnalyze(fullUrl);
+    }
+  }, [searchParams, handleAnalyze]);
+
   const handleAnimationComplete = useCallback(() => {
     animationDoneRef.current = true;
     if (graphRef.current) {
@@ -68,6 +81,7 @@ export default function Index() {
     setRepoUrl('');
     animationDoneRef.current = false;
     graphRef.current = null;
+    autoTriggeredRef.current = false;
   }, [reset]);
 
   if (stage === 'dashboard' && graph) {
