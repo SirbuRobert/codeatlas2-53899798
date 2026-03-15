@@ -239,7 +239,16 @@ export default function GraphCanvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
 
   // Sync rfNodes/rfEdges into React Flow state whenever highlight/overlay state changes
-  useEffect(() => { setNodes(rfNodes); }, [rfNodes]);
+  useEffect(() => {
+    setNodes(prev =>
+      prev.map(prevNode => {
+        const updated = rfNodes.find(r => r.id === prevNode.id);
+        if (!updated) return prevNode;
+        // Keep dragged position, update only visual data (highlights, dims, etc.)
+        return { ...updated, position: prevNode.position };
+      })
+    );
+  }, [rfNodes]);
   useEffect(() => { setEdges(rfEdges); }, [rfEdges]);
 
   const nodeTypes = useMemo(() => ({ axon: AxonGraphNode }), []);
