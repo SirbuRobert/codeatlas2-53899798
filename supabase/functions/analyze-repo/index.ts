@@ -155,16 +155,17 @@ const GRAPH_TOOLS = [
                 isOrphan: { type: "boolean" },
                 functions: {
                   type: "array",
-                  description: "Top 8 exported functions/classes/methods with line numbers",
+                  description: "Top 8 exported functions/classes/methods with exact line numbers",
                   items: {
                     type: "object",
                     properties: {
                       name: { type: "string", description: "Function or class name" },
-                      line: { type: "number", description: "Approximate line number" },
+                      line: { type: "number", description: "Exact opening line number of the function/class declaration" },
+                      endLine: { type: "number", description: "Exact closing line number of the function/class body (the line with the closing brace or end of block). Required for GitHub range highlighting." },
                       kind: { type: "string", enum: ["function", "class", "export", "const", "method"] },
                       isExported: { type: "boolean" },
                     },
-                    required: ["name", "line", "kind", "isExported"],
+                    required: ["name", "line", "endLine", "kind", "isExported"],
                   },
                 },
               },
