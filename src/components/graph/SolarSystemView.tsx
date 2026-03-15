@@ -250,27 +250,22 @@ function NodeSphere({
   positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
+  const pulseHaloRef = useRef<THREE.Mesh>(null!);
+  const pulseT = useRef(Math.random() * Math.PI * 2);
   const [hovered, setHovered] = useState(false);
   const isCritical = node.metadata.riskLevel === 'critical';
-
-  const effectiveColor = isExposed
-    ? '#ef4444'
-    : isSecurityNode
-    ? '#a855f7'
-    : isOrphan
-    ? '#475569'
-    : color;
-
-  const riskColor = RISK_EMISSIVE[node.metadata.riskLevel] ?? '#334155';
-
-  // Register position once
-  useEffect(() => {
-    positionsRef.current.set(node.id, position.clone());
-  }, [node.id, position, positionsRef]);
+  const isEntryPoint = !!node.metadata.isEntryPoint;
 
   useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.25;
+    }
+    if (pulseHaloRef.current && (isEntryPoint || isCritical) && !isDimmed) {
+      pulseT.current += delta * 0.9;
+      const s = 1.0 + Math.sin(pulseT.current) * 0.18;
+      pulseHaloRef.current.scale.setScalar(s);
+      (pulseHaloRef.current.material as THREE.MeshBasicMaterial).opacity =
+        0.22 + Math.sin(pulseT.current) * 0.14;
     }
   });
 
