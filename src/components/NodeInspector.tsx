@@ -228,9 +228,9 @@ function FunctionsSection({ functions, graph, path }: {
                     {fn.name}
                   </span>
 
-                  {/* Line number */}
+                  {/* Line number / range */}
                   <span className="font-mono text-[9px] text-foreground-dim flex-shrink-0">
-                    L{fn.line}
+                    {fn.endLine && fn.endLine > fn.line ? `L${fn.line}–${fn.endLine}` : `L${fn.line}`}
                   </span>
 
                   {/* External link icon — visible on hover */}
