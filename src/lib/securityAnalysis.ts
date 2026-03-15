@@ -162,6 +162,7 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
       severity: 'critical',
       label: `Exposed API: ${node.label}`,
       nodeId: id,
+      path: node.metadata.path,
       detail: `API endpoint has no auth guard in its call chain. Potential unauthorized access.`,
     });
   }
@@ -173,6 +174,7 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
       severity: 'high',
       label: `Unprotected DB: ${node.label}`,
       nodeId: id,
+      path: node.metadata.path,
       detail: `Database node is reachable from API layer without passing through an auth check.`,
     });
   }
@@ -185,6 +187,7 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
         severity: 'medium',
         label: `Complex Auth Logic: ${node.label}`,
         nodeId: id,
+        path: node.metadata.path,
         detail: `Security-critical node has complexity ${node.metadata.complexity} — prone to logic errors.`,
       });
     }
@@ -198,6 +201,7 @@ export function analyzeGraphSecurity(graph: CodebaseGraph): SecurityAnalysis {
         severity: 'medium',
         label: `Low Test Coverage: ${node.label}`,
         nodeId: id,
+        path: node.metadata.path,
         detail: `Auth node has only ${node.metadata.coverage}% test coverage — security regressions likely undetected.`,
       });
     }
