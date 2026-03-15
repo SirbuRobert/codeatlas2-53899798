@@ -64,7 +64,10 @@ async function fetchFileContent(
     const data = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, headers);
     if (data.encoding === "base64" && data.content) {
       const decoded = atob(data.content.replace(/\n/g, ""));
-      return decoded.slice(0, 2800);
+      // Prepend line numbers so AI uses exact line positions, not estimates
+      const lines = decoded.split('\n');
+      const numbered = lines.map((line, i) => `${i + 1}: ${line}`).join('\n');
+      return numbered.slice(0, 4000);
     }
     return "";
   } catch {
@@ -83,13 +86,13 @@ RULES:
 - Identify real entry points: server bootstrap, main function, CLI entry, API gateway
 - Assess risk realistically: critical = (>8 dependents AND/OR security-critical AND/OR <45% coverage)
 - Write semantic summaries that are genuinely insightful ("Handles JWT validation for all 9 route modules — SPOF")
-- Infer realistic LOC from file sizes, complexity from patterns (many branches/loops), churn from naming
+- Use file size hints from the file tree (marked as ~N LOC) for the "loc" field — these count ALL lines including blank lines and comments. Report the full file line count, not just code lines.
 - Identify orphaned files: zero dependents, not a main entry, likely dead code
 - Build the dependency graph: what calls what, what imports what
 - For databases: identify ORM schemas, migration files, DB clients
 - DO NOT include test files as primary nodes — mention coverage in the tested module instead
 - Map only the architecturally significant edges (max 30 edges)
-- For each node, list the top 8 exported functions/classes/methods with their approximate line numbers from the file content
+- For each node, list the top 8 exported functions/classes/methods. The file contents include explicit line numbers at the start of each line (e.g. "42: export function foo()"). Use these EXACT line numbers — do NOT estimate or count manually.
 
 NODE TYPE GUIDE:
 - service: Application bootstrap, server entry, main process
@@ -321,7 +324,7 @@ serve(async (req) => {
       .filter((e) => e.content.length > 50)
       .map(
         (e) =>
-          `--- FILE: ${e.path} ---\n${e.content.slice(0, 2500)}\n`,
+          `--- FILE: ${e.path} ---\n${e.content.slice(0, 3800)}\n`,
       )
       .join("\n");
 
