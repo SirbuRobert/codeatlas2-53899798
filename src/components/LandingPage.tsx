@@ -253,7 +253,7 @@ export default function LandingPage({
         style={{ background: 'radial-gradient(ellipse, hsl(var(--cyan)) 0%, transparent 70%)' }}
       />
       {/* Version chip + Auth button */}
-      <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
+      <div className="absolute top-6 right-6 flex items-center gap-3 z-20">
         <span className="font-mono text-[10px] text-foreground-dim tracking-[0.2em] uppercase hidden sm:block">AXON v2.1.0</span>
         <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse hidden sm:block" />
         {user ? (
