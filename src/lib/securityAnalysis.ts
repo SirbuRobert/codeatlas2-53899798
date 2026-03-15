@@ -16,6 +16,7 @@ export interface SecurityFinding {
   label: string;
   nodeId: string;
   path: string;
+  line?: number;  // Line number for GitHub deep-link highlight
   detail: string;
 }
 
