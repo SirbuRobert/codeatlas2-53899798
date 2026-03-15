@@ -210,6 +210,57 @@ export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: Da
     await createCommand(name, description);
   }, [createCommand]);
 
+  const handleVoiceCommand = useCallback((result: VoiceCommandResult) => {
+    switch (result.action) {
+      case 'blast-radius': {
+        const targetId = result.nodeId
+          ?? graph.nodes.find(n =>
+            n.label.toLowerCase().includes((result.target ?? '').toLowerCase()) ||
+            n.metadata.path.toLowerCase().includes((result.target ?? '').toLowerCase())
+          )?.id
+          ?? graph.nodes.find(n => n.metadata.isEntryPoint)?.id
+          ?? graph.nodes[0]?.id;
+        if (targetId) handleBlastRadius(targetId);
+        break;
+      }
+      case 'security-review':
+        handleSecurityReview();
+        break;
+      case 'ghost-city':
+        handleGhostCity();
+        break;
+      case 'switch-view': {
+        const view = (result.target ?? '').toLowerCase();
+        if (view === 'topology' || view === 'treemap' || view === 'solar') {
+          setViewMode(view);
+        }
+        break;
+      }
+      case 'search':
+        if (result.target) {
+          setSearchOpen(true);
+          // Pre-populate search with the target query via a short delay to let SearchBar mount
+          setTimeout(() => {
+            const evt = new CustomEvent('voice-search', { detail: result.target });
+            window.dispatchEvent(evt);
+          }, 100);
+        }
+        break;
+      case 'show-summary':
+        setSummaryOpen(true);
+        break;
+      case 'clear':
+        clearAll();
+        break;
+      case 'open-chat':
+        if (isPro) setChatOpen(true);
+        else openProGate('chat');
+        break;
+      default:
+        break;
+    }
+  }, [graph, handleBlastRadius, handleSecurityReview, handleGhostCity, clearAll, isPro]);
+
   // CMD+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
