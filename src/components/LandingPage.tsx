@@ -516,7 +516,7 @@ export default function LandingPage({
                             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </motion.svg>
                         )}
-                        {phase.status === 'running' && <div className="w-2 h-2 rounded-full bg-cyan animate-pulse" />}
+                        {phase.status === 'running' && <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
                         {phase.status === 'pending' && <div className="w-2 h-2 rounded-full bg-surface-3 border border-border" />}
                       </div>
                       <span className={`font-mono text-xs transition-colors duration-200 ${
