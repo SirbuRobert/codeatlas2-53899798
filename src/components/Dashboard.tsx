@@ -555,8 +555,27 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         </AnimatePresence>
       </div>
 
+      {/* Executing custom command spinner */}
+      {customCmdExecuting && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl panel-glass border border-border"
+          style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.5)' }}
+        >
+          <Loader2 className="w-3.5 h-3.5 text-cyan animate-spin" />
+          <span className="font-mono text-xs text-foreground-muted">AI is finding matching nodes…</span>
+        </div>
+      )}
+
       {/* Command Bar */}
-      <CommandBar isOpen={cmdOpen} onClose={() => setCmdOpen(false)} commands={slashCommands} />
+      <CommandBar
+        isOpen={cmdOpen}
+        onClose={() => setCmdOpen(false)}
+        commands={slashCommands}
+        customCommands={customCommands}
+        onExecuteCustom={(cmd) => { handleExecuteCustomCommand(cmd); }}
+        onCreateCustom={handleCreateCustomCommand}
+        onDeleteCustom={deleteCommand}
+        isLoggedIn={!!user}
+      />
 
       {/* AI Summary Panel */}
       <AISummaryPanel graph={graph} isOpen={summaryOpen} onClose={() => setSummaryOpen(false)} />
