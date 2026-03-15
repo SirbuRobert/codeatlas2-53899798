@@ -19,12 +19,12 @@ interface LandingPageProps {
 }
 
 const ANALYSIS_PHASES: AnalysisPhase[] = [
-  { id: 'clone', label: 'Cloning repository via GitHub API', status: 'pending' },
-  { id: 'parse', label: 'Running Tree-sitter AST parser on file tree', status: 'pending' },
-  { id: 'dag', label: 'Building Directed Acyclic Graph', status: 'pending' },
-  { id: 'semantic', label: 'AI Semantic enrichment (Gemini Flash)', status: 'pending' },
-  { id: 'layout', label: 'Computing ELK hierarchical layout', status: 'pending' },
-  { id: 'render', label: 'Initializing WebGL viewport', status: 'pending' },
+  { id: 'clone', label: 'Breaking into the repo (politely, via API)', status: 'pending' },
+  { id: 'parse', label: 'Reading every file like a nosy intern', status: 'pending' },
+  { id: 'dag', label: 'Drawing a very complicated web of arrows', status: 'pending' },
+  { id: 'semantic', label: 'Asking Gemini what this spaghetti means', status: 'pending' },
+  { id: 'layout', label: 'Making it look nice so you don\'t cry', status: 'pending' },
+  { id: 'render', label: 'Warming up the GPU for the fancy stuff', status: 'pending' },
 ];
 
 // Phase durations in ms — total ~7.5s, enough for the real API call
@@ -307,7 +307,7 @@ export default function LandingPage({
               <div className="bg-surface-1 border border-border rounded-2xl p-6 shadow-[var(--shadow-panel)]">
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <p className="font-mono text-xs text-foreground-dim mb-0.5">ANALYZING</p>
+                  <p className="font-mono text-xs text-foreground-dim mb-0.5">👀 SNOOPING THROUGH</p>
                     <p className="font-mono text-sm text-primary truncate max-w-[280px]">{analysisUrl}</p>
                   </div>
                   <div className="flex gap-1">
@@ -371,8 +371,8 @@ export default function LandingPage({
                     animate={{ opacity: 1 }}
                     className="mt-4 flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-xl border border-primary/15"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <span className="font-mono text-[10px] text-primary">Awaiting AI analysis completion…</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="font-mono text-[10px] text-primary">Gemini is vibing with your codebase… hang tight ☕</span>
                   </motion.div>
                 )}
               </div>
