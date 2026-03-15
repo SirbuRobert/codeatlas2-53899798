@@ -64,6 +64,7 @@ export function useAnalyzeRepo() {
   const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [graph, setGraph] = useState<CodebaseGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [webhookResult, setWebhookResult] = useState<{ sent: number; results?: Array<{ url: string; status: string }> } | null>(null);
 
   const analyze = useCallback(
     async (repoUrl: string, token?: string): Promise<CodebaseGraph | null> => {
