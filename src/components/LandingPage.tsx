@@ -190,26 +190,7 @@ export default function LandingPage({
           >
             GPS FOR CODE
           </h1>
-          <p className="font-mono text-foreground-muted text-xs sm:text-sm md:text-base tracking-[0.08em] sm:tracking-[0.1em]">
-            POINT IT AT A REPO · UNDERSTAND IN MINUTES
-          </p>
         </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-foreground-dim text-xs sm:text-sm text-center max-w-md mb-8 sm:mb-10 leading-relaxed px-2"
-        >
-          GitHub API → AST → Knowledge Graph → AI Layer → WebGL map.
-          No config. No setup. Just drop a URL.{' '}
-          <button
-            onClick={() => setPipelineOpen(true)}
-            className="inline-flex items-center gap-1 text-primary hover:underline transition-colors"
-          >
-            <HelpCircle className="w-3.5 h-3.5" />
-            How does this work?
-          </button>
         </motion.p>
 
         {/* Input / Analysis panel */}
