@@ -75,8 +75,8 @@ export default function Billing() {
         setSubscribed(data.subscribed === true && data.product_id === PRO_PRODUCT_ID);
         setSubEnd(data.subscription_end ?? null);
       }
-    } catch (_) {
-      // ignore
+    } catch (e) {
+      console.warn('[Billing] check-subscription error:', e);
     } finally {
       setSubLoading(false);
     }
