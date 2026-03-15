@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.execute-command]
 verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.check-subscription]
+verify_jwt = false

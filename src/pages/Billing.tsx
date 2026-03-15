@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Check, CreditCard, Lock, ArrowLeft, Zap, User } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Check, ArrowLeft, Zap, User, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+const PRO_PRODUCT_ID = 'prod_U9UXjFYfVVytEE';
 
 const PLANS = [
   {
@@ -28,8 +32,6 @@ const PLANS = [
       'SSO / SAML integration',
       'Priority support + SLA',
     ],
-    cta: 'Current Plan',
-    ctaDisabled: true,
   },
   {
     id: 'pro',
@@ -50,157 +52,76 @@ const PLANS = [
       'Dedicated success manager',
     ],
     missing: [],
-    cta: 'Upgrade to Pro',
-    ctaDisabled: false,
     highlight: true,
   },
 ];
 
-function PaymentModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [name, setName] = useState('');
-  const [processing, setProcessing] = useState(false);
-
-  const formatCard = (v: string) => v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
-  const formatExpiry = (v: string) => {
-    const d = v.replace(/\D/g, '').slice(0, 4);
-    return d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      onSuccess();
-    }, 1800);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md rounded-2xl border border-border overflow-hidden"
-        style={{ background: 'hsl(var(--surface-1))' }}
-      >
-        {/* Test mode banner */}
-        <div className="bg-warning/15 border-b border-warning/30 px-5 py-2 flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
-          <span className="font-mono text-[10px] text-warning font-bold tracking-wider">
-            TEST MODE — No real charges will be made
-          </span>
-        </div>
-
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="font-mono text-sm font-bold text-foreground">Upgrade to Pro</h3>
-              <p className="font-mono text-[10px] text-foreground-dim mt-0.5">$29.00 / month · Cancel anytime</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="font-mono text-[10px] text-foreground-dim hover:text-foreground transition-colors"
-            >
-              ✕ Cancel
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label className="font-mono text-[10px] text-foreground-dim block mb-1">CARDHOLDER NAME</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Jane Smith"
-                required
-                className="w-full bg-surface-2 border border-border rounded-xl px-4 py-2.5 font-mono text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-cyan/50 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="font-mono text-[10px] text-foreground-dim block mb-1">CARD NUMBER</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={cardNumber}
-                  onChange={e => setCardNumber(formatCard(e.target.value))}
-                  placeholder="4242 4242 4242 4242"
-                  required
-                  className="w-full bg-surface-2 border border-border rounded-xl px-4 py-2.5 pr-10 font-mono text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-cyan/50 transition-colors"
-                />
-                <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-dim" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-mono text-[10px] text-foreground-dim block mb-1">EXPIRY</label>
-                <input
-                  type="text"
-                  value={expiry}
-                  onChange={e => setExpiry(formatExpiry(e.target.value))}
-                  placeholder="MM/YY"
-                  required
-                  className="w-full bg-surface-2 border border-border rounded-xl px-4 py-2.5 font-mono text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-cyan/50 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="font-mono text-[10px] text-foreground-dim block mb-1">CVC</label>
-                <input
-                  type="text"
-                  value={cvc}
-                  onChange={e => setCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                  placeholder="123"
-                  required
-                  className="w-full bg-surface-2 border border-border rounded-xl px-4 py-2.5 font-mono text-sm text-foreground placeholder:text-foreground-dim focus:outline-none focus:border-cyan/50 transition-colors"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={processing}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-xl bg-cyan text-primary-foreground font-mono text-xs font-bold tracking-wider hover:opacity-90 disabled:opacity-50 transition-all active:scale-[0.98]"
-            >
-              {processing ? (
-                <>
-                  <div className="w-3.5 h-3.5 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-                  Processing…
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3.5 h-3.5" />
-                  PAY $29.00 / MONTH
-                </>
-              )}
-            </button>
-          </form>
-
-          <p className="font-mono text-[9px] text-foreground-dim text-center mt-3">
-            🔒 Secured by Stripe · 256-bit TLS · PCI DSS compliant
-          </p>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
 export default function Billing() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [modalOpen, setModalOpen] = useState(false);
+  const { user } = useAuth();
 
-  const handleUpgradeSuccess = () => {
-    setModalOpen(false);
-    toast({
-      title: '🎉 Welcome to Pro!',
-      description: 'Payment processed — your plan has been upgraded. Enjoy unlimited repos and AI summaries.',
-    });
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [subEnd, setSubEnd] = useState<string | null>(null);
+  const [subLoading, setSubLoading] = useState(true);
+
+  const checkSubscription = async () => {
+    if (!user) { setSubLoading(false); return; }
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      if (!error && data) {
+        setSubscribed(data.subscribed === true && data.product_id === PRO_PRODUCT_ID);
+        setSubEnd(data.subscription_end ?? null);
+      }
+    } catch (_) {
+      // ignore
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkSubscription();
+    // Check every 60s
+    const interval = setInterval(checkSubscription, 60_000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      toast({
+        title: '🎉 Welcome to Pro!',
+        description: 'Payment processed — your plan has been upgraded. Enjoy unlimited repos and AI summaries.',
+      });
+      // Refresh subscription status after a small delay
+      setTimeout(checkSubscription, 2000);
+    }
+    if (searchParams.get('canceled') === 'true') {
+      toast({
+        title: 'Checkout canceled',
+        description: 'No charges were made. You can upgrade any time.',
+      });
+    }
+  }, []);
+
+  const handleUpgrade = async () => {
+    if (!user) { navigate('/auth'); return; }
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout');
+      if (error || !data?.url) throw new Error(error?.message ?? 'Could not start checkout');
+      window.open(data.url, '_blank');
+    } catch (err) {
+      toast({
+        title: 'Checkout error',
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   return (
@@ -216,9 +137,19 @@ export default function Billing() {
         </button>
         <div className="h-4 w-px bg-border" />
         <span className="font-mono text-xs font-bold text-foreground">BILLING & PLANS</span>
-        <span className="font-mono text-[9px] px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
-          TEST MODE
-        </span>
+        {subscribed && (
+          <span className="font-mono text-[9px] px-2 py-0.5 rounded bg-success/15 text-success border border-success/30">
+            PRO ACTIVE
+          </span>
+        )}
+        <button
+          onClick={() => { setSubLoading(true); checkSubscription(); }}
+          className="ml-auto flex items-center gap-1 font-mono text-[10px] text-foreground-dim hover:text-foreground transition-colors"
+          disabled={subLoading}
+        >
+          <RefreshCw className={`w-3 h-3 ${subLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-12">
@@ -232,16 +163,22 @@ export default function Billing() {
             Choose your plan
           </h1>
           <p className="font-mono text-sm text-foreground-dim max-w-lg mx-auto leading-relaxed">
-            Upgrade to unlock private repos, AI summaries, Solar System view, and{' '}
+            Upgrade to unlock{' '}
             <span className="text-cyan font-semibold">Multi-Repo Analysis</span> — see how your entire
             engineering portfolio connects.
           </p>
+          {subscribed && subEnd && (
+            <p className="font-mono text-[11px] text-success mt-3">
+              ✓ Pro active · renews {new Date(subEnd).toLocaleDateString()}
+            </p>
+          )}
         </motion.div>
 
         {/* Plan cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto w-full">
           {PLANS.map((plan, i) => {
             const Icon = plan.icon;
+            const isCurrentPlan = plan.id === 'pro' ? subscribed : !subscribed;
             return (
               <motion.div
                 key={plan.id}
@@ -317,19 +254,34 @@ export default function Billing() {
                 </div>
 
                 {/* CTA */}
-                <button
-                  disabled={plan.ctaDisabled}
-                  onClick={() => plan.id === 'pro' ? setModalOpen(true) : undefined}
-                  className={`w-full py-2.5 rounded-xl font-mono text-xs font-semibold tracking-wider transition-all active:scale-[0.98] ${
-                    plan.ctaDisabled
-                      ? 'bg-surface-3 border border-border text-foreground-dim cursor-default'
-                      : plan.highlight
-                      ? 'bg-cyan text-primary-foreground hover:opacity-90'
-                      : 'bg-surface-2 border border-border text-foreground-muted hover:text-foreground hover:border-border-bright'
-                  }`}
-                >
-                  {plan.cta}
-                </button>
+                {plan.id === 'free' ? (
+                  <button
+                    disabled
+                    className="w-full py-2.5 rounded-xl bg-surface-3 border border-border font-mono text-xs font-semibold text-foreground-dim cursor-default"
+                  >
+                    {!subscribed ? 'Your Current Plan' : 'Free Plan'}
+                  </button>
+                ) : isCurrentPlan ? (
+                  <button
+                    disabled
+                    className="w-full py-2.5 rounded-xl bg-success/10 border border-success/30 font-mono text-xs font-semibold text-success cursor-default flex items-center justify-center gap-2"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Pro Active
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleUpgrade}
+                    disabled={checkoutLoading || subLoading}
+                    className="w-full py-2.5 rounded-xl bg-cyan text-primary-foreground font-mono text-xs font-bold tracking-wider hover:opacity-90 disabled:opacity-50 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    {checkoutLoading ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Starting checkout…</>
+                    ) : (
+                      <><ExternalLink className="w-3.5 h-3.5" /> Upgrade to Pro</>
+                    )}
+                  </button>
+                )}
               </motion.div>
             );
           })}
@@ -345,18 +297,16 @@ export default function Billing() {
           <p className="font-mono text-[11px] text-foreground-dim">
             All plans include a 14-day free trial. No credit card required for Free tier.{' '}
             <span className="text-foreground-muted">Questions?</span>{' '}
-            <span className="text-cyan cursor-pointer hover:underline">Contact us →</span>
+            <button onClick={() => navigate('/feedback')} className="text-cyan cursor-pointer hover:underline">Contact us →</button>
           </p>
+          {!user && (
+            <p className="font-mono text-[11px] text-warning mt-2">
+              ⚠ You need to be signed in to upgrade.{' '}
+              <button onClick={() => navigate('/auth')} className="underline">Sign in →</button>
+            </p>
+          )}
         </motion.div>
       </div>
-
-      {/* Payment modal */}
-      {modalOpen && (
-        <PaymentModal
-          onClose={() => setModalOpen(false)}
-          onSuccess={handleUpgradeSuccess}
-        />
-      )}
     </div>
   );
 }
