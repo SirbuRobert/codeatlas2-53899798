@@ -75,11 +75,15 @@ describe('SearchBar — search scoring', () => {
     const onResults = vi.fn();
     renderSearchBar(true, { onResults });
     const input = screen.getByPlaceholderText(/Search nodes/);
+    // First type something to get results
     fireEvent.change(input, { target: { value: 'auth' } });
+    onResults.mockClear();
+    // Then clear
     fireEvent.change(input, { target: { value: '' } });
-    const lastCall = onResults.mock.calls[onResults.mock.calls.length - 1];
-    expect(lastCall[0].size).toBe(0);
-    expect(lastCall[1]).toBe('');
+    expect(onResults).toHaveBeenCalledTimes(1);
+    const [ids, query] = onResults.mock.calls[0];
+    expect(ids.size).toBe(0);
+    expect(query).toBe('');
   });
 
   it('matches nodes by label substring', () => {
