@@ -59,12 +59,12 @@ describe('useCountUp', () => {
     const { result, rerender } = renderHook(({ target }) => useCountUp(target, 500), {
       initialProps: { target: 50 },
     });
-    flush(99999);
+    flush(99999); // sets startTime & completes (elapsed >> duration)
     expect(result.current).toBe(50);
 
     rerender({ target: 200 });
-    // Flush with a new, much later timestamp so elapsed >> duration → progress=1
-    flush(999999);
+    flush(1000000); // sets startTime=1000000, progress=0, schedules next
+    flush(9999999); // elapsed=8999999 >> 500ms, progress=1 → display=200
     expect(result.current).toBe(200);
   });
 
