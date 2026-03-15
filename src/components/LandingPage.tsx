@@ -446,7 +446,7 @@ export default function LandingPage({
                       </p>
                       <button
                         onClick={() => setGhModalOpen(true)}
-                        className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-cyan hover:underline"
+                        className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-primary hover:underline"
                       >
                         <Github className="w-3 h-3" />
                         Connect GitHub Token
