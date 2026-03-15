@@ -15,6 +15,7 @@ export interface SecurityFinding {
   severity: 'critical' | 'high' | 'medium';
   label: string;
   nodeId: string;
+  path: string;
   detail: string;
 }
 
