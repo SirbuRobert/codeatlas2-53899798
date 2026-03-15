@@ -41,7 +41,18 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [explainerOpen, setExplainerOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
+
+  // Auto-show explainer on first visit per repo
+  useEffect(() => {
+    const slug = graph.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\//g, '_');
+    const key = `axon_explained_${slug}`;
+    if (!localStorage.getItem(key)) {
+      const timer = setTimeout(() => setExplainerOpen(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [graph.repoUrl]);
 
   const securityAnalysis = useMemo(
     () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
