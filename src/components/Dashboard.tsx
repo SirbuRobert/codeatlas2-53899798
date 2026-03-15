@@ -105,6 +105,15 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     }
   }, []);
 
+  const handleNodeFocusFromChat = useCallback((nodeId: string) => {
+    const node = graph.nodes.find(n => n.id === nodeId);
+    if (node) {
+      setSelectedNode(node);
+      setViewMode('topology');
+      setTourFocusNodeId(nodeId);
+    }
+  }, [graph.nodes]);
+
   const clearAll = useCallback(() => {
     setBlastRadiusNodeId(null);
     setSecurityOverlayActive(false);
