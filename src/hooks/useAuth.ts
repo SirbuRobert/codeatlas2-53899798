@@ -107,10 +107,9 @@ export function useAuth() {
     return { error };
   }, [state.user]);
 
-  // Resolve the best available token: profile first, then localStorage fallback
+  // Token lives exclusively in the database profile — no localStorage fallback
   const getGithubToken = useCallback((): string | undefined => {
-    if (state.profile?.github_token) return state.profile.github_token;
-    return localStorage.getItem('axon_gh_token') ?? undefined;
+    return state.profile?.github_token ?? undefined;
   }, [state.profile]);
 
   return {

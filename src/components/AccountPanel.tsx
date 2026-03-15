@@ -28,13 +28,10 @@ export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
   const [webhookRepoUrl, setWebhookRepoUrl] = useState('');
   const [savingWebhook, setSavingWebhook] = useState(false);
 
-  // Populate token from profile when panel opens
+  // Populate token from profile when panel opens — DB is the sole source of truth
   useEffect(() => {
-    if (isOpen && profile?.github_token) {
-      setToken(profile.github_token);
-    } else if (isOpen) {
-      // Fall back to localStorage for migration
-      setToken(localStorage.getItem('axon_gh_token') ?? '');
+    if (isOpen) {
+      setToken(profile?.github_token ?? '');
     }
     setSaved(false);
   }, [isOpen, profile]);
