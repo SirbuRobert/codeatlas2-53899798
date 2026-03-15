@@ -60,14 +60,13 @@ const KIND_CONFIG: Record<FunctionEntry['kind'], { label: string; color: string 
 };
 
 // ── Utility: build a deep-link GitHub URL ─────────────────────────────────────
-function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number, endLine?: number): string {
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
   // graph.repoUrl is e.g. "github.com/owner/repo"
   const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
   if (!line) return base;
-  // Sanitize endLine: must be strictly > line, and range must be ≤300 lines
-  // (larger ranges = AI hallucination / wrong bracket counting)
-  const safeEnd = endLine && endLine > line && (endLine - line) <= 300 ? endLine : undefined;
-  if (safeEnd) return `${base}#L${line}-L${safeEnd}`;
+  // Link only to the declaration line — same as GitHub's own Symbols panel.
+  // endLine is intentionally ignored: AI bracket-counting is unreliable and
+  // produces ranges like L15-L387 that highlight the entire file.
   return `${base}#L${line}`;
 }
 
