@@ -81,6 +81,13 @@ export function useAuth() {
     await supabase.auth.signOut();
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { data, error };
+  }, []);
+
   const saveGithubToken = useCallback(async (token: string) => {
     if (!state.user) return { error: new Error('Not authenticated') };
     const { error } = await supabase
