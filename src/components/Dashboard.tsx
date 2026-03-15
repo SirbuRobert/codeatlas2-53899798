@@ -255,6 +255,19 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             <kbd className="font-mono text-[9px] bg-surface-3 px-1 py-0.5 rounded border border-border text-foreground-dim">⌘F</kbd>
           </button>
 
+          {/* Ask AI */}
+          <button
+            onClick={() => setChatOpen(o => !o)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-[10px] transition-all ${
+              chatOpen
+                ? 'bg-cyan/10 border-cyan/40 text-cyan'
+                : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground hover:border-border-bright'
+            }`}
+          >
+            <MessageSquare className="w-3 h-3" />
+            Ask AI
+          </button>
+
           {/* Business View */}
           <button
             onClick={() => setBusinessPanelOpen(o => !o)}
