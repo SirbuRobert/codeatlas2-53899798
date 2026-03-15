@@ -66,7 +66,7 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
             href="https://github.com/settings/tokens/new?scopes=repo&description=CodeAtlas+AXON"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 mt-2 font-mono text-[10px] text-cyan hover:underline"
+            className="inline-flex items-center gap-1.5 mt-2 font-mono text-[10px] text-primary hover:underline"
           >
             <ExternalLink className="w-3 h-3" />
             Open GitHub token page
