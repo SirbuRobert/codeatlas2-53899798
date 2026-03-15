@@ -114,7 +114,7 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
   const handleStatClick = useCallback((ids: Set<string>, label: string) => {
     // Toggle: clicking the same stat again clears
-    if (statsHighlightLabel === label && ids.size > 1) {
+    if (statsHighlightLabel === label) {
       setSearchHighlightIds(new Set());
       setSearchQuery('');
       setStatsHighlightLabel(null);
