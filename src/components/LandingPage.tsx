@@ -539,10 +539,10 @@ export default function LandingPage({
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="mt-4 flex items-center gap-2 px-3 py-2 bg-cyan/5 rounded-xl border border-cyan/15"
+                    className="mt-4 flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-xl border border-primary/15"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" />
-                    <span className="font-mono text-[10px] text-cyan">Awaiting AI analysis completion…</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="font-mono text-[10px] text-primary">Awaiting AI analysis completion…</span>
                   </motion.div>
                 )}
               </div>
