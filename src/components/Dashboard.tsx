@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen } from 'lucide-react';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -13,6 +13,7 @@ import SearchBar from '@/components/SearchBar';
 import AISummaryPanel, { AISummaryBanner } from '@/components/AISummaryPanel';
 import BusinessInsightsPanel from '@/components/BusinessInsightsPanel';
 import ExportModal from '@/components/ExportModal';
+import RepoExplainerModal from '@/components/RepoExplainerModal';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 
@@ -40,7 +41,18 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [businessPanelOpen, setBusinessPanelOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [explainerOpen, setExplainerOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
+
+  // Auto-show explainer on first visit per repo
+  useEffect(() => {
+    const slug = graph.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\//g, '_');
+    const key = `axon_explained_${slug}`;
+    if (!localStorage.getItem(key)) {
+      const timer = setTimeout(() => setExplainerOpen(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [graph.repoUrl]);
 
   const securityAnalysis = useMemo(
     () => (securityOverlayActive ? analyzeGraphSecurity(graph) : null),
@@ -271,6 +283,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           )}
 
           <button
+            onClick={() => setExplainerOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground hover:border-border-bright transition-all"
+          >
+            <BookOpen className="w-3 h-3" />
+            Explain Repo
+          </button>
+
+          <button
             onClick={() => setTourActive(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 border border-success/25 font-mono text-[10px] text-success hover:bg-success/15 transition-all"
           >
@@ -419,6 +439,22 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
       {/* Export Modal */}
       <ExportModal graph={graph} isOpen={exportOpen} onClose={() => setExportOpen(false)} />
+
+      {/* Repo Explainer Modal */}
+      <RepoExplainerModal
+        graph={graph}
+        isOpen={explainerOpen}
+        onClose={() => {
+          setExplainerOpen(false);
+          const slug = graph.repoUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\//g, '_');
+          localStorage.setItem(`axon_explained_${slug}`, '1');
+        }}
+        onFocusNode={(id) => {
+          setSelectedNode(graph.nodes.find((n) => n.id === id) ?? null);
+          setTourFocusNodeId(id);
+          setViewMode('topology');
+        }}
+      />
     </div>
   );
 }
