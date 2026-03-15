@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import AccountPanel from '@/components/AccountPanel';
 import GraphCanvas from '@/components/graph/GraphCanvas';
 import NodeInspector from '@/components/NodeInspector';
 import CommandBar, { buildSlashCommands } from '@/components/CommandBar';
@@ -28,6 +30,8 @@ interface DashboardProps {
 
 export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<AxonNode | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -338,6 +342,28 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             <RefreshCw className="w-3 h-3" />
             New Repo
           </button>
+
+          {/* Auth button — always visible */}
+          <div className="w-px h-4 bg-border mx-1 flex-shrink-0" />
+          {user ? (
+            <button
+              onClick={() => setAccountOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
+            >
+              <div className="w-5 h-5 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-[9px] font-bold text-cyan">{user.email?.[0]?.toUpperCase()}</span>
+              </div>
+              <span className="hidden md:inline">{user.email?.split('@')[0]}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/auth')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/25 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+            >
+              <LogIn className="w-3 h-3" />
+              Sign In
+            </button>
+          )}
         </div>
       </div>
 
@@ -485,6 +511,9 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         onClose={() => setChatOpen(false)}
         onNodeFocus={handleNodeFocusFromChat}
       />
+
+      {/* Account Panel */}
+      <AccountPanel isOpen={accountOpen} onClose={() => setAccountOpen(false)} />
     </div>
   );
 }
