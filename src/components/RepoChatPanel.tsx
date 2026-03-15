@@ -137,6 +137,33 @@ function findMentionedNodes(text: string, nodes: AxonNode[]): AxonNode[] {
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-repo`;
+const DUAL_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-repo-dual`;
+
+async function fetchDualChat({
+  messages,
+  graphContext,
+}: {
+  messages: Message[];
+  graphContext: object;
+}): Promise<{ gemini: string; gpt: string }> {
+  const resp = await fetch(DUAL_CHAT_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ messages, graphContext }),
+  });
+
+  if (!resp.ok) {
+    const json = await resp.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(json.error ?? `Error ${resp.status}`);
+  }
+
+  return resp.json();
+}
+
+
 
 async function streamChat({
   messages,
