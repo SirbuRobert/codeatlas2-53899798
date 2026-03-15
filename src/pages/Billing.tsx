@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Check, CreditCard, Lock, ArrowLeft, Zap, Building2, User } from 'lucide-react';
+import { Check, CreditCard, Lock, ArrowLeft, Zap, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const PLANS = [
