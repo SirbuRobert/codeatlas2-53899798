@@ -132,7 +132,7 @@ const GRAPH_TOOLS = [
                 path: { type: "string", description: "Primary file path" },
                 loc: { type: "number", description: "Estimated lines of code" },
                 complexity: { type: "number", description: "Cyclomatic complexity estimate 1-20" },
-                churn: { type: "number", description: "Change frequency estimate 0-100" },
+                churn: { type: "number", description: "Change frequency estimate 0-100. Base this on how foundational the file is and how often it changes. Entry points: 70-90. Core services/controllers: 40-80. Utilities/helpers: 5-20. Orphans/dead code: 0. Must vary realistically across nodes." },
                 dependents: { type: "number", description: "How many nodes depend on this" },
                 dependencies: { type: "number", description: "How many nodes this depends on" },
                 coverage: { type: "number", description: "Estimated test coverage % 0-100" },
