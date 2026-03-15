@@ -213,7 +213,7 @@ function FunctionsSection({ functions, graph, path }: {
                   onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border
                              hover:border-border hover:bg-surface-3 group transition-colors text-left"
-                  title={`Open ${fn.name} at line ${fn.line} on GitHub`}
+                  title={`Open ${fn.name} on GitHub (L${fn.line}${fn.endLine && fn.endLine > fn.line ? `–L${fn.endLine}` : ''})`}
                 >
                   {/* Kind badge */}
                   <span
