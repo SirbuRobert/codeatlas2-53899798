@@ -60,7 +60,7 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: FileCode,
       label: 'FILES',
-      value: stats.totalFiles,
+      value: liveFilesCount,
       color: 'hsl(var(--cyan))',
       sub: `${(stats.totalLines / 1000).toFixed(1)}k lines`,
       tooltip: 'Click to highlight all files in the graph.',
@@ -78,16 +78,16 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: AlertTriangle,
       label: 'HOTSPOTS',
-      value: stats.hotspots,
+      value: liveHotspotsCount,
       color: 'hsl(var(--destructive))',
       sub: 'critical risk',
-      tooltip: 'Click to highlight hotspot files.',
+      tooltip: 'Click to highlight hotspot files (complexity > 10 & churn > 40).',
       clickable: true,
     },
     {
       icon: Zap,
       label: 'ORPHANS',
-      value: stats.orphans,
+      value: liveOrphansCount,
       color: 'hsl(var(--muted-foreground))',
       sub: 'dead code',
       tooltip: 'Click to highlight orphaned (dead) files.',
@@ -96,8 +96,8 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: GitBranch,
       label: 'CIRCULAR DEPS',
-      value: stats.circularDeps,
-      color: stats.circularDeps > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--success))',
+      value: liveCircularCount,
+      color: liveCircularCount > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--success))',
       sub: 'detected',
       tooltip: 'Click to highlight files with circular dependencies.',
       clickable: true,
@@ -105,15 +105,15 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     {
       icon: CheckCircle,
       label: 'COVERAGE',
-      value: `${stats.testCoverage}%`,
+      value: `${liveCoverageCount}`,
       color:
-        stats.testCoverage >= 80
+        liveCoverageCount === 0
           ? 'hsl(var(--success))'
-          : stats.testCoverage >= 60
+          : liveCoverageCount <= 2
           ? 'hsl(var(--warning))'
           : 'hsl(var(--destructive))',
-      sub: 'test coverage',
-      tooltip: 'Click to highlight files with low test coverage (<60%).',
+      sub: 'low coverage files',
+      tooltip: 'Click to highlight files with test coverage < 70%.',
       clickable: true,
     },
   ];
