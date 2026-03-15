@@ -10,9 +10,9 @@ interface Message {
 }
 
 // ── Voice Input Hook ──────────────────────────────────────────────────────────
-const SpeechRecognitionAPI =
+const SpeechRecognitionAPI: any =
   typeof window !== 'undefined'
-    ? (window.SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null)
+    ? ((window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition ?? null)
     : null;
 
 function useVoiceInput(onTranscript: (text: string) => void) {
