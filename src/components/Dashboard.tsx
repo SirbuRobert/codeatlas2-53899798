@@ -30,6 +30,8 @@ interface DashboardProps {
 
 export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<AxonNode | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
   const [cmdOpen, setCmdOpen] = useState(false);
