@@ -16,7 +16,7 @@ function toAxonNode(raw: RawNode, position: { x: number; y: number }): AxonNode 
     metadata: {
       loc: (raw.loc as number) ?? 80,
       complexity: (raw.complexity as number) ?? 4,
-      churn: (raw.churn as number) ?? 20,
+      churn: (raw.churn as number) ?? 0,
       dependents: (raw.dependents as number) ?? 0,
       dependencies: (raw.dependencies as number) ?? 0,
       coverage: (raw.coverage as number) ?? 70,

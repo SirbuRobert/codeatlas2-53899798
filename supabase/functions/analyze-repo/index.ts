@@ -168,7 +168,7 @@ const GRAPH_TOOLS = [
                   },
                 },
               },
-              required: ["id", "type", "label", "path", "semanticSummary", "riskLevel", "language", "loc", "complexity"],
+              required: ["id", "type", "label", "path", "semanticSummary", "riskLevel", "language", "loc", "complexity", "churn", "coverage", "dependents", "dependencies"],
             },
           },
           edges: {
