@@ -19,12 +19,12 @@ interface LandingPageProps {
 }
 
 const ANALYSIS_PHASES: AnalysisPhase[] = [
-  { id: 'clone', label: 'Cloning repository via GitHub API', status: 'pending' },
-  { id: 'parse', label: 'Running Tree-sitter AST parser on file tree', status: 'pending' },
-  { id: 'dag', label: 'Building Directed Acyclic Graph', status: 'pending' },
-  { id: 'semantic', label: 'AI Semantic enrichment (Gemini Flash)', status: 'pending' },
-  { id: 'layout', label: 'Computing ELK hierarchical layout', status: 'pending' },
-  { id: 'render', label: 'Initializing WebGL viewport', status: 'pending' },
+  { id: 'clone', label: 'Breaking into the repo (politely, via API)', status: 'pending' },
+  { id: 'parse', label: 'Reading every file like a nosy intern', status: 'pending' },
+  { id: 'dag', label: 'Drawing a very complicated web of arrows', status: 'pending' },
+  { id: 'semantic', label: 'Asking Gemini what this spaghetti means', status: 'pending' },
+  { id: 'layout', label: 'Making it look nice so you don\'t cry', status: 'pending' },
+  { id: 'render', label: 'Warming up the GPU for the fancy stuff', status: 'pending' },
 ];
 
 // Phase durations in ms — total ~7.5s, enough for the real API call
