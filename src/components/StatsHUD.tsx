@@ -124,8 +124,8 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="flex items-center gap-px bg-surface-1 border-b border-border px-4 overflow-x-auto"
-        style={{ height: 48 }}
+        className="flex items-center gap-px bg-surface-1 border-b border-border px-2 sm:px-4 overflow-x-auto"
+        style={{ height: 44, scrollbarWidth: 'none' } as React.CSSProperties}
       >
         {/* Repo info */}
         <div className="flex items-center gap-2 pr-4 border-r border-border mr-3 flex-shrink-0">
