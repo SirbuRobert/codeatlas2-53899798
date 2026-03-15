@@ -235,10 +235,23 @@ export default function GraphCanvas({
     });
   }, [graph.edges, hoveredNodeId, blastRadius, blastRadiusNodeId, securityOverlay]);
 
-  const [nodes, , onNodesChange] = useNodesState(rfNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
   const [edges, , onEdgesChange] = useEdgesState(rfEdges);
 
   const nodeTypes = useMemo(() => ({ axon: AxonGraphNode }), []);
+
+  const hasDraggedNodes = useMemo(() => {
+    return nodes.some(n => {
+      const orig = rfNodes.find(r => r.id === n.id);
+      if (!orig) return false;
+      return Math.abs(n.position.x - orig.position.x) > 2 ||
+             Math.abs(n.position.y - orig.position.y) > 2;
+    });
+  }, [nodes, rfNodes]);
+
+  const handleResetLayout = useCallback(() => {
+    setNodes(rfNodes);
+  }, [setNodes, rfNodes]);
 
   const handleNodeClick: NodeMouseHandler = useCallback((_, node) => {
     const axonNode = graph.nodes.find(n => n.id === node.id);
