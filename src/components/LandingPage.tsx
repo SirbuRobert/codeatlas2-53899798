@@ -191,7 +191,6 @@ export default function LandingPage({
             GPS FOR CODE
           </h1>
         </motion.div>
-        </motion.p>
 
         {/* Input / Analysis panel */}
         <AnimatePresence mode="wait">
