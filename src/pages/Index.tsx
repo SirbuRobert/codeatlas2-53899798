@@ -24,7 +24,7 @@ export default function Index() {
   const { getGithubToken } = useAuth();
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const autoTriggeredRef = useRef(false);
 
   const handleAnalyze = useCallback(
