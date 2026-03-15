@@ -394,29 +394,30 @@ export default function LandingPage({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                <span className="font-mono text-[11px] text-foreground-dim mr-1">TRY:</span>
-                {exampleRepos.map((repo) => (
-                  <button
-                    key={repo.url}
-                    onClick={() => handleSubmit(repo.url)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright hover:bg-surface-3 transition-all duration-150 group"
-                  >
-                    {repo.private ? (
-                      <Lock className="w-2.5 h-2.5 text-warning" />
-                    ) : (
-                      <Globe className="w-2.5 h-2.5 text-foreground-dim" />
-                    )}
-                    {repo.label}
-                    {repo.stars && (
-                      <span className="flex items-center gap-0.5 text-foreground-dim">
-                        <Star className="w-2.5 h-2.5" />
-                        {(repo.stars / 1000).toFixed(0)}k
-                      </span>
-                    )}
-                    <ChevronRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                ))}
+              <div className="flex items-start gap-2">
+                <span className="font-mono text-[11px] text-foreground-dim flex-shrink-0 mt-1.5">TRY:</span>
+                <div className="flex flex-wrap gap-2">
+                  {exampleRepos.map((repo) => (
+                    <button
+                      key={repo.url}
+                      onClick={() => handleSubmit(repo.url)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border font-mono text-[11px] text-foreground-muted hover:text-foreground hover:border-border-bright hover:bg-surface-3 transition-all duration-150 group"
+                    >
+                      {repo.private ? (
+                        <Lock className="w-2.5 h-2.5 text-warning" />
+                      ) : (
+                        <Globe className="w-2.5 h-2.5 text-foreground-dim" />
+                      )}
+                      {repo.label}
+                      {repo.stars && (
+                        <span className="hidden sm:flex items-center gap-0.5 text-foreground-dim">
+                          <Star className="w-2.5 h-2.5" />
+                          {(repo.stars / 1000).toFixed(0)}k
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </motion.div>
           ) : analysisError ? (
