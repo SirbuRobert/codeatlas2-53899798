@@ -26,13 +26,19 @@ import { useSubscription } from '@/hooks/useSubscription';
 
 type ViewMode = 'topology' | 'treemap' | 'solar';
 
+interface WebhookResult {
+  sent: number;
+  results?: Array<{ url: string; status: string }>;
+}
+
 interface DashboardProps {
   graph: CodebaseGraph;
   repoUrl: string;
   onReset: () => void;
+  webhookResult?: WebhookResult | null;
 }
 
-export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
+export default function Dashboard({ graph, repoUrl, onReset, webhookResult }: DashboardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isPro } = useSubscription();
