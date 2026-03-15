@@ -477,19 +477,24 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph, onN
           {/* ── Connectivity (requires graph prop) ── */}
           {graph && (importedBy.length > 0 || exportsTo.length > 0) && (
             <div className="space-y-3">
-              <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase">
-                DEPENDENCY GRAPH
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase">
+                  DEPENDENCY GRAPH
+                </p>
+                <span className="font-mono text-[8px] text-foreground-dim opacity-60 italic">
+                  — click to inspect
+                </span>
+              </div>
 
               <CollapsibleSection title="↑ Imported By" count={importedBy.length} color="#f97316">
                 {importedBy.map(id => (
-                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} />
+                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} onNavigate={handleNavigate} />
                 ))}
               </CollapsibleSection>
 
               <CollapsibleSection title="↓ Exports To" count={exportsTo.length} color="#3b82f6">
                 {exportsTo.map(id => (
-                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} />
+                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} onNavigate={handleNavigate} />
                 ))}
               </CollapsibleSection>
             </div>

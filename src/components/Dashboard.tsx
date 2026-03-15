@@ -400,6 +400,10 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
                 onClose={() => setSelectedNode(null)}
                 onBlastRadius={handleBlastRadius}
                 graph={graph}
+                onNodeNavigate={(nodeId) => {
+                  const n = graph.nodes.find(x => x.id === nodeId);
+                  if (n) setSelectedNode(n);
+                }}
               />
             </div>
           )}
