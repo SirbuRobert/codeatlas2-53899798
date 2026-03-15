@@ -59,7 +59,15 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const sub = subscriptions.data[0];
-      subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+      logStep("Subscription object keys", { keys: Object.keys(sub) });
+      const periodEnd = sub.current_period_end;
+      if (periodEnd && typeof periodEnd === 'number' && !isNaN(periodEnd)) {
+        subscriptionEnd = new Date(periodEnd * 1000).toISOString();
+      } else {
+        const anchor = (sub as any).billing_cycle_anchor;
+        subscriptionEnd = anchor ? new Date((anchor + 30 * 86400) * 1000).toISOString() : null;
+        logStep("current_period_end missing, used billing_cycle_anchor fallback", { anchor });
+      }
       productId = sub.items.data[0].price.product;
       logStep("Active subscription found", { productId, subscriptionEnd });
     } else {
