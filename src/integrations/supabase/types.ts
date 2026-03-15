@@ -35,6 +35,39 @@ export type Database = {
         }
         Relationships: []
       }
+      repo_commands: {
+        Row: {
+          color: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          repo_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          repo_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          repo_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

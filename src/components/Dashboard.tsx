@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import AccountPanel from '@/components/AccountPanel';
 import GraphCanvas from '@/components/graph/GraphCanvas';
@@ -19,6 +19,7 @@ import RepoExplainerModal from '@/components/RepoExplainerModal';
 import RepoChatPanel from '@/components/RepoChatPanel';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
+import { useCustomCommands } from '@/hooks/useCustomCommands';
 
 type ViewMode = 'topology' | 'treemap' | 'solar';
 
@@ -49,6 +50,10 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
+  const [customCmdExecuting, setCustomCmdExecuting] = useState(false);
+
+  const { commands: customCommands, createCommand, deleteCommand, executeCommand: execCustomCmd } =
+    useCustomCommands(repoUrl);
 
   // Auto-show explainer on first visit per repo
   useEffect(() => {
@@ -142,6 +147,33 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
     setBlastRadiusNodeId(null);
     setGhostMode(false);
   }, [statsHighlightLabel]);
+
+  const handleExecuteCustomCommand = useCallback(async (cmd: import('@/hooks/useCustomCommands').CustomCommand) => {
+    setCustomCmdExecuting(true);
+    try {
+      const ids = await execCustomCmd(cmd, graph);
+      if (ids.size > 0) {
+        setSearchHighlightIds(ids);
+        setSearchQuery(`/${cmd.name}`);
+        setStatsHighlightLabel(`/${cmd.name}`);
+        setSecurityOverlayActive(false);
+        setBlastRadiusNodeId(null);
+        setGhostMode(false);
+        setViewMode('topology');
+      } else {
+        // Nothing matched — clear any existing highlight
+        setSearchHighlightIds(new Set());
+        setSearchQuery('');
+        setStatsHighlightLabel(null);
+      }
+    } finally {
+      setCustomCmdExecuting(false);
+    }
+  }, [execCustomCmd, graph]);
+
+  const handleCreateCustomCommand = useCallback(async (name: string, description: string) => {
+    await createCommand(name, description);
+  }, [createCommand]);
 
   // CMD+K
   useEffect(() => {
@@ -523,8 +555,27 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         </AnimatePresence>
       </div>
 
+      {/* Executing custom command spinner */}
+      {customCmdExecuting && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl panel-glass border border-border"
+          style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.5)' }}
+        >
+          <Loader2 className="w-3.5 h-3.5 text-cyan animate-spin" />
+          <span className="font-mono text-xs text-foreground-muted">AI is finding matching nodes…</span>
+        </div>
+      )}
+
       {/* Command Bar */}
-      <CommandBar isOpen={cmdOpen} onClose={() => setCmdOpen(false)} commands={slashCommands} />
+      <CommandBar
+        isOpen={cmdOpen}
+        onClose={() => setCmdOpen(false)}
+        commands={slashCommands}
+        customCommands={customCommands}
+        onExecuteCustom={(cmd) => { handleExecuteCustomCommand(cmd); }}
+        onCreateCustom={handleCreateCustomCommand}
+        onDeleteCustom={deleteCommand}
+        isLoggedIn={!!user}
+      />
 
       {/* AI Summary Panel */}
       <AISummaryPanel graph={graph} isOpen={summaryOpen} onClose={() => setSummaryOpen(false)} />
