@@ -256,6 +256,21 @@ function NodeSphere({
   const isCritical = node.metadata.riskLevel === 'critical';
   const isEntryPoint = !!node.metadata.isEntryPoint;
 
+  const effectiveColor = isExposed
+    ? '#ef4444'
+    : isSecurityNode
+    ? '#a855f7'
+    : isOrphan
+    ? '#475569'
+    : color;
+
+  const riskColor = RISK_EMISSIVE[node.metadata.riskLevel] ?? '#334155';
+
+  // Register position once
+  useEffect(() => {
+    positionsRef.current.set(node.id, position.clone());
+  }, [node.id, position, positionsRef]);
+
   useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.25;
