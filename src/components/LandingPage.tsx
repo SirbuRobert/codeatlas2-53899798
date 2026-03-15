@@ -619,6 +619,9 @@ export default function LandingPage({
       <AnimatePresence>
         {ghModalOpen && <GitHubTokenModal onClose={handleModalClose} />}
       </AnimatePresence>
+
+      {/* Account Panel (logged-in users) */}
+      <AccountPanel isOpen={accountOpen} onClose={() => setAccountOpen(false)} />
     </div>
   );
 }
