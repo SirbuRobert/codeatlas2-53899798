@@ -59,7 +59,7 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
             <span>Click <strong className="text-foreground">Generate new token</strong> and enable the <code className="bg-surface-3 px-1 rounded text-primary">repo</code> scope</span>
           </div>
           <div className="flex items-start gap-2 font-mono text-[11px] text-foreground-muted">
-            <span className="text-cyan flex-shrink-0">3.</span>
+            <span className="text-primary flex-shrink-0">3.</span>
             <span>Paste the token below — it stays only on your device</span>
           </div>
           <a
