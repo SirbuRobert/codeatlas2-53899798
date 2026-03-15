@@ -180,7 +180,7 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
         </div>
 
         {/* Language breakdown */}
-        <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+        <div className="hidden sm:flex ml-auto items-center gap-2 flex-shrink-0">
           {Object.entries(stats.languages).map(([lang, pct]) => (
             <div key={lang} className="flex items-center gap-1">
               <div
