@@ -3,6 +3,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { computeHierarchicalLayout } from '@/lib/graphLayout';
 import type { CodebaseGraph, AxonNode, AxonEdge, NodeType, RiskLevel, Language, FunctionEntry } from '@/types/graph';
 
+async function fireWebhooks(repoUrl: string, graph: CodebaseGraph) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return { sent: 0 };
+
+    const { data } = await supabase.functions.invoke('webhook-notify', {
+      body: {
+        repo_url: repoUrl,
+        event: 'analysis.complete',
+        payload: {
+          stats: graph.stats,
+          nodeCount: graph.nodes.length,
+          edgeCount: graph.edges.length,
+          language: graph.language,
+          analyzedAt: graph.analyzedAt,
+        },
+      },
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    return data ?? { sent: 0 };
+  } catch {
+    return { sent: 0 };
+  }
+}
+
 export type AnalysisStatus = 'idle' | 'loading' | 'success' | 'error';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
