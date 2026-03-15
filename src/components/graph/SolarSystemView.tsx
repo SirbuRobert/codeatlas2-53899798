@@ -26,12 +26,12 @@ const NODE_COLORS: Record<NodeType, string> = {
 };
 
 const EDGE_COLORS: Record<string, string> = {
-  imports:  '#334155',
-  calls:    '#1e3a5f',
-  inherits: '#3b2a5f',
-  composes: '#1a3a2a',
-  queries:  '#3a1a3a',
-  exposes:  '#1a3a3a',
+  imports:  '#2d4a6a',
+  calls:    '#1e4a7a',
+  inherits: '#4a2a6a',
+  composes: '#1a4a2a',
+  queries:  '#4a1a4a',
+  exposes:  '#1a4a4a',
 };
 
 const RISK_EMISSIVE: Record<string, string> = {
