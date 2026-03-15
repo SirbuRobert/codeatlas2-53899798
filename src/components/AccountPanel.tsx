@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface AccountPanelProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface AccountPanelProps {
 
 export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
   const { user, profile, signOut, saveGithubToken } = useAuth();
+  const { isPro, loading: subLoading } = useSubscription();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -115,9 +117,9 @@ export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
                 </div>
                 <div className="min-w-0">
                   <p className="font-mono text-xs font-semibold text-foreground truncate">{user?.email}</p>
-                  <p className="font-mono text-[10px] text-foreground-dim mt-0.5 flex items-center gap-1">
+                   <p className="font-mono text-[10px] text-foreground-dim mt-0.5 flex items-center gap-1">
                     <User className="w-2.5 h-2.5" />
-                    Free Plan
+                    {subLoading ? '...' : isPro ? 'Pro Plan' : 'Free Plan'}
                   </p>
                 </div>
               </div>
@@ -213,16 +215,26 @@ export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
               <div className="p-3 rounded-xl bg-surface-2 border border-border">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-mono text-[10px] font-bold text-foreground-muted uppercase tracking-wider">Current Plan</span>
-                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-surface-3 border border-border text-foreground-dim">FREE</span>
+                  <span
+                    className="font-mono text-[10px] px-2 py-0.5 rounded border"
+                    style={isPro
+                      ? { background: 'rgba(168,85,247,0.12)', borderColor: 'rgba(168,85,247,0.3)', color: '#a855f7' }
+                      : { background: 'var(--surface-3)', borderColor: 'var(--border)', color: 'var(--foreground-dim)' }
+                    }
+                  >
+                    {subLoading ? '...' : isPro ? 'PRO' : 'FREE'}
+                  </span>
                 </div>
                 <p className="font-mono text-[10px] text-foreground-dim leading-relaxed mb-2">
-                  Unlimited analyses, all views, AI summaries included.
+                  {isPro
+                    ? 'AI Chat, Business Insights, and all Pro features unlocked.'
+                    : 'Unlimited analyses, all views, AI summaries included.'}
                 </p>
                 <button
                   onClick={() => { onClose(); navigate('/billing'); }}
                   className="w-full py-1.5 rounded-lg bg-surface-3 border border-border font-mono text-[10px] text-foreground-muted hover:text-foreground hover:border-border-bright transition-colors"
                 >
-                  View Plans →
+                  {isPro ? 'Manage Plan →' : 'View Plans →'}
                 </button>
               </div>
 
