@@ -94,7 +94,7 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
         <button
           onClick={handleSave}
           disabled={!token.trim() || saved}
-          className="w-full py-2.5 rounded-xl bg-cyan text-primary-foreground font-mono text-xs font-semibold tracking-wider
+          className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
                      hover:bg-primary-glow disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2"
         >
           {saved ? (
