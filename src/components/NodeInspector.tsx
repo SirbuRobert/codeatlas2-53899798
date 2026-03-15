@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown, ExternalLink } from 'lucide-react';
+import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown, ExternalLink, ArrowLeft } from 'lucide-react';
 import type { AxonNode, NodeType, CodebaseGraph, FunctionEntry } from '@/types/graph';
 
 interface NodeInspectorProps {
@@ -8,6 +8,7 @@ interface NodeInspectorProps {
   onClose: () => void;
   onBlastRadius: (nodeId: string) => void;
   graph?: CodebaseGraph;
+  onNodeNavigate?: (nodeId: string) => void;
 }
 
 const TYPE_LABELS: Record<NodeType, string> = {
