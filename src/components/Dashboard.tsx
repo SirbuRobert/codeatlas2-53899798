@@ -511,6 +511,9 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
         onClose={() => setChatOpen(false)}
         onNodeFocus={handleNodeFocusFromChat}
       />
+
+      {/* Account Panel */}
+      <AccountPanel isOpen={accountOpen} onClose={() => setAccountOpen(false)} />
     </div>
   );
 }
