@@ -550,51 +550,7 @@ export default function LandingPage({
           )}
         </AnimatePresence>
 
-        {/* Stats */}
-        {!isAnalyzing && !analysisError && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="flex items-center gap-8 mt-16"
-          >
-            {statsData.map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="font-mono text-2xl font-bold text-primary">{stat.value}</div>
-                <div className="font-mono text-[10px] text-foreground-dim tracking-wider uppercase mt-0.5">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-
-        {/* Feature grid */}
-        {!isAnalyzing && !analysisError && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-12 max-w-2xl w-full"
-          >
-            {featureItems.map((f, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 p-4 rounded-xl bg-surface-1 border border-border hover:border-border-bright hover:bg-surface-2 transition-all duration-200 cursor-default"
-              >
-                <span className="text-xl leading-none mt-0.5">{f.icon}</span>
-                <div>
-                  <div className="font-mono text-xs font-semibold text-foreground mb-1">{f.title}</div>
-                  <div className="font-mono text-[10px] text-foreground-dim leading-relaxed">{f.desc}</div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
       </div>
-
-      {/* Live stats bar — shown on idle landing, hidden during analysis */}
-      {!isAnalyzing && !analysisError && (
-        <LiveStatsBar stats={sessionStats} />
-      )}
 
       <div className="relative z-10 text-center pb-6">
         <p className="font-mono text-[10px] text-foreground-dim tracking-[0.2em]">
