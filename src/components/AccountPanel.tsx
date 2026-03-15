@@ -28,13 +28,13 @@ export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
   const [webhookRepoUrl, setWebhookRepoUrl] = useState('');
   const [savingWebhook, setSavingWebhook] = useState(false);
 
-  // Populate token from profile when panel opens — DB is the sole source of truth
+  // Token is encrypted server-side — input is always empty on open
   useEffect(() => {
     if (isOpen) {
-      setToken(profile?.github_token ?? '');
+      setToken('');
     }
     setSaved(false);
-  }, [isOpen, profile]);
+  }, [isOpen]);
 
   const handleSave = async () => {
     setSaving(true);

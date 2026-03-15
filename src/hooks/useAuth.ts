@@ -93,24 +93,26 @@ export function useAuth() {
   }, []);
 
   const saveGithubToken = useCallback(async (token: string) => {
-    if (!state.user) return { error: new Error('Not authenticated') };
-    const { error } = await supabase
-      .from('profiles')
-      .update({ github_token: token || null })
-      .eq('id', state.user.id);
+    if (!state.user || !state.session) return { error: new Error('Not authenticated') };
+    const { error } = await supabase.functions.invoke('save-github-token', {
+      body: { token: token || '' },
+      headers: { Authorization: `Bearer ${state.session.access_token}` },
+    });
     if (!error) {
+      // Update local profile indicator: non-null means a token is stored
+      const indicator = token ? '[encrypted]' : null;
       setState((prev) => ({
         ...prev,
-        profile: prev.profile ? { ...prev.profile, github_token: token || null } : null,
+        profile: prev.profile ? { ...prev.profile, github_token: indicator } : null,
       }));
     }
-    return { error };
-  }, [state.user]);
+    return { error: error ? new Error(error.message) : null };
+  }, [state.user, state.session]);
 
-  // Token lives exclusively in the database profile — no localStorage fallback
+  // Token is encrypted server-side — never expose the value to the frontend
   const getGithubToken = useCallback((): string | undefined => {
-    return state.profile?.github_token ?? undefined;
-  }, [state.profile]);
+    return undefined;
+  }, []);
 
   return {
     ...state,

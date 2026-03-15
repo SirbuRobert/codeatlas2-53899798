@@ -67,14 +67,20 @@ export function useAnalyzeRepo() {
   const [webhookResult, setWebhookResult] = useState<{ sent: number; results?: Array<{ url: string; status: string }> } | null>(null);
 
   const analyze = useCallback(
-    async (repoUrl: string, token?: string): Promise<CodebaseGraph | null> => {
+    async (repoUrl: string): Promise<CodebaseGraph | null> => {
       setStatus('loading');
       setError(null);
       setGraph(null);
 
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const authHeaders = session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {};
+
         const { data, error: fnError } = await supabase.functions.invoke('analyze-repo', {
-          body: { repoUrl, token },
+          body: { repoUrl },
+          headers: authHeaders,
         });
 
         if (fnError) throw new Error(fnError.message);
