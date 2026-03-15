@@ -129,14 +129,14 @@ describe('Voice command → ghost-city', () => {
     act(() => {
       capturedOnResult!(makeResult({ action: 'ghost-city' }));
     });
-    expect(screen.getByText(/GHOST/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/GHOST/i).length).toBeGreaterThan(0);
   });
 
   it('toggles ghost mode off on second call', () => {
     renderDashboard();
     act(() => { capturedOnResult!(makeResult({ action: 'ghost-city' })); });
     act(() => { capturedOnResult!(makeResult({ action: 'ghost-city' })); });
-    expect(screen.queryByText(/GHOST/i)).not.toBeInTheDocument();
+    expect(screen.queryAllByText(/GHOST/i)).toHaveLength(0);
   });
 });
 
