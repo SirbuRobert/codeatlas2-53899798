@@ -350,8 +350,8 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
               onClick={() => setAccountOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
             >
-              <div className="w-5 h-5 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-[9px] font-bold text-cyan">{user.email?.[0]?.toUpperCase()}</span>
+              <div className="w-5 h-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-[9px] font-bold text-primary">{user.email?.[0]?.toUpperCase()}</span>
               </div>
               <span className="hidden md:inline">{user.email?.split('@')[0]}</span>
             </button>
