@@ -261,7 +261,7 @@ export default function LandingPage({
         ) : (
           <button
             onClick={() => navigate('/auth')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-cyan/30 font-mono text-[10px] text-foreground-muted hover:text-cyan transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-1 border border-border hover:border-primary/30 font-mono text-[10px] text-foreground-muted hover:text-primary transition-all"
           >
             <LogIn className="w-3 h-3" />
             Sign In
