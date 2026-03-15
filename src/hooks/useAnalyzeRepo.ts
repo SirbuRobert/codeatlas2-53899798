@@ -27,8 +27,9 @@ function toAxonNode(raw: RawNode, position: { x: number; y: number }): AxonNode 
       lastModified: (raw.lastModified as string) ?? 'unknown',
       riskLevel: (raw.riskLevel as RiskLevel) ?? 'none',
       flags: (raw.flags as string[]) ?? [],
-      isEntryPoint: (raw.isEntryPoint as boolean) ?? false,
+    isEntryPoint: (raw.isEntryPoint as boolean) ?? false,
       isOrphan: (raw.isOrphan as boolean) ?? false,
+      functions: (raw.functions as FunctionEntry[]) ?? [],
     },
     position,
   };
