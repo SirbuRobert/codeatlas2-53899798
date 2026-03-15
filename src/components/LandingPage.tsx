@@ -484,7 +484,7 @@ export default function LandingPage({
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse"
+                        className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
                         style={{ animationDelay: `${i * 0.2}s` }}
                       />
                     ))}
