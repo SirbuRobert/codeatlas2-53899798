@@ -384,7 +384,7 @@ export default function LandingPage({
                   <button
                     onClick={() => handleSubmit()}
                     disabled={!inputUrl.trim()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan text-primary-foreground font-mono text-xs font-semibold tracking-wider
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-mono text-xs font-semibold tracking-wider
                                hover:bg-primary-glow disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 active:scale-95"
                   >
                     <Zap className="w-3.5 h-3.5" />
