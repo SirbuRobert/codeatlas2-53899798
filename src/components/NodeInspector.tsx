@@ -87,26 +87,48 @@ function MetricBar({ label, value, max = 100, color }: { label: string; value: n
   );
 }
 
-function NodeRefRow({ nodeId, graph, onBlastRadius }: { nodeId: string; graph: CodebaseGraph; onBlastRadius: (id: string) => void }) {
+function NodeRefRow({
+  nodeId, graph, onBlastRadius, onNavigate,
+}: {
+  nodeId: string;
+  graph: CodebaseGraph;
+  onBlastRadius: (id: string) => void;
+  onNavigate?: (id: string) => void;
+}) {
   const n = graph.nodes.find(nd => nd.id === nodeId);
   if (!n) return null;
   const color = TYPE_COLORS[n.type] ?? '#64748b';
   return (
-    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border group">
+    <button
+      onClick={() => onNavigate?.(nodeId)}
+      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border
+                 group transition-all duration-150 text-left cursor-pointer
+                 hover:bg-surface-3"
+      style={{ '--node-color': color } as React.CSSProperties}
+      title={`Inspect ${n.label}`}
+    >
       <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
       <span className="font-mono text-[10px] text-foreground-muted flex-1 truncate">{n.label}</span>
-      <span className="font-mono text-[9px] px-1 py-0.5 rounded border text-[10px]"
-        style={{ color, borderColor: `${color}30`, background: `${color}10` }}>
+      <span
+        className="font-mono text-[9px] px-1 py-0.5 rounded border"
+        style={{ color, borderColor: `${color}30`, background: `${color}10` }}
+      >
         {TYPE_LABELS[n.type]}
       </span>
+      {/* Navigate arrow — always visible on hover */}
+      <ChevronRight
+        className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ color }}
+      />
+      {/* Blast radius — stop propagation so it doesn't trigger navigation */}
       <button
-        onClick={() => onBlastRadius(nodeId)}
+        onClick={e => { e.stopPropagation(); onBlastRadius(nodeId); }}
         className="opacity-0 group-hover:opacity-100 transition-opacity"
         title="Blast radius"
       >
         <Zap className="w-3 h-3 text-alert" />
       </button>
-    </div>
+    </button>
   );
 }
 
