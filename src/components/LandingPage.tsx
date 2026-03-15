@@ -302,8 +302,8 @@ export default function LandingPage({
             }`}
             style={{
               textShadow: glitchActive
-                ? '2px 0 hsl(var(--alert)), -2px 0 hsl(var(--cyan))'
-                : '0 0 40px hsl(var(--cyan) / 0.3)',
+                ? '2px 0 hsl(var(--alert)), -2px 0 hsl(var(--primary))'
+                : '0 0 30px hsl(var(--primary) / 0.2)',
             }}
           >
             GPS FOR CODE
