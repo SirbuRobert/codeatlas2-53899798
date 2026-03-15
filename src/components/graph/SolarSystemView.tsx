@@ -26,12 +26,12 @@ const NODE_COLORS: Record<NodeType, string> = {
 };
 
 const EDGE_COLORS: Record<string, string> = {
-  imports:  '#334155',
-  calls:    '#1e3a5f',
-  inherits: '#3b2a5f',
-  composes: '#1a3a2a',
-  queries:  '#3a1a3a',
-  exposes:  '#1a3a3a',
+  imports:  '#2d4a6a',
+  calls:    '#1e4a7a',
+  inherits: '#4a2a6a',
+  composes: '#1a4a2a',
+  queries:  '#4a1a4a',
+  exposes:  '#1a4a4a',
 };
 
 const RISK_EMISSIVE: Record<string, string> = {
@@ -341,8 +341,8 @@ function NodeSphere({
       {/* Glow halo */}
       {!isOrphan && !isDimmed && (
         <mesh>
-          <sphereGeometry args={[size * 1.5, 12, 12]} />
-          <meshBasicMaterial color={effectiveColor} transparent opacity={0.06} />
+          <sphereGeometry args={[size * 1.8, 12, 12]} />
+          <meshBasicMaterial color={effectiveColor} transparent opacity={0.18} />
         </mesh>
       )}
 
@@ -358,9 +358,9 @@ function NodeSphere({
         <meshStandardMaterial
           color={effectiveColor}
           emissive={isCritical ? riskColor : effectiveColor}
-          emissiveIntensity={isDimmed ? 0.04 : (hovered || isSelected ? 1.4 : 0.55)}
-          roughness={isOrphan ? 0.9 : 0.45}
-          metalness={isOrphan ? 0 : 0.3}
+          emissiveIntensity={isDimmed ? 0.04 : (hovered || isSelected ? 2.2 : 1.2)}
+          roughness={isOrphan ? 0.5 : 0.2}
+          metalness={isOrphan ? 0 : 0.15}
           transparent
           opacity={opacity}
         />
@@ -480,8 +480,12 @@ function ForceScene({
   return (
     <>
       <Stars radius={80} depth={50} count={2000} factor={3} saturation={0} fade speed={0.4} />
-      <ambientLight intensity={0.25} />
-      <pointLight position={[0, 0, 0]} intensity={2} color="#ffffff" distance={60} decay={2} />
+      <ambientLight intensity={1.2} />
+      <pointLight position={[0, 0, 0]} intensity={6} color="#ffffff" distance={120} decay={1.5} />
+      <pointLight position={[0, 30, 0]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
+      <pointLight position={[0, -30, 0]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
+      <pointLight position={[30, 0, 30]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
+      <pointLight position={[-30, 0, -30]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
 
       {/* Edges */}
       {visibleEdges.map((edge) => {
@@ -508,7 +512,7 @@ function ForceScene({
             from={fromPos}
             to={toPos}
             color={baseColor}
-            opacity={dimEdge ? 0.04 : isHighlighted ? 1 : 0.28}
+            opacity={dimEdge ? 0.04 : isHighlighted ? 1 : 0.45}
             highlighted={!!isHighlighted}
             animated={
               selectedNodeId != null &&
