@@ -97,7 +97,7 @@ export default function SearchBar({ nodes, onResults, onClose, isOpen }: SearchB
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[480px]"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[calc(100vw-16px)] sm:w-[480px] max-w-[calc(100vw-16px)]"
         >
           <div
             className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-surface-1/95 backdrop-blur-xl border border-border"
@@ -109,8 +109,8 @@ export default function SearchBar({ nodes, onResults, onClose, isOpen }: SearchB
               value={query}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              placeholder='Search nodes… "auth logic", "database queries", "entry point"'
-              className="flex-1 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
+              placeholder='Search nodes…'
+              className="flex-1 min-w-0 bg-transparent border-none outline-none font-mono text-sm text-foreground placeholder:text-foreground-dim"
             />
 
             {/* Match count */}
@@ -141,7 +141,7 @@ export default function SearchBar({ nodes, onResults, onClose, isOpen }: SearchB
             )}
 
             {/* Close */}
-            <button onClick={() => { onResults(new Set(), ''); onClose(); }} className="text-foreground-dim hover:text-foreground transition-colors">
+            <button onClick={() => { onResults(new Set(), ''); onClose(); }} className="flex-shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center text-foreground-dim hover:text-foreground transition-colors">
               <kbd className="font-mono text-[9px] bg-surface-3 px-1.5 py-0.5 rounded border border-border text-foreground-dim">ESC</kbd>
             </button>
           </div>
