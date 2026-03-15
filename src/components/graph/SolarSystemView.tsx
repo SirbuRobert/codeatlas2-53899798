@@ -483,7 +483,7 @@ function ForceScene({
 
   return (
     <>
-      <Stars radius={80} depth={50} count={2000} factor={3} saturation={0} fade speed={0.4} />
+      <Stars radius={80} depth={50} count={4000} factor={3} saturation={0} fade speed={0.4} />
       <ambientLight intensity={3.5} />
       <pointLight position={[0, 0, 0]} intensity={15} color="#ffffff" distance={200} decay={1.0} />
       <pointLight position={[0, 40, 0]} intensity={8} color="#ffffff" distance={150} decay={1.0} />
