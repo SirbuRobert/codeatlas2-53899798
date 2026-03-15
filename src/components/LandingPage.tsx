@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle, HelpCircle, Github, Check, Eye, EyeOff, X, ExternalLink } from 'lucide-react';
+import { GitBranch, Zap, Search, ChevronRight, Lock, Star, Globe, AlertCircle, HelpCircle, Github, Check, Eye, EyeOff, X, ExternalLink, UserCircle, LogIn } from 'lucide-react';
 import { exampleRepos } from '@/data/mockGraph';
 import type { AnalysisPhase } from '@/types/graph';
 import LiveStatsBar from '@/components/LiveStatsBar';
 import type { SessionStats } from '@/components/LiveStatsBar';
 import PipelineExplainer from '@/components/PipelineExplainer';
+import AccountPanel from '@/components/AccountPanel';
+import { useAuth } from '@/hooks/useAuth';
 
 const GH_TOKEN_KEY = 'axon_gh_token';
 
