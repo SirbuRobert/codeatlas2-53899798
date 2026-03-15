@@ -60,14 +60,13 @@ const KIND_CONFIG: Record<FunctionEntry['kind'], { label: string; color: string 
 };
 
 // ── Utility: build a deep-link GitHub URL ─────────────────────────────────────
-function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number, endLine?: number): string {
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
   // graph.repoUrl is e.g. "github.com/owner/repo"
   const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
   if (!line) return base;
-  // Sanitize endLine: must be strictly > line, and range must be ≤300 lines
-  // (larger ranges = AI hallucination / wrong bracket counting)
-  const safeEnd = endLine && endLine > line && (endLine - line) <= 300 ? endLine : undefined;
-  if (safeEnd) return `${base}#L${line}-L${safeEnd}`;
+  // Link only to the declaration line — same as GitHub's own Symbols panel.
+  // endLine is intentionally ignored: AI bracket-counting is unreliable and
+  // produces ranges like L15-L387 that highlight the entire file.
   return `${base}#L${line}`;
 }
 
@@ -208,14 +207,14 @@ function FunctionsSection({ functions, graph, path }: {
           >
             {functions.map((fn, i) => {
               const cfg = KIND_CONFIG[fn.kind] ?? KIND_CONFIG.function;
-              const url = buildGitHubUrl(graph, path, fn.line, fn.endLine);
+              const url = buildGitHubUrl(graph, path, fn.line);
               return (
                 <button
                   key={i}
                   onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border
                              hover:border-border hover:bg-surface-3 group transition-colors text-left"
-                  title={`Open ${fn.name} on GitHub (L${fn.line}${fn.endLine && fn.endLine > fn.line ? `–L${fn.endLine}` : ''})`}
+                  title={`Open ${fn.name} on GitHub (L${fn.line})`}
                 >
                   {/* Kind badge */}
                   <span
@@ -230,9 +229,9 @@ function FunctionsSection({ functions, graph, path }: {
                     {fn.name}
                   </span>
 
-                  {/* Line number / range */}
+                  {/* Line number — only start line, no range */}
                   <span className="font-mono text-[9px] text-foreground-dim flex-shrink-0">
-                    {fn.endLine && fn.endLine > fn.line ? `L${fn.line}–${fn.endLine}` : `L${fn.line}`}
+                    L{fn.line}
                   </span>
 
                   {/* External link icon — visible on hover */}
