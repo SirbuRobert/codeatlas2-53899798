@@ -64,7 +64,10 @@ async function fetchFileContent(
     const data = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, headers);
     if (data.encoding === "base64" && data.content) {
       const decoded = atob(data.content.replace(/\n/g, ""));
-      return decoded.slice(0, 2800);
+      // Prepend line numbers so AI uses exact line positions, not estimates
+      const lines = decoded.split('\n');
+      const numbered = lines.map((line, i) => `${i + 1}: ${line}`).join('\n');
+      return numbered.slice(0, 4000);
     }
     return "";
   } catch {
