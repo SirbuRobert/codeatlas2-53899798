@@ -22,6 +22,7 @@ function buildGraphContext(graph: CodebaseGraph) {
     repoUrl: graph.repoUrl,
     summary: graph.summary,
     stats: graph.stats,
+    contributors: graph.contributors ?? [],
     nodes: graph.nodes.map(n => ({
       id: n.id,
       label: n.label,
