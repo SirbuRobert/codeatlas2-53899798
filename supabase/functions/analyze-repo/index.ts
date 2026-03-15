@@ -399,11 +399,16 @@ serve(async (req) => {
 
         if (userId && ENCRYPTION_KEY) {
           const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-          const { data: decrypted } = await serviceClient.rpc("decrypt_github_token", {
+          const { data: decrypted, error: rpcError } = await serviceClient.rpc("decrypt_github_token", {
             p_user_id: userId,
             p_key: ENCRYPTION_KEY,
           });
-          if (decrypted) resolvedToken = decrypted as string;
+          if (rpcError) {
+            console.error("[analyze-repo] Token decryption RPC failed:", rpcError.message);
+          } else if (decrypted) {
+            resolvedToken = decrypted as string;
+            console.log("[analyze-repo] GitHub token resolved for user");
+          }
         }
       } catch (tokenErr) {
         console.warn("Could not resolve encrypted token, proceeding without:", tokenErr);
