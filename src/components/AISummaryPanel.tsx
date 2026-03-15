@@ -41,8 +41,13 @@ function getRiskColor(level: string): string {
   return level === 'critical' ? '#ef4444' : level === 'high' ? '#f59e0b' : level === 'medium' ? '#eab308' : '#22c55e';
 }
 
-export default function AISummaryPanel({ graph, isOpen, onClose }: AISummaryPanelProps) {
+export default function AISummaryPanel({ graph, isOpen, onClose, onNodeSelect }: AISummaryPanelProps) {
   const [copied, setCopied] = useState(false);
+
+  const handleNodeClick = (nodeId: string) => {
+    onNodeSelect?.(nodeId);
+    onClose();
+  };
 
   const archStyle = useMemo(() => inferArchitectureStyle(graph), [graph]);
 
