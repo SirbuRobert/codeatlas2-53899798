@@ -131,7 +131,7 @@ export default function LandingPage({
       />
       {/* Version chip + Auth button */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 sm:gap-3 z-20">
-        <span className="font-mono text-[10px] text-foreground-dim tracking-[0.2em] uppercase hidden sm:block">AXON v2.1.0</span>
+        <span className="font-mono text-[10px] text-foreground-dim tracking-[0.2em] uppercase hidden sm:block">v3.0.0</span>
         <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse hidden sm:block" />
         {user ? (
           <button
