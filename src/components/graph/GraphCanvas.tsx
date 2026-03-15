@@ -543,6 +543,25 @@ export default function GraphCanvas({
           )}
         </AnimatePresence>
 
+        {/* ── Reset Layout Button ── */}
+        <AnimatePresence>
+          {hasDraggedNodes && (
+            <Panel position="top-right">
+              <motion.button
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                transition={{ duration: 0.15, ease: [0.2, 0, 0, 1] }}
+                onClick={handleResetLayout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg panel-glass border border-border font-mono text-[10px] text-foreground-dim hover:text-foreground transition-all mr-2 mt-2"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset Layout
+              </motion.button>
+            </Panel>
+          )}
+        </AnimatePresence>
+
         {/* ── Blast Radius Indicator ── */}
         <AnimatePresence>
           {blastRadiusNodeId && blastRadius && !securityOverlay && (
