@@ -156,8 +156,7 @@ export default function Billing() {
           </h1>
           <p className="font-mono text-sm text-foreground-dim max-w-lg mx-auto leading-relaxed">
             Upgrade to unlock{' '}
-            <span className="text-cyan font-semibold">Multi-Repo Analysis</span> — see how your entire
-            engineering portfolio connects.
+            <span className="text-cyan font-semibold">AI Chat and Business Insights</span> — ask your codebase anything and get engineering-level intelligence.
           </p>
           {subscribed && subEnd && (
             <p className="font-mono text-[11px] text-success mt-3">
