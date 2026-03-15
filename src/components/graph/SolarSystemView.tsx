@@ -709,7 +709,7 @@ export default function SolarSystemView({
     <div className="w-full h-full relative bg-background">
       <Canvas
         camera={{ position: [0, 12, 32], fov: 55, near: 0.1, far: 300 }}
-        gl={{ antialias: true, alpha: false }}
+        gl={{ antialias: true, alpha: false, toneMapping: THREE.NoToneMapping }}
         dpr={[1, 1.5]}
       >
         {!ready ? (
