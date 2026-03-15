@@ -206,7 +206,7 @@ function FunctionsSection({ functions, graph, path }: {
             transition={{ duration: 0.2 }}
             className="overflow-hidden space-y-0.5"
           >
-            {functions.map((fn, i) => {
+            {validFunctions.map((fn, i) => {
               const cfg = KIND_CONFIG[fn.kind] ?? KIND_CONFIG.function;
               const url = buildGitHubUrl(graph, path, fn.line);
               return (
