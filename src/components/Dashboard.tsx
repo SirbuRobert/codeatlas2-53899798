@@ -342,6 +342,28 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
             <RefreshCw className="w-3 h-3" />
             New Repo
           </button>
+
+          {/* Auth button — always visible */}
+          <div className="w-px h-4 bg-border mx-1 flex-shrink-0" />
+          {user ? (
+            <button
+              onClick={() => setAccountOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border hover:border-border-bright font-mono text-[10px] text-foreground-muted hover:text-foreground transition-all"
+            >
+              <div className="w-5 h-5 rounded-lg bg-cyan/10 border border-cyan/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-[9px] font-bold text-cyan">{user.email?.[0]?.toUpperCase()}</span>
+              </div>
+              <span className="hidden md:inline">{user.email?.split('@')[0]}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/auth')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan/10 border border-cyan/25 font-mono text-[10px] text-cyan hover:bg-cyan/15 transition-all"
+            >
+              <LogIn className="w-3 h-3" />
+              Sign In
+            </button>
+          )}
         </div>
       </div>
 
