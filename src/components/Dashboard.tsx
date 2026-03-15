@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn, Loader2 } from 'lucide-react';
+import { Map, LayoutGrid, Terminal, Route, RefreshCw, Orbit, ShieldAlert, Ghost, Search, TrendingUp, CreditCard, FileDown, BookOpen, MessageSquare, LogIn, Loader2, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import AccountPanel from '@/components/AccountPanel';
 import GraphCanvas from '@/components/graph/GraphCanvas';
@@ -17,9 +17,11 @@ import BusinessInsightsPanel from '@/components/BusinessInsightsPanel';
 import ExportModal from '@/components/ExportModal';
 import RepoExplainerModal from '@/components/RepoExplainerModal';
 import RepoChatPanel from '@/components/RepoChatPanel';
+import ProGate from '@/components/ProGate';
 import type { AxonNode, CodebaseGraph } from '@/types/graph';
 import { analyzeGraphSecurity } from '@/lib/securityAnalysis';
 import { useCustomCommands } from '@/hooks/useCustomCommands';
+import { useSubscription } from '@/hooks/useSubscription';
 
 type ViewMode = 'topology' | 'treemap' | 'solar';
 
@@ -32,6 +34,7 @@ interface DashboardProps {
 export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPro } = useSubscription();
   const [accountOpen, setAccountOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<AxonNode | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
@@ -50,7 +53,14 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [statsHighlightLabel, setStatsHighlightLabel] = useState<string | null>(null);
+  const [proGateOpen, setProGateOpen] = useState(false);
+  const [proGateFeature, setProGateFeature] = useState<'chat' | 'business'>('chat');
   const [customCmdExecuting, setCustomCmdExecuting] = useState(false);
+
+  const openProGate = (feature: 'chat' | 'business') => {
+    setProGateFeature(feature);
+    setProGateOpen(true);
+  };
 
   const { commands: customCommands, createCommand, deleteCommand, executeCommand: execCustomCmd } =
     useCustomCommands(repoUrl);
@@ -370,27 +380,35 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
           </button>
 
           <button
-            onClick={() => setChatOpen(o => !o)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono text-[10px] transition-all whitespace-nowrap flex-shrink-0 ${
-              chatOpen
+            onClick={() => {
+              if (!isPro) { openProGate('chat'); return; }
+              setChatOpen(o => !o);
+            }}
+            className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono text-[10px] transition-all whitespace-nowrap flex-shrink-0 ${
+              chatOpen && isPro
                 ? 'bg-primary/10 border-primary/40 text-primary'
                 : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground hover:border-border-bright'
             }`}
           >
             <MessageSquare className="w-3 h-3" />
             Ask AI
+            {!isPro && <Zap className="w-2.5 h-2.5 text-primary ml-0.5" />}
           </button>
 
           <button
-            onClick={() => setBusinessPanelOpen(o => !o)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono text-[10px] transition-all whitespace-nowrap flex-shrink-0 ${
-              businessPanelOpen
+            onClick={() => {
+              if (!isPro) { openProGate('business'); return; }
+              setBusinessPanelOpen(o => !o);
+            }}
+            className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono text-[10px] transition-all whitespace-nowrap flex-shrink-0 ${
+              businessPanelOpen && isPro
                 ? 'bg-surface-3 border-border-bright text-foreground'
                 : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground'
             }`}
           >
             <TrendingUp className="w-3 h-3" />
             Business
+            {!isPro && <Zap className="w-2.5 h-2.5 text-primary ml-0.5" />}
           </button>
 
           <button
@@ -531,11 +549,13 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
 
         {/* Business Insights Panel */}
         <div className="pointer-events-auto">
-          <BusinessInsightsPanel
-            graph={graph}
-            isOpen={businessPanelOpen}
-            onClose={() => setBusinessPanelOpen(false)}
-          />
+          {isPro && (
+            <BusinessInsightsPanel
+              graph={graph}
+              isOpen={businessPanelOpen}
+              onClose={() => setBusinessPanelOpen(false)}
+            />
+          )}
         </div>
 
         {/* Onboarding tour — bottom-center */}
@@ -600,11 +620,20 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       />
 
       {/* Repo Chat Panel */}
-      <RepoChatPanel
-        graph={graph}
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-        onNodeFocus={handleNodeFocusFromChat}
+      {isPro && (
+        <RepoChatPanel
+          graph={graph}
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          onNodeFocus={handleNodeFocusFromChat}
+        />
+      )}
+
+      {/* Pro Gate Modal */}
+      <ProGate
+        isOpen={proGateOpen}
+        feature={proGateFeature}
+        onClose={() => setProGateOpen(false)}
       />
 
       {/* Account Panel */}
