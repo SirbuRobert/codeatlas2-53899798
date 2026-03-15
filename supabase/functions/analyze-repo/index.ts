@@ -368,7 +368,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { repoUrl, token } = body as { repoUrl: string; token?: string };
+    const { repoUrl } = body as { repoUrl: string };
 
     if (!repoUrl?.trim()) {
       return new Response(JSON.stringify({ error: "repoUrl is required" }), {
@@ -379,12 +379,43 @@ serve(async (req) => {
 
     const { owner, repo } = parseGitHubUrl(repoUrl);
 
+    // ── Resolve GitHub token: decrypt from DB for authenticated users ───
+    let resolvedToken: string | undefined;
+
+    const bearerToken = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    if (bearerToken) {
+      try {
+        const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const ENCRYPTION_KEY = Deno.env.get("GITHUB_TOKEN_ENCRYPTION_KEY");
+
+        const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: { headers: { Authorization: `Bearer ${bearerToken}` } },
+        });
+        const { data: claimsData } = await anonClient.auth.getClaims(bearerToken);
+        const userId = claimsData?.claims?.sub as string | undefined;
+
+        if (userId && ENCRYPTION_KEY) {
+          const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          const { data: decrypted } = await serviceClient.rpc("decrypt_github_token", {
+            p_user_id: userId,
+            p_key: ENCRYPTION_KEY,
+          });
+          if (decrypted) resolvedToken = decrypted as string;
+        }
+      } catch (tokenErr) {
+        console.warn("Could not resolve encrypted token, proceeding without:", tokenErr);
+      }
+    }
+
     // ── GitHub API headers ──────────────────────────────────────────────
     const ghHeaders: Record<string, string> = {
       Accept: "application/vnd.github.v3+json",
       "User-Agent": "CodeAtlas-AXON/1.0",
     };
-    if (token) ghHeaders["Authorization"] = `Bearer ${token}`;
+    if (resolvedToken) ghHeaders["Authorization"] = `Bearer ${resolvedToken}`;
 
     // ── 1. Fetch repo metadata + contributors in parallel ──────────────
     const [repoInfo, contributorsRaw] = await Promise.all([

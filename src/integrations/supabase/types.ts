@@ -136,7 +136,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrypt_github_token: {
+        Args: { p_key: string; p_user_id: string }
+        Returns: string
+      }
+      encrypt_github_token: {
+        Args: { p_key: string; p_token: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

@@ -3,10 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import LandingPage from '@/components/LandingPage';
 import Dashboard from '@/components/Dashboard';
 import { useAnalyzeRepo } from '@/hooks/useAnalyzeRepo';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import type { CodebaseGraph } from '@/types/graph';
 import type { SessionStats } from '@/components/LiveStatsBar';
+
 
 type AppStage = 'landing' | 'analyzing' | 'ready' | 'dashboard';
 
@@ -21,7 +21,6 @@ export default function Index() {
   const [repoUrl, setRepoUrl] = useState('');
   const [sessionStats, setSessionStats] = useState<SessionStats>(BASELINE_STATS);
   const { analyze, status, graph, error, reset, webhookResult } = useAnalyzeRepo();
-  const { getGithubToken } = useAuth();
   const animationDoneRef = useRef(false);
   const graphRef = useRef<CodebaseGraph | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,9 +33,8 @@ export default function Index() {
       animationDoneRef.current = false;
       graphRef.current = null;
 
-      // Prefer profile token, fall back to localStorage
-      const token = getGithubToken();
-      const result = await analyze(url, token || undefined);
+      // Token is resolved server-side from encrypted DB — just pass the URL
+      const result = await analyze(url);
       graphRef.current = result;
 
       if (result) {
@@ -53,7 +51,7 @@ export default function Index() {
         else setStage('landing');
       }
     },
-    [analyze, getGithubToken],
+    [analyze],
   );
 
   // Auto-analyze from ?url=FULL_GITHUB_URL (shareable/refresh-safe link)
