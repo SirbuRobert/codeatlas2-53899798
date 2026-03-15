@@ -117,9 +117,9 @@ export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
                 </div>
                 <div className="min-w-0">
                   <p className="font-mono text-xs font-semibold text-foreground truncate">{user?.email}</p>
-                  <p className="font-mono text-[10px] text-foreground-dim mt-0.5 flex items-center gap-1">
+                   <p className="font-mono text-[10px] text-foreground-dim mt-0.5 flex items-center gap-1">
                     <User className="w-2.5 h-2.5" />
-                    Free Plan
+                    {subLoading ? '...' : isPro ? 'Pro Plan' : 'Free Plan'}
                   </p>
                 </div>
               </div>
