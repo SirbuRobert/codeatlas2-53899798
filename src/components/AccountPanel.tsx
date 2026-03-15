@@ -14,6 +14,7 @@ interface AccountPanelProps {
 
 export default function AccountPanel({ isOpen, onClose }: AccountPanelProps) {
   const { user, profile, signOut, saveGithubToken } = useAuth();
+  const { isPro, loading: subLoading } = useSubscription();
   const { toast } = useToast();
   const navigate = useNavigate();
 
