@@ -29,7 +29,8 @@ afterEach(() => {
 
 const flush = (ts = 99999) => {
   act(() => {
-    (globalThis as Record<string, unknown>).__flushRAF?.(ts);
+    const fn = (globalThis as Record<string, unknown>).__flushRAF;
+    if (typeof fn === 'function') fn(ts);
   });
 };
 
