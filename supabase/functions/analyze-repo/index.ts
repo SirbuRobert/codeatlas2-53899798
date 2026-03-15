@@ -96,8 +96,7 @@ RULES:
 - CRITICAL — line number rules:
   • "line" MUST point to the line containing the actual declaration keyword: "function", "class", "const", "export function", "async function", "export const", "export default function", "export class", "=>" (arrow). NEVER point to a comment (// ...), a JSDoc block (/** */), an import statement, or a type alias.
   • Example: if line 38 is "// loginUser handles auth" and line 42 is "export async function loginUser(", then line MUST be 42, NOT 38.
-  • "endLine" MUST be the line number of the closing "}" at the SAME indentation level as the opening declaration. Count brackets carefully. If you are not 100% certain of the closing line, OMIT endLine entirely — it is better to have no range than a wrong range that highlights too much code.
-  • IMPORTANT: If the function/method/struct body spans more than 80 lines, OMIT endLine entirely. Large functions make bracket-counting unreliable and produce incorrect ranges like L15-L387 that highlight the entire file. It is far better to link only to the declaration line.
+   • "endLine" MUST be the line number of the closing "}" at the SAME indentation level as the opening declaration. Count brackets carefully. OMIT endLine unless ALL three conditions are met: (1) you counted every opening and closing bracket manually and are 100% certain of the closing line, (2) endLine - line <= 60 (short functions only — large bodies make bracket-counting unreliable), (3) the file has >= 100 lines total (avoids accidental file-end references). When in doubt — OMIT. A wrong range (e.g. L15-L387 that highlights the entire file) is far worse than no range at all. It is always better to link only to the declaration line.
 
 NODE TYPE GUIDE:
 - service: Application bootstrap, server entry, main process
