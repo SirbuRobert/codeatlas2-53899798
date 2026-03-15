@@ -206,7 +206,7 @@ function FunctionsSection({ functions, graph, path }: {
           >
             {functions.map((fn, i) => {
               const cfg = KIND_CONFIG[fn.kind] ?? KIND_CONFIG.function;
-              const url = buildGitHubUrl(graph, path, fn.line);
+              const url = buildGitHubUrl(graph, path, fn.line, fn.endLine);
               return (
                 <button
                   key={i}
