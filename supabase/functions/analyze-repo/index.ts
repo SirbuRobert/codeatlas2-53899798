@@ -164,8 +164,8 @@ const GRAPH_TOOLS = [
                     type: "object",
                     properties: {
                       name: { type: "string", description: "Function or class name" },
-                      line: { type: "number", description: "Exact opening line number of the function/class declaration" },
-                      endLine: { type: "number", description: "Exact closing line number of the function/class body (the line with the closing brace or end of block). Required for GitHub range highlighting." },
+                      line: { type: "number", description: "Line number of the actual declaration keyword (function/class/const/export). MUST NOT be a comment, JSDoc, import, or type line — must be the line with 'function', 'class', 'const', 'export', etc." },
+                      endLine: { type: "number", description: "Line number of the closing brace '}' at the same indentation as the opening declaration. Only provide if you are certain — omit if unsure. Max range: 300 lines. If endLine - line > 300, omit endLine." },
                       kind: { type: "string", enum: ["function", "class", "export", "const", "method"] },
                       isExported: { type: "boolean" },
                     },
