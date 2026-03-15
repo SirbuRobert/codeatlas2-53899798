@@ -33,9 +33,13 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
       }
       case 'CIRCULAR DEPS':
         return new Set(nodes.filter(n => n.metadata.flags?.includes('circular-dep')).map(n => n.id));
-      case 'COVERAGE':
-        // threshold relaxat la 70 pentru a prinde mai multe fișiere
-        return new Set(nodes.filter(n => n.metadata.coverage < 70).map(n => n.id));
+      case 'COVERAGE': {
+        // Încearcă threshold strict (<70), apoi fallback la sub medie
+        const lowCov = nodes.filter(n => n.metadata.coverage < 70);
+        if (lowCov.length > 0) return new Set(lowCov.map(n => n.id));
+        const avgCov = nodes.reduce((s, n) => s + n.metadata.coverage, 0) / nodes.length;
+        return new Set(nodes.filter(n => n.metadata.coverage < avgCov).map(n => n.id));
+      }
       default:
         return new Set();
     }
