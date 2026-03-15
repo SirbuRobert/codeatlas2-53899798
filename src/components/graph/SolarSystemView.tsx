@@ -250,8 +250,11 @@ function NodeSphere({
   positionsRef: React.MutableRefObject<Map<string, THREE.Vector3>>;
 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
+  const pulseHaloRef = useRef<THREE.Mesh>(null!);
+  const pulseT = useRef(Math.random() * Math.PI * 2);
   const [hovered, setHovered] = useState(false);
   const isCritical = node.metadata.riskLevel === 'critical';
+  const isEntryPoint = !!node.metadata.isEntryPoint;
 
   const effectiveColor = isExposed
     ? '#ef4444'
@@ -271,6 +274,13 @@ function NodeSphere({
   useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.25;
+    }
+    if (pulseHaloRef.current && (isEntryPoint || isCritical) && !isDimmed) {
+      pulseT.current += delta * 0.9;
+      const s = 1.0 + Math.sin(pulseT.current) * 0.18;
+      pulseHaloRef.current.scale.setScalar(s);
+      (pulseHaloRef.current.material as THREE.MeshBasicMaterial).opacity =
+        0.22 + Math.sin(pulseT.current) * 0.14;
     }
   });
 
@@ -351,6 +361,18 @@ function NodeSphere({
         <mesh>
           <sphereGeometry args={[size * 1.8, 12, 12]} />
           <meshBasicMaterial color={effectiveColor} transparent opacity={0.35} />
+        </mesh>
+      )}
+
+      {/* Pulse halo — entry-point (cyan) or critical (red) */}
+      {(isEntryPoint || isCritical) && !isDimmed && (
+        <mesh ref={pulseHaloRef}>
+          <sphereGeometry args={[size * 2.2, 12, 12]} />
+          <meshBasicMaterial
+            color={isCritical ? '#ef4444' : '#00ffff'}
+            transparent
+            opacity={0.22}
+          />
         </mesh>
       )}
 
