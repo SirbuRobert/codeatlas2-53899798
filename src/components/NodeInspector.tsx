@@ -207,14 +207,14 @@ function FunctionsSection({ functions, graph, path }: {
           >
             {functions.map((fn, i) => {
               const cfg = KIND_CONFIG[fn.kind] ?? KIND_CONFIG.function;
-              const url = buildGitHubUrl(graph, path, fn.line, fn.endLine);
+              const url = buildGitHubUrl(graph, path, fn.line);
               return (
                 <button
                   key={i}
                   onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border
                              hover:border-border hover:bg-surface-3 group transition-colors text-left"
-                  title={`Open ${fn.name} on GitHub (L${fn.line}${fn.endLine && fn.endLine > fn.line ? `–L${fn.endLine}` : ''})`}
+                  title={`Open ${fn.name} on GitHub (L${fn.line})`}
                 >
                   {/* Kind badge */}
                   <span
@@ -229,9 +229,9 @@ function FunctionsSection({ functions, graph, path }: {
                     {fn.name}
                   </span>
 
-                  {/* Line number / range */}
+                  {/* Line number — only start line, no range */}
                   <span className="font-mono text-[9px] text-foreground-dim flex-shrink-0">
-                    {fn.endLine && fn.endLine > fn.line ? `L${fn.line}–${fn.endLine}` : `L${fn.line}`}
+                    L{fn.line}
                   </span>
 
                   {/* External link icon — visible on hover */}

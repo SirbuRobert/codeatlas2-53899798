@@ -166,7 +166,7 @@ const GRAPH_TOOLS = [
                     properties: {
                       name: { type: "string", description: "Function or class name" },
                       line: { type: "number", description: "Line number of the actual declaration keyword (function/class/const/export). MUST NOT be a comment, JSDoc, import, or type line — must be the line with 'function', 'class', 'const', 'export', etc." },
-                      endLine: { type: "number", description: "Line number of the closing brace '}' at the same indentation as the opening declaration. Only provide if you are certain — omit if unsure. Max range: 300 lines. If endLine - line > 300, omit endLine." },
+                      endLine: { type: "number", description: "Line number of the closing brace '}' at the same indentation as the opening declaration. OMIT if: (1) you are not 100% certain, (2) endLine - line > 80 (large functions = unreliable bracket counting), or (3) the file has fewer than 100 lines total (risk of pointing to file end). Better no range than a wrong range." },
                       kind: { type: "string", enum: ["function", "class", "export", "const", "method"] },
                       isExported: { type: "boolean" },
                     },
