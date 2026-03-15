@@ -18,10 +18,25 @@ interface RepoChatPanelProps {
 
 // Build compact graph context (keep under ~6000 chars)
 function buildGraphContext(graph: CodebaseGraph) {
+  // Derive contributor stats from node authors (mirrors BusinessInsightsPanel logic)
+  const authorCounts = new Map<string, number>();
+  for (const n of graph.nodes) {
+    const a = n.metadata.author;
+    authorCounts.set(a, (authorCounts.get(a) ?? 0) + 1);
+  }
+  const contributors = [...authorCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, nodeCount]) => ({
+      name,
+      nodeCount,
+      pct: Math.round((nodeCount / graph.nodes.length) * 100),
+    }));
+
   return {
     repoUrl: graph.repoUrl,
     summary: graph.summary,
     stats: graph.stats,
+    contributors,
     nodes: graph.nodes.map(n => ({
       id: n.id,
       label: n.label,
@@ -32,6 +47,7 @@ function buildGraphContext(graph: CodebaseGraph) {
       flags: n.metadata.flags,
       functions: (n.metadata.functions ?? []).map(f => f.name),
       isEntryPoint: n.metadata.isEntryPoint,
+      author: n.metadata.author,
     })),
     edges: graph.edges.map(e => ({ s: e.source, t: e.target, r: e.relation })),
   };
