@@ -80,7 +80,7 @@ function GitHubTokenModal({ onClose }: { onClose: () => void }) {
             onChange={(e) => setToken(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 pr-10 font-mono text-sm text-foreground placeholder:text-foreground-dim outline-none focus:border-cyan/50 transition-colors"
+            className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 pr-10 font-mono text-sm text-foreground placeholder:text-foreground-dim outline-none focus:border-primary/50 transition-colors"
           />
           <button
             type="button"
