@@ -71,19 +71,18 @@ describe('SearchBar — search scoring', () => {
     expect(query).toBe('auth');
   });
 
-  it('calls onResults with empty set when query is cleared', () => {
+  it('calls onResults with empty set when X button is clicked', () => {
     const onResults = vi.fn();
     renderSearchBar(true, { onResults });
     const input = screen.getByPlaceholderText(/Search nodes/);
-    // First type something to get results
     fireEvent.change(input, { target: { value: 'auth' } });
+    // X clear button appears when there is text — click it
+    const buttons = screen.getAllByRole('button');
+    // Buttons: ESC is the last, X is second-to-last
+    const xBtn = buttons[buttons.length - 2];
     onResults.mockClear();
-    // Then clear
-    fireEvent.change(input, { target: { value: '' } });
-    expect(onResults).toHaveBeenCalledTimes(1);
-    const [ids, query] = onResults.mock.calls[0];
-    expect(ids.size).toBe(0);
-    expect(query).toBe('');
+    fireEvent.click(xBtn);
+    expect(onResults).toHaveBeenCalledWith(new Set(), '');
   });
 
   it('matches nodes by label substring', () => {
