@@ -338,11 +338,19 @@ function NodeSphere({
         </mesh>
       )}
 
+      {/* Outer aura halo */}
+      {!isOrphan && !isDimmed && (
+        <mesh>
+          <sphereGeometry args={[size * 2.8, 10, 10]} />
+          <meshBasicMaterial color={effectiveColor} transparent opacity={0.07} />
+        </mesh>
+      )}
+
       {/* Glow halo */}
       {!isOrphan && !isDimmed && (
         <mesh>
           <sphereGeometry args={[size * 1.8, 12, 12]} />
-          <meshBasicMaterial color={effectiveColor} transparent opacity={0.18} />
+          <meshBasicMaterial color={effectiveColor} transparent opacity={0.35} />
         </mesh>
       )}
 
@@ -355,12 +363,8 @@ function NodeSphere({
         onPointerLeave={() => setHovered(false)}
       >
         <sphereGeometry args={[size, 28, 28]} />
-        <meshStandardMaterial
+        <meshBasicMaterial
           color={effectiveColor}
-          emissive={isCritical ? riskColor : effectiveColor}
-          emissiveIntensity={isDimmed ? 0.15 : (hovered || isSelected ? 4.5 : 2.8)}
-          roughness={0.0}
-          metalness={0.0}
           transparent
           opacity={opacity}
         />
