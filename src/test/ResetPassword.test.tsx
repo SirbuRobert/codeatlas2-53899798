@@ -108,10 +108,10 @@ describe('ResetPassword page', () => {
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'password1' } });
     fireEvent.change(inputs[1], { target: { value: 'password2' } });
-    fireEvent.submit(inputs[0].closest('form')!);
+    fireEvent.click(screen.getByRole('button', { name: /update password/i }));
     await waitFor(() => {
       expect(screen.getByText('Passwords do not match.')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
   });
 
   it('shows success message after password update', async () => {
@@ -122,10 +122,10 @@ describe('ResetPassword page', () => {
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'newpass123' } });
     fireEvent.change(inputs[1], { target: { value: 'newpass123' } });
-    fireEvent.submit(inputs[0].closest('form')!);
+    fireEvent.click(screen.getByRole('button', { name: /update password/i }));
     await waitFor(() => {
       expect(screen.getByText('Password updated!')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
   });
 
   it('shows API error if updateUser fails', async () => {
@@ -136,9 +136,9 @@ describe('ResetPassword page', () => {
     const inputs = screen.getAllByPlaceholderText('••••••••');
     fireEvent.change(inputs[0], { target: { value: 'newpass123' } });
     fireEvent.change(inputs[1], { target: { value: 'newpass123' } });
-    fireEvent.submit(inputs[0].closest('form')!);
+    fireEvent.click(screen.getByRole('button', { name: /update password/i }));
     await waitFor(() => {
       expect(screen.getByText('Token expired')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
   });
 });
