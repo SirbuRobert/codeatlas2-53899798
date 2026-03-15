@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown, ExternalLink } from 'lucide-react';
+import { X, Code2, User, Clock, GitBranch, AlertTriangle, CheckCircle, Zap, ChevronRight, ChevronDown, ExternalLink, ArrowLeft } from 'lucide-react';
 import type { AxonNode, NodeType, CodebaseGraph, FunctionEntry } from '@/types/graph';
 
 interface NodeInspectorProps {
@@ -8,6 +8,7 @@ interface NodeInspectorProps {
   onClose: () => void;
   onBlastRadius: (nodeId: string) => void;
   graph?: CodebaseGraph;
+  onNodeNavigate?: (nodeId: string) => void;
 }
 
 const TYPE_LABELS: Record<NodeType, string> = {
@@ -86,26 +87,48 @@ function MetricBar({ label, value, max = 100, color }: { label: string; value: n
   );
 }
 
-function NodeRefRow({ nodeId, graph, onBlastRadius }: { nodeId: string; graph: CodebaseGraph; onBlastRadius: (id: string) => void }) {
+function NodeRefRow({
+  nodeId, graph, onBlastRadius, onNavigate,
+}: {
+  nodeId: string;
+  graph: CodebaseGraph;
+  onBlastRadius: (id: string) => void;
+  onNavigate?: (id: string) => void;
+}) {
   const n = graph.nodes.find(nd => nd.id === nodeId);
   if (!n) return null;
   const color = TYPE_COLORS[n.type] ?? '#64748b';
   return (
-    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border group">
+    <button
+      onClick={() => onNavigate?.(nodeId)}
+      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border
+                 group transition-all duration-150 text-left cursor-pointer
+                 hover:bg-surface-3"
+      style={{ '--node-color': color } as React.CSSProperties}
+      title={`Inspect ${n.label}`}
+    >
       <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
       <span className="font-mono text-[10px] text-foreground-muted flex-1 truncate">{n.label}</span>
-      <span className="font-mono text-[9px] px-1 py-0.5 rounded border text-[10px]"
-        style={{ color, borderColor: `${color}30`, background: `${color}10` }}>
+      <span
+        className="font-mono text-[9px] px-1 py-0.5 rounded border"
+        style={{ color, borderColor: `${color}30`, background: `${color}10` }}
+      >
         {TYPE_LABELS[n.type]}
       </span>
+      {/* Navigate arrow — always visible on hover */}
+      <ChevronRight
+        className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ color }}
+      />
+      {/* Blast radius — stop propagation so it doesn't trigger navigation */}
       <button
-        onClick={() => onBlastRadius(nodeId)}
+        onClick={e => { e.stopPropagation(); onBlastRadius(nodeId); }}
         className="opacity-0 group-hover:opacity-100 transition-opacity"
         title="Blast radius"
       >
         <Zap className="w-3 h-3 text-alert" />
       </button>
-    </div>
+    </button>
   );
 }
 
@@ -219,7 +242,32 @@ function FunctionsSection({ functions, graph, path }: {
   );
 }
 
-export default function NodeInspector({ node, onClose, onBlastRadius, graph }: NodeInspectorProps) {
+export default function NodeInspector({ node, onClose, onBlastRadius, graph, onNodeNavigate }: NodeInspectorProps) {
+  // Internal navigation history stack for back-button UX
+  const [historyStack, setHistoryStack] = useState<string[]>([]);
+
+  // Reset history when the node changes from an external source (not internal navigation)
+  const prevNodeId = useState(node?.id)[0];
+
+  const handleNavigate = useCallback((targetNodeId: string) => {
+    if (!node || !onNodeNavigate) return;
+    // Push current node onto the back-stack
+    setHistoryStack(prev => [...prev, node.id]);
+    onNodeNavigate(targetNodeId);
+  }, [node, onNodeNavigate]);
+
+  const handleBack = useCallback(() => {
+    if (historyStack.length === 0 || !onNodeNavigate) return;
+    const prev = historyStack[historyStack.length - 1];
+    setHistoryStack(s => s.slice(0, -1));
+    onNodeNavigate(prev);
+  }, [historyStack, onNodeNavigate]);
+
+  const handleClose = useCallback(() => {
+    setHistoryStack([]);
+    onClose();
+  }, [onClose]);
+
   if (!node) return null;
 
   const typeColor = TYPE_COLORS[node.type] ?? '#00ffff';
@@ -249,6 +297,18 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph }: N
         <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-border">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
+              {/* Back button — only visible when there's history */}
+              {historyStack.length > 0 && (
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-surface-3 border border-border
+                             font-mono text-[9px] text-foreground-dim hover:text-foreground transition-colors mr-1"
+                  title="Back to previous node"
+                >
+                  <ArrowLeft className="w-3 h-3" />
+                  Back
+                </button>
+              )}
               <div
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ background: typeColor, boxShadow: `0 0 8px ${typeColor}` }}
@@ -261,7 +321,7 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph }: N
               </span>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="w-6 h-6 flex items-center justify-center rounded-lg bg-surface-3 text-foreground-dim
                          hover:text-foreground hover:bg-surface-3 transition-colors"
             >
@@ -417,19 +477,24 @@ export default function NodeInspector({ node, onClose, onBlastRadius, graph }: N
           {/* ── Connectivity (requires graph prop) ── */}
           {graph && (importedBy.length > 0 || exportsTo.length > 0) && (
             <div className="space-y-3">
-              <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase">
-                DEPENDENCY GRAPH
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono text-[9px] text-foreground-dim tracking-widest uppercase">
+                  DEPENDENCY GRAPH
+                </p>
+                <span className="font-mono text-[8px] text-foreground-dim opacity-60 italic">
+                  — click to inspect
+                </span>
+              </div>
 
               <CollapsibleSection title="↑ Imported By" count={importedBy.length} color="#f97316">
                 {importedBy.map(id => (
-                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} />
+                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} onNavigate={handleNavigate} />
                 ))}
               </CollapsibleSection>
 
               <CollapsibleSection title="↓ Exports To" count={exportsTo.length} color="#3b82f6">
                 {exportsTo.map(id => (
-                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} />
+                  <NodeRefRow key={id} nodeId={id} graph={graph} onBlastRadius={onBlastRadius} onNavigate={handleNavigate} />
                 ))}
               </CollapsibleSection>
             </div>
