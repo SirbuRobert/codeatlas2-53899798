@@ -61,6 +61,8 @@ export default function Index() {
     const urlParam = searchParams.get('url');
     if (urlParam && !autoTriggeredRef.current) {
       autoTriggeredRef.current = true;
+      // Skip animation when auto-loading from URL param
+      animationDoneRef.current = true;
       handleAnalyze(urlParam);
       return;
     }
@@ -69,6 +71,7 @@ export default function Index() {
     const autoParam = searchParams.get('auto');
     if (repoParam && autoParam === 'true' && !autoTriggeredRef.current) {
       autoTriggeredRef.current = true;
+      animationDoneRef.current = true;
       handleAnalyze(`https://github.com/${repoParam}`);
     }
   }, [searchParams, handleAnalyze]);
