@@ -81,6 +81,7 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
+    localStorage.removeItem('axon_gh_token');
     await supabase.auth.signOut();
   }, []);
 
