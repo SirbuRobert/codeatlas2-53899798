@@ -19,14 +19,23 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
     switch (label) {
       case 'FILES':
         return new Set(nodes.map(n => n.id));
-      case 'HOTSPOTS':
-        return new Set(nodes.filter(n => n.metadata.complexity > 10 && n.metadata.churn > 40).map(n => n.id));
-      case 'ORPHANS':
-        return new Set(nodes.filter(n => n.metadata.isOrphan).map(n => n.id));
+      case 'HOTSPOTS': {
+        const strict = nodes.filter(n => n.metadata.complexity > 10 && n.metadata.churn > 40);
+        if (strict.length > 0) return new Set(strict.map(n => n.id));
+        // fallback: orice nod cu complexitate ridicată SAU churn ridicat
+        return new Set(nodes.filter(n => n.metadata.complexity > 8 || n.metadata.churn > 50).map(n => n.id));
+      }
+      case 'ORPHANS': {
+        const orphans = nodes.filter(n => n.metadata.isOrphan === true);
+        if (orphans.length > 0) return new Set(orphans.map(n => n.id));
+        // fallback: noduri fără dependenți
+        return new Set(nodes.filter(n => n.metadata.dependents === 0).map(n => n.id));
+      }
       case 'CIRCULAR DEPS':
-        return new Set(nodes.filter(n => n.metadata.flags.includes('circular-dep')).map(n => n.id));
+        return new Set(nodes.filter(n => n.metadata.flags?.includes('circular-dep')).map(n => n.id));
       case 'COVERAGE':
-        return new Set(nodes.filter(n => n.metadata.coverage < 60).map(n => n.id));
+        // threshold relaxat la 70 pentru a prinde mai multe fișiere
+        return new Set(nodes.filter(n => n.metadata.coverage < 70).map(n => n.id));
       default:
         return new Set();
     }
@@ -44,7 +53,8 @@ export default function StatsHUD({ graph, onStatClick, activeStatLabel }: StatsH
       return;
     }
     const ids = getNodeIds(label);
-    if (ids.size === 0) return;
+    // CIRCULAR DEPS poate fi 0 în mod legitim — nu blocăm, lăsăm Dashboard să gestioneze
+    if (ids.size === 0 && label !== 'CIRCULAR DEPS') return;
     onStatClick?.(ids, label);
   };
 
