@@ -19,7 +19,13 @@ import type { AxonNode, AxonEdge, CodebaseGraph } from '@/types/graph';
 import { calculateBlastRadius } from '@/types/graph';
 import type { SecurityAnalysis } from '@/lib/securityAnalysis';
 import AxonGraphNode from './AxonGraphNode';
-import { ShieldAlert, ShieldCheck, AlertTriangle, Lock } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Lock, ExternalLink, Search } from 'lucide-react';
+
+// Build a GitHub deep-link URL for a file path (with optional line number)
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
+  const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
+  return line ? `${base}#L${line}` : base;
+}
 
 interface GraphCanvasProps {
   graph: CodebaseGraph;
@@ -30,6 +36,7 @@ interface GraphCanvasProps {
   searchHighlightIds?: Set<string>;
   ghostMode?: boolean;
   tourFocusNodeId?: string | null;
+  onFindingNodeSelect?: (nodeId: string) => void;
 }
 
 const RELATION_COLORS: Record<string, string> = {
@@ -71,6 +78,7 @@ export default function GraphCanvas({
   searchHighlightIds = new Set(),
   ghostMode = false,
   tourFocusNodeId = null,
+  onFindingNodeSelect,
 }: GraphCanvasProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
@@ -383,32 +391,66 @@ export default function GraphCanvas({
 
                 {/* Top findings */}
                 {securityOverlay.findings.length > 0 && (
-                  <div className="flex flex-col gap-1 pt-1" style={{ borderTop: '1px solid rgba(168,85,247,0.15)' }}>
+                  <div className="flex flex-col gap-1.5 pt-1" style={{ borderTop: '1px solid rgba(168,85,247,0.15)' }}>
                     <p className="font-mono text-[8px] tracking-widest text-foreground-dim uppercase mb-0.5">
                       Top Findings
                     </p>
-                    {securityOverlay.findings.slice(0, 3).map((finding, i) => {
+                    {securityOverlay.findings.slice(0, 5).map((finding, i) => {
                       const SeverityIcon = SEVERITY_ICON[finding.severity];
+                      const color = SEVERITY_COLOR[finding.severity];
+                      const githubUrl = finding.path ? buildGitHubUrl(graph, finding.path) : null;
                       return (
-                        <div key={i} className="flex items-start gap-1.5">
-                          <SeverityIcon
-                            className="w-3 h-3 flex-shrink-0 mt-0.5"
-                            style={{ color: SEVERITY_COLOR[finding.severity] }}
-                          />
-                          <div>
-                            <p className="font-mono text-[9px] font-semibold text-foreground leading-tight">
-                              {finding.label}
-                            </p>
-                            <p className="font-mono text-[8px] text-foreground-dim leading-tight mt-0.5 line-clamp-2">
-                              {finding.detail}
-                            </p>
+                        <div
+                          key={i}
+                          className="rounded-lg p-2 flex flex-col gap-1.5 transition-colors"
+                          style={{ background: `${color}08`, border: `1px solid ${color}25` }}
+                        >
+                          {/* Label row */}
+                          <div className="flex items-start gap-1.5">
+                            <SeverityIcon
+                              className="w-3 h-3 flex-shrink-0 mt-0.5"
+                              style={{ color }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-mono text-[9px] font-semibold text-foreground leading-tight truncate">
+                                {finding.label}
+                              </p>
+                              <p className="font-mono text-[8px] text-foreground-dim leading-tight mt-0.5 line-clamp-2">
+                                {finding.detail}
+                              </p>
+                            </div>
+                          </div>
+                          {/* Action buttons */}
+                          <div className="flex items-center gap-1">
+                            {githubUrl && (
+                              <button
+                                onClick={() => window.open(githubUrl, '_blank', 'noopener,noreferrer')}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[8px] transition-all hover:opacity-80"
+                                style={{ background: `${color}18`, border: `1px solid ${color}35`, color }}
+                                title={`Open ${finding.path} on GitHub`}
+                              >
+                                <ExternalLink className="w-2.5 h-2.5" />
+                                GitHub
+                              </button>
+                            )}
+                            {onFindingNodeSelect && (
+                              <button
+                                onClick={() => onFindingNodeSelect(finding.nodeId)}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[8px] transition-all hover:opacity-80"
+                                style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc' }}
+                                title="Open node inspector"
+                              >
+                                <Search className="w-2.5 h-2.5" />
+                                Inspect
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
                     })}
-                    {securityOverlay.findings.length > 3 && (
+                    {securityOverlay.findings.length > 5 && (
                       <p className="font-mono text-[8px] text-foreground-dim mt-0.5">
-                        +{securityOverlay.findings.length - 3} more findings
+                        +{securityOverlay.findings.length - 5} more findings
                       </p>
                     )}
                   </div>
