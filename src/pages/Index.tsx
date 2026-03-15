@@ -32,7 +32,7 @@ export default function Index() {
 
       // Prefer profile token, fall back to localStorage
       const token = getGithubToken();
-      const result = await analyze(url, token);
+      const result = await analyze(url, token || undefined);
       graphRef.current = result;
 
       if (result) {
@@ -49,7 +49,7 @@ export default function Index() {
         else setStage('landing');
       }
     },
-    [analyze],
+    [analyze, getGithubToken],
   );
 
   const handleAnimationComplete = useCallback(() => {
