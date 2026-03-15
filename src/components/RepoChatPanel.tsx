@@ -580,3 +580,68 @@ function ChatMessage({ message, nodes, onNodeFocus }: { message: Message; nodes:
     </div>
   );
 }
+
+function DualChatMessage({ gemini, gpt, nodes, onNodeFocus }: { gemini: string; gpt: string; nodes: AxonNode[]; onNodeFocus: (id: string) => void }) {
+  const [activeTab, setActiveTab] = useState<'gemini' | 'gpt'>('gemini');
+  const activeContent = activeTab === 'gemini' ? gemini : gpt;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Tab switcher */}
+      <div className="flex gap-1">
+        {(['gemini', 'gpt'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-[9px] font-bold border transition-all ${
+              activeTab === tab
+                ? tab === 'gemini'
+                  ? 'bg-cyan/10 border-cyan/30 text-cyan'
+                  : 'bg-violet/10 border-violet/30 text-violet'
+                : 'bg-surface-2 border-border text-foreground-dim hover:text-foreground'
+            }`}
+          >
+            {tab === 'gemini' ? '✦ Gemini Flash' : '⊕ GPT-5 mini'}
+          </button>
+        ))}
+        <div className="ml-auto font-mono text-[8px] text-foreground-dim flex items-center">
+          Second Opinion
+        </div>
+      </div>
+
+      {/* Answer */}
+      <div className={`rounded-xl px-3 py-2 font-mono text-[11px] leading-relaxed border ${
+        activeTab === 'gemini' ? 'bg-cyan/5 border-cyan/10' : 'bg-violet/5 border-violet/10'
+      }`}>
+        <div className="prose prose-xs prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_li]:my-0.5 [&_code]:bg-surface-3 [&_code]:px-1 [&_code]:rounded [&_pre]:bg-surface-3 [&_pre]:p-2 [&_pre]:rounded-lg [&_h1]:text-[13px] [&_h2]:text-[12px] [&_h3]:text-[11px] [&_strong]:text-foreground">
+          <ReactMarkdown>{activeContent}</ReactMarkdown>
+        </div>
+      </div>
+
+      {/* Node chips from active answer */}
+      {(() => {
+        const mentioned = findMentionedNodes(activeContent, nodes).slice(0, 4);
+        if (mentioned.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-1.5">
+            {mentioned.map(node => (
+              <button
+                key={node.id}
+                onClick={() => onNodeFocus(node.id)}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[9px] transition-all hover:scale-105"
+                style={{
+                  background: 'rgba(0,255,255,0.08)',
+                  border: '1px solid rgba(0,255,255,0.2)',
+                  color: '#00ffff',
+                }}
+              >
+                <span>⬡</span>{node.label}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
