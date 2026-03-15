@@ -598,6 +598,17 @@ function ForceScene({
         rotateSpeed={0.6}
         zoomSpeed={0.8}
       />
+
+      {/* ── Bloom post-processing ─────────────────────────────────────────── */}
+      <EffectComposer>
+        <Bloom
+          intensity={1.4}
+          luminanceThreshold={0.25}
+          luminanceSmoothing={0.9}
+          mipmapBlur
+          radius={0.85}
+        />
+      </EffectComposer>
     </>
   );
 }
