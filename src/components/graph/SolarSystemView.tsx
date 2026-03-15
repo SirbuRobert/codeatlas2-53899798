@@ -358,9 +358,9 @@ function NodeSphere({
         <meshStandardMaterial
           color={effectiveColor}
           emissive={isCritical ? riskColor : effectiveColor}
-          emissiveIntensity={isDimmed ? 0.04 : (hovered || isSelected ? 2.2 : 1.2)}
-          roughness={isOrphan ? 0.5 : 0.2}
-          metalness={isOrphan ? 0 : 0.15}
+          emissiveIntensity={isDimmed ? 0.15 : (hovered || isSelected ? 4.5 : 2.8)}
+          roughness={0.0}
+          metalness={0.0}
           transparent
           opacity={opacity}
         />
@@ -480,12 +480,12 @@ function ForceScene({
   return (
     <>
       <Stars radius={80} depth={50} count={2000} factor={3} saturation={0} fade speed={0.4} />
-      <ambientLight intensity={1.2} />
-      <pointLight position={[0, 0, 0]} intensity={6} color="#ffffff" distance={120} decay={1.5} />
-      <pointLight position={[0, 30, 0]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
-      <pointLight position={[0, -30, 0]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
-      <pointLight position={[30, 0, 30]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
-      <pointLight position={[-30, 0, -30]} intensity={3} color="#ffffff" distance={100} decay={1.5} />
+      <ambientLight intensity={3.5} />
+      <pointLight position={[0, 0, 0]} intensity={15} color="#ffffff" distance={200} decay={1.0} />
+      <pointLight position={[0, 40, 0]} intensity={8} color="#ffffff" distance={150} decay={1.0} />
+      <pointLight position={[0, -40, 0]} intensity={8} color="#ffffff" distance={150} decay={1.0} />
+      <pointLight position={[40, 0, 40]} intensity={8} color="#ffffff" distance={150} decay={1.0} />
+      <pointLight position={[-40, 0, -40]} intensity={8} color="#ffffff" distance={150} decay={1.0} />
 
       {/* Edges */}
       {visibleEdges.map((edge) => {
