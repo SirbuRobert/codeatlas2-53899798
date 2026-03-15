@@ -18,20 +18,16 @@ const PLANS = [
     description: 'For individuals and teams exploring codebases.',
     features: [
       'Unlimited repo analyses',
-      'Public repos',
+      'Public & private repos (GitHub PAT)',
       'All views (Topology, Solar, Treemap)',
       'AI semantic summaries (Gemini)',
-      'Blast Radius & Security Topology',
-      'GitHub PAT for private repos',
-      'Community support',
+      'Blast Radius analysis',
+      'Security Topology overlay',
+      'Command bar & custom slash commands',
     ],
     missing: [
       'AI Chat (ask the repo anything)',
       'Business Insights panel',
-      'Multi-Repo Analysis',
-      'Team dashboards',
-      'SSO / SAML integration',
-      'Priority support + SLA',
     ],
   },
   {
@@ -41,18 +37,11 @@ const PLANS = [
     icon: Zap,
     color: '#00ffff',
     badge: 'MOST POPULAR',
-    description: 'For engineering leads and organisations that need governance.',
+    description: 'For engineering leads who need deeper AI-powered insights.',
     features: [
       'Everything in Free',
       '✦ AI Chat (ask the repo anything)',
       '✦ Business Insights panel',
-      '✦ Multi-Repo Analysis',
-      'Team dashboards',
-      'SSO / SAML integration',
-      'Role-based access control',
-      'Audit logs',
-      'Priority support + SLA',
-      'Dedicated success manager',
     ],
     missing: [],
     highlight: true,
@@ -167,8 +156,7 @@ export default function Billing() {
           </h1>
           <p className="font-mono text-sm text-foreground-dim max-w-lg mx-auto leading-relaxed">
             Upgrade to unlock{' '}
-            <span className="text-cyan font-semibold">Multi-Repo Analysis</span> — see how your entire
-            engineering portfolio connects.
+            <span className="text-cyan font-semibold">AI Chat and Business Insights</span> — ask your codebase anything and get engineering-level intelligence.
           </p>
           {subscribed && subEnd && (
             <p className="font-mono text-[11px] text-success mt-3">
@@ -298,7 +286,7 @@ export default function Billing() {
           className="mt-12 text-center"
         >
           <p className="font-mono text-[11px] text-foreground-dim">
-            All plans include a 14-day free trial. No credit card required for Free tier.{' '}
+            No credit card required for the Free tier.{' '}
             <span className="text-foreground-muted">Questions?</span>{' '}
             <button onClick={() => navigate('/feedback')} className="text-cyan cursor-pointer hover:underline">Contact us →</button>
           </p>
