@@ -620,11 +620,20 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       />
 
       {/* Repo Chat Panel */}
-      <RepoChatPanel
-        graph={graph}
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-        onNodeFocus={handleNodeFocusFromChat}
+      {isPro && (
+        <RepoChatPanel
+          graph={graph}
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          onNodeFocus={handleNodeFocusFromChat}
+        />
+      )}
+
+      {/* Pro Gate Modal */}
+      <ProGate
+        isOpen={proGateOpen}
+        feature={proGateFeature}
+        onClose={() => setProGateOpen(false)}
       />
 
       {/* Account Panel */}
