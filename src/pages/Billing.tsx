@@ -22,11 +22,12 @@ const PLANS = [
       'All views (Topology, Solar, Treemap)',
       'AI semantic summaries (Gemini)',
       'Blast Radius & Security Topology',
-      'Business Insights panel',
       'GitHub PAT for private repos',
       'Community support',
     ],
     missing: [
+      'AI Chat (ask the repo anything)',
+      'Business Insights panel',
       'Multi-Repo Analysis',
       'Team dashboards',
       'SSO / SAML integration',
@@ -43,6 +44,8 @@ const PLANS = [
     description: 'For engineering leads and organisations that need governance.',
     features: [
       'Everything in Free',
+      '✦ AI Chat (ask the repo anything)',
+      '✦ Business Insights panel',
       '✦ Multi-Repo Analysis',
       'Team dashboards',
       'SSO / SAML integration',
