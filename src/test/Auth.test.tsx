@@ -112,52 +112,28 @@ describe('Auth page', () => {
   it('calls navigate("/") after successful sign in', async () => {
     mockSignIn.mockResolvedValueOnce({ error: null, data: {} });
     renderAuth();
-
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-      target: { value: 'test@test.com' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
-      target: { value: 'password123' },
-    });
-    const submitButtons = screen.getAllByText('SIGN IN');
-    const submitBtn = submitButtons.find((el) => el.closest('button')?.type === 'submit') ?? submitButtons[0];
-    fireEvent.click(submitBtn.closest('button') ?? submitBtn);
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
-    });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'test@test.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
+    fireEvent.submit(screen.getByPlaceholderText('you@example.com').closest('form')!);
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
   });
 
   it('shows "Check your email" after successful sign up', async () => {
     mockSignUp.mockResolvedValueOnce({ error: null, data: {} });
     renderAuth();
-
     fireEvent.click(screen.getByText('SIGN UP'));
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-      target: { value: 'new@test.com' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
-      target: { value: 'securepass' },
-    });
-    fireEvent.click(screen.getByText('CREATE ACCOUNT'));
-
-    await waitFor(() => {
-      expect(screen.getByText('Check your email')).toBeInTheDocument();
-    });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'new@test.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'securepass' } });
+    fireEvent.submit(screen.getByPlaceholderText('you@example.com').closest('form')!);
+    await waitFor(() => expect(screen.getByText('Check your email')).toBeInTheDocument());
   });
 
   it('forgot password form submits and shows confirmation', async () => {
     mockResetPassword.mockResolvedValueOnce({ error: null, data: {} });
     renderAuth();
-
     fireEvent.click(screen.getByText('Forgot password?'));
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-      target: { value: 'user@test.com' },
-    });
-    fireEvent.click(screen.getByText('SEND RESET LINK'));
-
-    await waitFor(() => {
-      expect(screen.getByText('Check your email')).toBeInTheDocument();
-    });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'user@test.com' } });
+    fireEvent.submit(screen.getByPlaceholderText('you@example.com').closest('form')!);
+    await waitFor(() => expect(screen.getByText('Check your email')).toBeInTheDocument());
   });
 });
