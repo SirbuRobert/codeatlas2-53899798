@@ -92,7 +92,7 @@ RULES:
 - For databases: identify ORM schemas, migration files, DB clients
 - DO NOT include test files as primary nodes — mention coverage in the tested module instead
 - Map only the architecturally significant edges (max 30 edges)
-- For each node, list the top 8 exported functions/classes/methods. The file contents include explicit line numbers at the start of each line (e.g. "42: export function foo()"). Use these EXACT line numbers — do NOT estimate or count manually.
+- For each node, list the top 8 exported functions/classes/methods. The file contents include explicit line numbers at the start of each line (e.g. "42: export function foo()"). Use these EXACT line numbers — do NOT estimate or count manually. For each function, also provide the "endLine" — the line number of the closing brace or end of the block. This enables GitHub range highlighting (e.g. #L42-L87). Look for the matching closing "}" or "end" at the correct nesting depth.
 
 NODE TYPE GUIDE:
 - service: Application bootstrap, server entry, main process
@@ -155,16 +155,17 @@ const GRAPH_TOOLS = [
                 isOrphan: { type: "boolean" },
                 functions: {
                   type: "array",
-                  description: "Top 8 exported functions/classes/methods with line numbers",
+                  description: "Top 8 exported functions/classes/methods with exact line numbers",
                   items: {
                     type: "object",
                     properties: {
                       name: { type: "string", description: "Function or class name" },
-                      line: { type: "number", description: "Approximate line number" },
+                      line: { type: "number", description: "Exact opening line number of the function/class declaration" },
+                      endLine: { type: "number", description: "Exact closing line number of the function/class body (the line with the closing brace or end of block). Required for GitHub range highlighting." },
                       kind: { type: "string", enum: ["function", "class", "export", "const", "method"] },
                       isExported: { type: "boolean" },
                     },
-                    required: ["name", "line", "kind", "isExported"],
+                    required: ["name", "line", "endLine", "kind", "isExported"],
                   },
                 },
               },

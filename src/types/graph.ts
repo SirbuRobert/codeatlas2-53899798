@@ -10,6 +10,7 @@ export type Language = 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 
 export interface FunctionEntry {
   name: string;
   line: number;
+  endLine?: number;  // Closing line of the block for GitHub range highlighting (#L10-L25)
   kind: 'function' | 'class' | 'export' | 'const' | 'method';
   isExported: boolean;
 }

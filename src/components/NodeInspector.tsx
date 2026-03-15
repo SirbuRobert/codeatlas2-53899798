@@ -60,10 +60,13 @@ const KIND_CONFIG: Record<FunctionEntry['kind'], { label: string; color: string 
 };
 
 // ── Utility: build a deep-link GitHub URL ─────────────────────────────────────
-function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number, endLine?: number): string {
   // graph.repoUrl is e.g. "github.com/owner/repo"
   const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
-  return line ? `${base}#L${line}` : base;
+  if (!line) return base;
+  // Use range highlight (#L10-L25) when endLine is known and differs from start
+  if (endLine && endLine > line) return `${base}#L${line}-L${endLine}`;
+  return `${base}#L${line}`;
 }
 
 function MetricBar({ label, value, max = 100, color }: { label: string; value: number; max?: number; color: string }) {
@@ -203,14 +206,14 @@ function FunctionsSection({ functions, graph, path }: {
           >
             {functions.map((fn, i) => {
               const cfg = KIND_CONFIG[fn.kind] ?? KIND_CONFIG.function;
-              const url = buildGitHubUrl(graph, path, fn.line);
+              const url = buildGitHubUrl(graph, path, fn.line, fn.endLine);
               return (
                 <button
                   key={i}
                   onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border
                              hover:border-border hover:bg-surface-3 group transition-colors text-left"
-                  title={`Open ${fn.name} at line ${fn.line} on GitHub`}
+                  title={`Open ${fn.name} on GitHub (L${fn.line}${fn.endLine && fn.endLine > fn.line ? `–L${fn.endLine}` : ''})`}
                 >
                   {/* Kind badge */}
                   <span
@@ -225,9 +228,9 @@ function FunctionsSection({ functions, graph, path }: {
                     {fn.name}
                   </span>
 
-                  {/* Line number */}
+                  {/* Line number / range */}
                   <span className="font-mono text-[9px] text-foreground-dim flex-shrink-0">
-                    L{fn.line}
+                    {fn.endLine && fn.endLine > fn.line ? `L${fn.line}–${fn.endLine}` : `L${fn.line}`}
                   </span>
 
                   {/* External link icon — visible on hover */}

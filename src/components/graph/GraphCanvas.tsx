@@ -21,10 +21,12 @@ import type { SecurityAnalysis } from '@/lib/securityAnalysis';
 import AxonGraphNode from './AxonGraphNode';
 import { ShieldAlert, AlertTriangle, Lock, ExternalLink, Search, RotateCcw } from 'lucide-react';
 
-// Build a GitHub deep-link URL for a file path (with optional line number)
-function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number): string {
+// Build a GitHub deep-link URL for a file path (with optional line number or range)
+function buildGitHubUrl(graph: CodebaseGraph, path: string, line?: number, endLine?: number): string {
   const base = `https://${graph.repoUrl}/blob/${graph.version}/${path}`;
-  return line ? `${base}#L${line}` : base;
+  if (!line) return base;
+  if (endLine && endLine > line) return `${base}#L${line}-L${endLine}`;
+  return `${base}#L${line}`;
 }
 
 const STAT_ACCENT: Record<string, string> = {
