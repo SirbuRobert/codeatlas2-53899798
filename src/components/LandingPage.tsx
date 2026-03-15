@@ -307,7 +307,7 @@ export default function LandingPage({
               <div className="bg-surface-1 border border-border rounded-2xl p-6 shadow-[var(--shadow-panel)]">
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <p className="font-mono text-xs text-foreground-dim mb-0.5">ANALYZING</p>
+                  <p className="font-mono text-xs text-foreground-dim mb-0.5">👀 SNOOPING THROUGH</p>
                     <p className="font-mono text-sm text-primary truncate max-w-[280px]">{analysisUrl}</p>
                   </div>
                   <div className="flex gap-1">
