@@ -96,8 +96,7 @@ RULES:
 - CRITICAL — line number rules:
   • "line" MUST point to the line containing the actual declaration keyword: "function", "class", "const", "export function", "async function", "export const", "export default function", "export class", "=>" (arrow). NEVER point to a comment (// ...), a JSDoc block (/** */), an import statement, or a type alias.
   • Example: if line 38 is "// loginUser handles auth" and line 42 is "export async function loginUser(", then line MUST be 42, NOT 38.
-  • "endLine" MUST be the line number of the closing "}" at the SAME indentation level as the opening declaration. Count brackets carefully. If you are not 100% certain of the closing line, OMIT endLine entirely — it is better to have no range than a wrong range that highlights too much code.
-  • IMPORTANT: If the function/method/struct body spans more than 80 lines, OMIT endLine entirely. Large functions make bracket-counting unreliable and produce incorrect ranges like L15-L387 that highlight the entire file. It is far better to link only to the declaration line.
+   • "endLine" MUST be the line number of the closing "}" at the SAME indentation level as the opening declaration. Count brackets carefully. OMIT endLine unless ALL three conditions are met: (1) you counted every opening and closing bracket manually and are 100% certain of the closing line, (2) endLine - line <= 60 (short functions only — large bodies make bracket-counting unreliable), (3) the file has >= 100 lines total (avoids accidental file-end references). When in doubt — OMIT. A wrong range (e.g. L15-L387 that highlights the entire file) is far worse than no range at all. It is always better to link only to the declaration line.
 
 NODE TYPE GUIDE:
 - service: Application bootstrap, server entry, main process
@@ -166,11 +165,11 @@ const GRAPH_TOOLS = [
                     properties: {
                       name: { type: "string", description: "Function or class name" },
                       line: { type: "number", description: "Line number of the actual declaration keyword (function/class/const/export). MUST NOT be a comment, JSDoc, import, or type line — must be the line with 'function', 'class', 'const', 'export', etc." },
-                      endLine: { type: "number", description: "Line number of the closing brace '}' at the same indentation as the opening declaration. OMIT if: (1) you are not 100% certain, (2) endLine - line > 80 (large functions = unreliable bracket counting), or (3) the file has fewer than 100 lines total (risk of pointing to file end). Better no range than a wrong range." },
+                      endLine: { type: "number", description: "Closing brace '}' at the SAME indentation as the opening declaration. OMIT unless ALL three are true: (1) you counted every bracket manually and are 100% certain, (2) endLine - line <= 60 (short functions only), (3) file has >= 100 lines total. When in doubt — OMIT. A wrong range is far worse than no range." },
                       kind: { type: "string", enum: ["function", "class", "export", "const", "method"] },
                       isExported: { type: "boolean" },
                     },
-                    required: ["name", "line", "endLine", "kind", "isExported"],
+                    required: ["name", "line", "kind", "isExported"],
                   },
                 },
               },
