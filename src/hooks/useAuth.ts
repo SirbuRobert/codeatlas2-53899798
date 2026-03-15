@@ -114,6 +114,7 @@ export function useAuth() {
     signUp,
     signIn,
     signOut,
+    resetPassword,
     saveGithubToken,
     getGithubToken,
   };
