@@ -598,7 +598,19 @@ export default function Dashboard({ graph, repoUrl, onReset }: DashboardProps) {
       />
 
       {/* AI Summary Panel */}
-      <AISummaryPanel graph={graph} isOpen={summaryOpen} onClose={() => setSummaryOpen(false)} />
+      <AISummaryPanel
+        graph={graph}
+        isOpen={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+        onNodeSelect={(nodeId) => {
+          const n = graph.nodes.find((x) => x.id === nodeId);
+          if (n) {
+            setSelectedNode(n);
+            setViewMode('topology');
+          }
+          setSummaryOpen(false);
+        }}
+      />
 
       {/* Export Modal */}
       <ExportModal graph={graph} isOpen={exportOpen} onClose={() => setExportOpen(false)} />

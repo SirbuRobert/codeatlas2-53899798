@@ -10,6 +10,7 @@ interface AISummaryPanelProps {
   graph: CodebaseGraph;
   isOpen: boolean;
   onClose: () => void;
+  onNodeSelect?: (nodeId: string) => void;
 }
 
 const TYPE_COLORS: Record<NodeType, string> = {
@@ -40,8 +41,13 @@ function getRiskColor(level: string): string {
   return level === 'critical' ? '#ef4444' : level === 'high' ? '#f59e0b' : level === 'medium' ? '#eab308' : '#22c55e';
 }
 
-export default function AISummaryPanel({ graph, isOpen, onClose }: AISummaryPanelProps) {
+export default function AISummaryPanel({ graph, isOpen, onClose, onNodeSelect }: AISummaryPanelProps) {
   const [copied, setCopied] = useState(false);
+
+  const handleNodeClick = (nodeId: string) => {
+    onNodeSelect?.(nodeId);
+    onClose();
+  };
 
   const archStyle = useMemo(() => inferArchitectureStyle(graph), [graph]);
 
@@ -242,11 +248,16 @@ export default function AISummaryPanel({ graph, isOpen, onClose }: AISummaryPane
                     </p>
                     <div className="space-y-1">
                       {entryPointNodes.map(n => (
-                        <div key={n.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border">
-                          <div className="w-1.5 h-1.5 rounded-full bg-cyan" />
-                          <span className="font-mono text-[10px] text-foreground truncate">{n.label}</span>
-                          <span className="font-mono text-[9px] text-foreground-dim ml-auto">{n.metadata.loc}L</span>
-                        </div>
+                        <button
+                          key={n.id}
+                          onClick={() => handleNodeClick(n.id)}
+                          className="group w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border hover:border-border-bright hover:brightness-110 transition-all cursor-pointer text-left"
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-cyan flex-shrink-0" />
+                          <span className="font-mono text-[10px] text-foreground truncate flex-1">{n.label}</span>
+                          <span className="font-mono text-[9px] text-foreground-dim">{n.metadata.loc}L</span>
+                          <span className="font-mono text-[10px] text-foreground-dim opacity-0 group-hover:opacity-100 transition-opacity ml-1">→</span>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -260,9 +271,10 @@ export default function AISummaryPanel({ graph, isOpen, onClose }: AISummaryPane
                     </p>
                     <div className="space-y-1.5">
                       {topRiskNodes.map(n => (
-                        <div
+                        <button
                           key={n.id}
-                          className="flex items-start gap-2 px-3 py-2 rounded-lg border"
+                          onClick={() => handleNodeClick(n.id)}
+                          className="group w-full flex items-start gap-2 px-3 py-2 rounded-lg border cursor-pointer text-left hover:brightness-110 transition-all"
                           style={{
                             background: `${getRiskColor(n.metadata.riskLevel)}08`,
                             borderColor: `${getRiskColor(n.metadata.riskLevel)}25`,
@@ -281,7 +293,8 @@ export default function AISummaryPanel({ graph, isOpen, onClose }: AISummaryPane
                           >
                             {n.metadata.riskLevel}
                           </span>
-                        </div>
+                          <span className="font-mono text-[10px] text-foreground-dim opacity-0 group-hover:opacity-100 transition-opacity self-center ml-1">→</span>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -295,11 +308,16 @@ export default function AISummaryPanel({ graph, isOpen, onClose }: AISummaryPane
                     </p>
                     <div className="space-y-1">
                       {orphanNodes.map(n => (
-                        <div key={n.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border opacity-70">
-                          <div className="w-1.5 h-1.5 rounded-full bg-foreground-dim" />
-                          <span className="font-mono text-[10px] text-foreground-muted truncate">{n.label}</span>
-                          <span className="font-mono text-[9px] text-foreground-dim ml-auto line-through">{n.metadata.loc}L</span>
-                        </div>
+                        <button
+                          key={n.id}
+                          onClick={() => handleNodeClick(n.id)}
+                          className="group w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-2 border border-border opacity-70 hover:opacity-100 hover:border-border-bright transition-all cursor-pointer text-left"
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-foreground-dim flex-shrink-0" />
+                          <span className="font-mono text-[10px] text-foreground-muted truncate flex-1">{n.label}</span>
+                          <span className="font-mono text-[9px] text-foreground-dim line-through">{n.metadata.loc}L</span>
+                          <span className="font-mono text-[10px] text-foreground-dim opacity-0 group-hover:opacity-100 transition-opacity ml-1">→</span>
+                        </button>
                       ))}
                       {graph.stats.orphans > 5 && (
                         <p className="font-mono text-[9px] text-foreground-dim px-1">+{graph.stats.orphans - 5} more unreachable nodes</p>
