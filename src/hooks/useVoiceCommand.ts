@@ -80,18 +80,17 @@ export function useVoiceCommand(
   }, [graph, onResult]);
 
   const startListening = useCallback(() => {
-    const SpeechRecognition =
-      (window as unknown as { SpeechRecognition?: typeof globalThis.SpeechRecognition; webkitSpeechRecognition?: typeof globalThis.SpeechRecognition })
-        .SpeechRecognition ??
-      (window as unknown as { SpeechRecognition?: typeof globalThis.SpeechRecognition; webkitSpeechRecognition?: typeof globalThis.SpeechRecognition })
-        .webkitSpeechRecognition;
+    type SpeechRecognitionCtor = new () => SpeechRecognition;
+    const SpeechRecognitionAPI: SpeechRecognitionCtor | undefined =
+      (window as Record<string, unknown>).SpeechRecognition as SpeechRecognitionCtor ??
+      (window as Record<string, unknown>).webkitSpeechRecognition as SpeechRecognitionCtor;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionAPI) {
       setStatus('unsupported');
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
