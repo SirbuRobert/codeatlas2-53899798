@@ -271,9 +271,10 @@ export default function AISummaryPanel({ graph, isOpen, onClose, onNodeSelect }:
                     </p>
                     <div className="space-y-1.5">
                       {topRiskNodes.map(n => (
-                        <div
+                        <button
                           key={n.id}
-                          className="flex items-start gap-2 px-3 py-2 rounded-lg border"
+                          onClick={() => handleNodeClick(n.id)}
+                          className="group w-full flex items-start gap-2 px-3 py-2 rounded-lg border cursor-pointer text-left hover:brightness-110 transition-all"
                           style={{
                             background: `${getRiskColor(n.metadata.riskLevel)}08`,
                             borderColor: `${getRiskColor(n.metadata.riskLevel)}25`,
@@ -292,7 +293,8 @@ export default function AISummaryPanel({ graph, isOpen, onClose, onNodeSelect }:
                           >
                             {n.metadata.riskLevel}
                           </span>
-                        </div>
+                          <span className="font-mono text-[10px] text-foreground-dim opacity-0 group-hover:opacity-100 transition-opacity self-center ml-1">→</span>
+                        </button>
                       ))}
                     </div>
                   </div>
