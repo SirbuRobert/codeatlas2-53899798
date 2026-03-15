@@ -323,7 +323,7 @@ export default function LandingPage({
           No config. No setup. Just drop a URL.{' '}
           <button
             onClick={() => setPipelineOpen(true)}
-            className="inline-flex items-center gap-1 text-cyan hover:underline transition-colors"
+            className="inline-flex items-center gap-1 text-primary hover:underline transition-colors"
           >
             <HelpCircle className="w-3.5 h-3.5" />
             How does this work?
