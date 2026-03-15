@@ -51,7 +51,7 @@ export default function Index() {
         else setStage('landing');
       }
     },
-    [analyze, getGithubToken],
+    [analyze],
   );
 
   // Auto-analyze from ?url=FULL_GITHUB_URL (shareable/refresh-safe link)
