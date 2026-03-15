@@ -371,8 +371,8 @@ export default function LandingPage({
                     animate={{ opacity: 1 }}
                     className="mt-4 flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-xl border border-primary/15"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <span className="font-mono text-[10px] text-primary">Awaiting AI analysis completion…</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="font-mono text-[10px] text-primary">Gemini is vibing with your codebase… hang tight ☕</span>
                   </motion.div>
                 )}
               </div>
